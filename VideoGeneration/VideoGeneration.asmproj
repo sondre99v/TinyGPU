@@ -71,10 +71,19 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="default_metatile_data.asm">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="image_data.asm">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="main.asm">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="metatileset.asm">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tileset.asm">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
