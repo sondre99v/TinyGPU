@@ -10,6 +10,7 @@
  <SOURCE_FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</SOURCE_FILE>
  <INCLUDED_FILES>
   <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\1.4.283\avrasm\inc\tn817def.inc</FILE>
+  <FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\image_data.asm</FILE>
  </INCLUDED_FILES>
  <OBJECT_FILES>
   <FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\Debug\VideoGeneration.obj</FILE>
@@ -22,17 +23,18 @@
   <FILE>VideoGeneration.lss</FILE>
  </OUTPUT_FILES>
  <LABELS>
-  <start><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>34</LINE></start>
-  <scanline_loop><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>121</LINE></scanline_loop>
-  <setup_visible_line><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>148</LINE></setup_visible_line>
-  <setup_sync_line><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>141</LINE></setup_sync_line>
-  <blank_pixel_line><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>266</LINE></blank_pixel_line>
-  <horizontal_blanking_interval><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>290</LINE></horizontal_blanking_interval>
-  <z_phase_visible><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>321</LINE></z_phase_visible>
-  <z_phase_front><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>326</LINE></z_phase_front>
-  <z_phase_sync><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>332</LINE></z_phase_sync>
-  <z_phase_back><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>339</LINE></z_phase_back>
-  <z_phase_wrap><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>346</LINE></z_phase_wrap>
-  <z_phase_done><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>353</LINE></z_phase_done>
+  <start><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>28</LINE></start>
+  <scanline_loop><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>111</LINE></scanline_loop>
+  <setup_visible_line><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>137</LINE></setup_visible_line>
+  <setup_sync_line><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>131</LINE></setup_sync_line>
+  <blank_pixel_line><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>247</LINE></blank_pixel_line>
+  <horizontal_blanking_interval><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>272</LINE></horizontal_blanking_interval>
+  <y_phase_visible><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>304</LINE></y_phase_visible>
+  <y_phase_front><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>309</LINE></y_phase_front>
+  <y_phase_sync><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>315</LINE></y_phase_sync>
+  <y_phase_back><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>322</LINE></y_phase_back>
+  <y_phase_wrap><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>329</LINE></y_phase_wrap>
+  <y_phase_done><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm</FILE><LINE>336</LINE></y_phase_done>
+  <image_data><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\image_data.asm</FILE><LINE>10</LINE></image_data>
  </LABELS>
 </ASSEMBLER_INFO>
