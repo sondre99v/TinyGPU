@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm Sun May 10 18:45:47 2020
+AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm Sun May 10 19:18:45 2020
 
 
 EQU  SIGNATURE_000 0000001e
@@ -3220,15 +3220,14 @@ EQU  V_FRONT      00000001
 EQU  V_SYNC       00000004
 EQU  V_BACK       00000017
 EQU  V_FULL       00000274
-CSEG scanline_loop 0000004a
-CSEG setup_visible_line 0000007d
-CSEG setup_sync_line 00000077
-CSEG blank_pixel_line 00000214
-CSEG pixel_phase  00000085
-CSEG horizontal_blanking_interval 000003a3
-CSEG z_phase_visible 000003f1
-CSEG z_phase_front 000003fd
-CSEG z_phase_sync 00000407
-CSEG z_phase_back 0000040f
-CSEG z_phase_wrap 00000415
-CSEG z_phase_done 00000419
+CSEG scanline_loop 0000004b
+CSEG setup_visible_line 0000007e
+CSEG setup_sync_line 00000078
+CSEG blank_pixel_line 00000216
+CSEG horizontal_blanking_interval 000003a5
+CSEG z_phase_visible 000003f3
+CSEG z_phase_front 000003ff
+CSEG z_phase_sync 00000409
+CSEG z_phase_back 00000411
+CSEG z_phase_wrap 00000417
+CSEG z_phase_done 0000041b

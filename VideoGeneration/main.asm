@@ -86,14 +86,6 @@ start:
 	sbi VPORTA_DIR, 3
 	cbi VPORTA_OUT, 3
 
-	; Configure USART0
-	ldi r16, USART_TXEN_bm
-	sts USART0_CTRLB, r16
-	ldi r16, USART_MSPI_CMODE_MSPI_gc
-	sts USART0_CTRLC, r16
-	ldi r16, (1 << 6)
-	sts USART0_BAUD, r16
-
 	; Configure CCL
 	ldi r16, CCL_INSEL1_USART0_gc | CCL_INSEL0_MASK_gc
 	sts CCL_LUT0CTRLB, r16
@@ -106,6 +98,16 @@ start:
 	ldi r16, CCL_ENABLE_bm
 	sts CCL_CTRLA, r16
 
+	; Configure USART0
+	; Note! USART clock starts counting when the USART is enabled, meaning it could
+	; get out of phase if odd number of clock cycles occur between this enable and the TCA enable
+	ldi r16, USART_MSPI_CMODE_MSPI_gc
+	sts USART0_CTRLC, r16
+	ldi r16, (1 << 6)
+	sts USART0_BAUD, r16
+	ldi r16, USART_TXEN_bm
+	sts USART0_CTRLB, r16
+	nop
 
 	; Enable TCA to start video signal
 	ldi r16, TCA_SINGLE_ENABLE_bm
@@ -117,6 +119,7 @@ start:
 ; This loop should be synchronous with TCA, so it must run exactly H_FULL/CLK_DIV (1056/2=528) clock cycles
 ;	TCA0.CNT is H_BACK/CLK_DIV-LOOP_HEADSTART at the top of this loop
 scanline_loop:
+	; Delay to close to the end of the back porch
 	nop nop nop nop nop nop nop nop nop nop													  ; 2-11
 	nop nop nop nop nop nop nop nop nop nop													  ; 12-21
 	nop nop nop nop nop nop nop nop nop nop													  ; 22-31
@@ -140,39 +143,46 @@ scanline_loop:
 		cbi VPORTC_OUT, 0 ; Set sync pulse low												  ; 45
 		rjmp blank_pixel_line																  ; 46-47
 
-	setup_visible_line:
-		ldi r16, 0x40 ; Output byte 0														  ; 39
-		sts USART0_TXDATAL, r16 ; Data transmission starts 3 clock cycles later				  ; 40-41
-		nop nop nop																			  ; 42-44
-		; Enable pixel data output at the same time as USART starts transmitting
-		sbi VPORTA_OUT, 3																	  ; 45
-		rjmp pixel_phase																	  ; 46-47
 
-; >>> TCA0.CNT = 48
-	pixel_phase:
-	nop nop nop nop nop nop nop nop															  ; 48-55
+
+	setup_visible_line:
+	ldi r16, 0x80 ; Output byte 0															  ; 39
+	sts USART0_TXDATAL, r16 ; Data transmission starts 4 clock cycles later					  ; 40-41
+	nop nop nop																				  ; 42-44
+
+	; Enable pixel data output at the same time as USART starts transmitting
+	sbi VPORTA_OUT, 3																		  ; 45
+	nop nop nop nop nop nop nop nop nop nop													  ; 46-55
 	
-	ldi r16, 0x7E ; Output byte 1															  ; 56
+	ldi r16, 0x00 ; Output byte 1															  ; 56
 	sts USART0_TXDATAL, r16																	  ; 57-58
 	nop nop nop nop nop nop nop nop nop nop nop nop nop										  ; 59-71
 	
-	ldi r16, 0x81 ; Output byte 2															  ; 72
+	ldi r16, 0x00 ; Output byte 2															  ; 72
+	sts USART0_TXDATAL, r16
+	nop nop nop nop nop nop nop nop nop
+	
+	mov r17, ZL
+	sbrs r17, 5
+		ldi r16, 0x00
+	sbrc r17, 5
+		ldi r16, 0xFF
+
+	;ldi r16, 0x00 ; Output byte 3
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
-	ldi r16, 0x7E ; Output byte 3
+	ldi r16, 0x00 ; Output byte 4
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
-	ldi r16, 0x81 ; Output byte 4
+	mov r16, ZH
+	;ldi r16, 0x00 ; Output byte 5
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
-	ldi r16, 0x7E ; Output byte 5
-	sts USART0_TXDATAL, r16
-	nop nop nop nop nop nop nop nop nop nop nop nop nop
-	
-	ldi r16, 0x81 ; Output byte 6
+	mov r16, ZL
+	;ldi r16, 0x00 ; Output byte 6
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
@@ -180,7 +190,7 @@ scanline_loop:
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
-	ldi r16, 0xFF ; Output byte 8
+	ldi r16, 0x00 ; Output byte 8
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
@@ -188,7 +198,7 @@ scanline_loop:
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
-	ldi r16, 0xFF ; Output byte 10
+	ldi r16, 0x00 ; Output byte 10
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
@@ -196,7 +206,7 @@ scanline_loop:
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
-	ldi r16, 0xFF ; Output byte 12
+	ldi r16, 0x00 ; Output byte 12
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
@@ -204,7 +214,7 @@ scanline_loop:
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
-	ldi r16, 0xFF ; Output byte 14
+	ldi r16, 0x00 ; Output byte 14
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
@@ -212,7 +222,7 @@ scanline_loop:
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
-	ldi r16, 0xFF ; Output byte 16
+	ldi r16, 0x00 ; Output byte 16
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
@@ -220,7 +230,7 @@ scanline_loop:
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
-	ldi r16, 0xFF ; Output byte 18
+	ldi r16, 0x00 ; Output byte 18
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
@@ -228,7 +238,7 @@ scanline_loop:
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
-	ldi r16, 0xFF ; Output byte 20
+	ldi r16, 0x00 ; Output byte 20
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
@@ -236,7 +246,7 @@ scanline_loop:
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
-	ldi r16, 0xFF ; Output byte 22
+	ldi r16, 0x00 ; Output byte 22
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
@@ -244,7 +254,7 @@ scanline_loop:
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop nop nop nop nop nop nop
 	
-	ldi r16, 0xFF ; Output byte 24															  ; 424
+	ldi r16, 0x01 ; Output byte 24															  ; 424
 	sts USART0_TXDATAL, r16																	  ; 425-426
 	nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop					  ; 427-444
 	
@@ -252,7 +262,7 @@ scanline_loop:
 	cbi VPORTA_OUT, 3																		  ; 445
 	rjmp horizontal_blanking_interval
 	
-; >>> TCA0.CNT = 48
+
 	blank_pixel_line:
 	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 48-67
 	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 68-87
@@ -273,10 +283,8 @@ scanline_loop:
 	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 368-387
 	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 388-407
 	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 408-427
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop						  ; 428-444
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop					  ; 428-445
 	
-	; Turn off pixel data
-	cbi VPORTA_OUT, 3																		  ; 445
 	rjmp horizontal_blanking_interval														  ; 446-447
 
 	horizontal_blanking_interval:
