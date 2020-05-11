@@ -23,7 +23,8 @@ rjmp start
 .EQU V_BACK = 23
 .EQU V_FULL = 628
 
-.def r_y = r6
+.def r_y = r6 ; Inter-tile y-index
+.def r_ty = r8 ; Tile y-index
 .def r_x = r7
 
 ; Main entry point
@@ -88,8 +89,6 @@ start:
 	sts CCL_CTRLA, r16
 
 	; Configure USART0
-	; Note! USART clock starts counting when the USART is enabled, meaning it could
-	; get out of phase if odd number of clock cycles occur between this enable and the TCA enable
 	ldi r16, USART_MSPI_CMODE_MSPI_gc
 	sts USART0_CTRLC, r16
 	ldi r16, (1 << 6)
@@ -102,27 +101,32 @@ start:
 	
 	; Setup registers for tile-decoding
 	clr r_y
+	clr r_ty
 	clr r_x
 
-	; Load default level into metatile_data
-	ldi XL, low(metatile_data)
-	ldi XH, high(metatile_data)
-	ldi ZL, low(default_metatile_data << 1)
-	ldi ZH, high(default_metatile_data << 1)
+	; Load default level into tiledata
+	ldi XL, low(tiledata)
+	ldi XH, high(tiledata)
+	ldi ZL, low(default_leveldata << 1)
+	ldi ZH, high(default_leveldata << 1)
 	clr r17
 	load_level_loop:
 		lpm r16, Z+
 		st X+, r16
+		lpm r16, Z+
+		st X+, r16
 		inc r17
+		cpi r17, 224
 		brne load_level_loop
 
-	; Enable TCA and USART to start video signal
-	ldi r16, USART_TXEN_bm
-	sts USART0_CTRLB, r16
-	nop
 
-	ldi r16, TCA_SINGLE_ENABLE_bm
-	sts TCA0_SINGLE_CTRLA, r16
+	; Enable TCA and USART to start video signal
+	; Note! USART clock starts counting when the USART is enabled, meaning it could
+	; get out of phase if odd number of clock cycles occur between this enable and the TCA enable
+	ldi r16, USART_TXEN_bm
+	ldi r17, TCA_SINGLE_ENABLE_bm
+	sts USART0_CTRLB, r16
+	sts TCA0_SINGLE_CTRLA, r17
 	nop ; TCA0 wraps to 0x0000
 	nop ; TCA0 counts to 0x0001
 	nop ; TCA0 counts to 0x0002, as sync line goes high
@@ -131,46 +135,49 @@ start:
 ;	TCA0.CNT is H_BACK/CLK_DIV-LOOP_HEADSTART at the top of this loop
 scanline_loop:
 	; Starting at TCA.CNT = 2
-
-	; Setup r_x, r_y and r8 (metatile_index)
-	clr r_x
-	mov r8, r_y
-	swap r8
-	ldi r16, 0x0F
-	and r8, r16
-
-	; Lookup first byte
-	; Load metatile index
-	ldi XH, high(metatile_data)
-	mov XL, r8
-	ld ZL, X
-
-	; Shift index (since each metatile is 4 bytes)
-	lsl ZL
-	lsl ZL
 	
-	; Load metatile data
-	ldi ZH, high(metatileset_data << 1)
-	sbrc r_y, 3 ; If y % 16 > 7, go to second row of metatile
-		inc ZL
-	sbrs r_y, 3 nop
-	; Load tile-indices for both tiles in this row of metatile
-	lpm r17, Z+
-	inc ZL
-	lpm r18, Z+
+	ldi r19, 12
+	clr r20
+	clr r_x
 
-	; Shift and offset indices (since each tile is 8 bytes)
-	mov r16, r_y
-	andi r16, 0x07
-	lsl r17
-	lsl r17
-	lsl r17
-	add r17, r16
+	; Lookup first tile index
+	ldi XH, high(tiledata)
+	ldi XL, low(tiledata)
+
+	ldi r16, 28
+	mul r16, r_ty
+
+	add XL, r0
+	adc XH, r1
+
+	nop
+	nop
+	nop
+	nop
+	nop
 	nop
 
-	; Load tile data
+	ld r16, X+
+	mul r16, r19
+	
+	; Set Z to base of tileset
 	ldi ZH, high(tileset_data << 1)
-	mov ZL, r17
+	ldi ZL, low(tileset_data << 1)
+
+	; Add index to correct tile
+	add ZL, r0
+	adc ZH, r1
+
+	; Add index to row in tile
+	add ZL, r_y
+	adc ZH, r20
+	
+	; Load correct byte
+	lpm r17, Z
+
+	nop
+	nop
+	nop
 	
 
 	; Setup line
@@ -193,116 +200,327 @@ scanline_loop:
 
 	setup_visible_line:
 	
-	lpm r17, Z
+	; Start preparing next byte
+	ld r16, X+																	              ; 37-38
+	nop 																					  ; 39
+
 	sts USART0_TXDATAL, r17 ; Output byte 0													  ; 40-41
-	nop nop nop ; Wait for transmission to start											  ; 42-44
+	
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
 
 	; Enable pixel data output at the same time as USART starts transmitting
 	sbi VPORTA_OUT, 3
-	
-	lsl r18
-	lsl r18
-	lsl r18
-	add r18, r16
-	mov ZL, r18
-	lpm r18, Z
-	
-	;lpm r16, Z+
+
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
 	nop nop nop
-	sts USART0_TXDATAL, r18 ; Output byte 1
-	nop nop nop nop nop nop nop nop nop nop nop
-	
-	nop nop ldi r16, 0x00
+
+	sts USART0_TXDATAL, r16 ; Output byte 1
+
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 2
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 3
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 4
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 5
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 6
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 7
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 8
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 9
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 10
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 11
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 12
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 13
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 14
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 15
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 16
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 17
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 18
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 19
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 20
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 21
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 22
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop ldi r16, 0x00
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 23
-	nop nop nop nop nop nop nop nop nop nop nop
 	
-	nop nop
-	mov r16, r_y
+	; Load next byte
+	ld r16, X+
+	mul r16, r19
+	ldi ZH, high(tileset_data << 1)
+	ldi ZL, low(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	add ZL, r_y
+	adc ZH, r20
+	lpm r16, Z
+	nop
 	sts USART0_TXDATAL, r16 ; Output byte 24
+
 	nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop					  ; 427-444
 	
 
@@ -341,13 +559,13 @@ scanline_loop:
 	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop					  ; 448-465 (front porch)
 	
 	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 466-485
-	nop nop nop nop nop nop nop nop	nop														  ; 486-494
+	nop nop nop nop nop nop nop 															  ; 486-492
 
 	
 
 	; Increment and wrap line counter, and set r5 to 0, 1, 2 or 3 depending on
 	; which vertical phase we are in (visible, front, sync, or back)
-	adiw YH:YL, 1																			  ; 495-496
+	adiw YH:YL, 1																			  ; 493-494
 
 	; First, check top byte. If this is not 0x02, we are in the visible phase
 	cpi YH, 0x02
@@ -365,78 +583,83 @@ scanline_loop:
 	cpi YL, low(V_FULL)
 	breq y_phase_wrap
 
-	nop nop nop nop
+	nop nop nop nop nop nop
 	rjmp y_phase_done
 
 	; Handle each phase separatly
 	y_phase_visible:
 		; No changes here, so just wait the right amount of time
-		nop nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop nop nop nop
 	rjmp y_phase_done
 
 	y_phase_front:
 		; Start of front porch
 		inc r5
-		nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
 	rjmp y_phase_done
 
 	y_phase_sync:
 		; Start of sync pulse
 		inc r5
 		inc r5
-		nop nop nop nop nop
+		nop nop nop nop nop nop nop
 	rjmp y_phase_done
 
 	y_phase_back:
 		; Start of back porch
 		dec r5
 		dec r5
-		nop nop nop
+		nop nop nop nop nop
 	rjmp y_phase_done
 
 	y_phase_wrap:
 		clr r5
 		clr YH
 		clr YL
+		clr r_ty
+		clr r_y
 	rjmp y_phase_done
 
 
 	y_phase_done: ; 16 cycles after adiw YH:YL, 1
 
 
-	; Calculate image index
-	mov r16, YL
-	mov r17, YH
-	lsr r17
-	ror r16
-	lsr r17
-	ror r16
-	
-	; Fast method of keeping line-count:
-	; mov r16, YL
-	; sbrc YL, 3
-	;	inc r_y
+	; Increment r_y if line is multiple of 4
+	sbrc YL, 0
+	rjmp dont_inc_r_y_A
+	sbrc YL, 1
+	rjmp dont_inc_r_y_B
+		; Increment r_y and r_ty
+		inc r_y
+		ldi r16, 12
+		cp r_y, r16
+		breq ry_wrap
+		nop nop nop
+		rjmp inc_ry_done
+		ry_wrap:
+		clr r_y
+		inc r_ty
+		rjmp inc_ry_done
 
-	mov r_y, r16 ; Update y-register for tile-decoding
+	dont_inc_r_y_A:
+		nop nop
+	dont_inc_r_y_B:
+		nop nop nop nop nop nop nop nop
 
-	ldi r17, 25
-	mul r16, r17
+	inc_ry_done:
 
-	movw ZH:ZL, r1:r0
-	ldi r16, low(tileset_data << 1)
-	add ZL, r16
-	ldi r16, high(tileset_data << 1)
-	adc ZH, r16																				  ; 527
+
+	nop
+	nop																						  ; 527
 
 
     rjmp scanline_loop ; Jump back takes 2 cycles											  ; 0-1
 
 
 .include "tileset.asm"
-.include "metatileset.asm"
-.include "default_metatile_data.asm"
+.include "default_leveldata.asm"
 
 .dseg
 .org 0x3E00
-metatile_data:
-.byte 256
+tiledata:
+.byte 28*16
