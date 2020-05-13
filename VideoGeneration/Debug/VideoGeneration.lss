@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm Wed May 13 22:49:35 2020
+AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm Wed May 13 23:59:37 2020
 
 [builtin](2): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\1.4.283\avrasm\inc\tn817def.inc'
 C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm(11): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\1.4.283\avrasm\inc\tn817def.inc'
@@ -4795,10 +4795,9 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 00006b 0000
 00006c 0000
 00006d 0000
-00006e 0000                      	nop nop nop nop
-                                 	
-00006f 9a0b                      	sbi VPORTA_OUT, 3
-000070 980b                      	cbi VPORTA_OUT, 3
+00006e 0000
+00006f 0000
+000070 0000                      	nop nop nop nop nop nop
                                  
 000071 e3be                      	ldi XH, high(scanline_bufferA)
 000072 e0a0                      	ldi XL, low(scanline_bufferA)
@@ -6695,18 +6694,996 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000818 0000
 000819 0000
 00081a 0000
-00081b 0000
-00081c 0000
-00081d 0000                      	nop nop nop nop nop nop nop
+00081b 0000                      	nop nop nop nop nop
                                  
-00081e 9593                      	inc r_y
+00081c 9593                      	inc r_y
+                                 
+00081d 3997                      	cpi r_y, (V_VISIBLE / PIXEL_DIV + 1)
+00081e f009                      	breq vblank
                                  
 00081f c829                      	rjmp visible_scanline4x
                                  
+                                 
+                                 ; This section lasts for exactly 24 lines, plus the initial NOP at the
+                                 ; beginning. The VBLANK interval is really 28 lines, but the final four lines
+                                 ; is spent runing the visible_scanline4x loop without streaming out any data,
+                                 ; so that row 0 can be rendered to the buffer.
+                                 ;   24 lines = 24*1056/2 = 12672 cycles
                                  vblank:
+000820 0000                      	nop ; 1-cycle delay to synchronize with where the visible_scanline4x starts
+                                 
+                                 	; Disable pixel output
+000821 980b                      	cbi VPORTA_OUT, 3 ; Ignore for now
+                                 
+                                 	; Wait until start of line
+000822 0000
+000823 0000
+000824 0000
+000825 0000
+000826 0000
+000827 0000
+000828 0000
+000829 0000
+00082a 0000
+00082b 0000                      	nop nop nop nop nop nop nop nop nop nop
+00082c 0000
+00082d 0000
+00082e 0000
+00082f 0000
+000830 0000
+000831 0000
+000832 0000
+000833 0000
+000834 0000
+000835 0000                      	nop nop nop nop nop nop nop nop nop nop
+000836 0000
+000837 0000
+000838 0000
+000839 0000
+00083a 0000
+00083b 0000
+00083c 0000
+00083d 0000
+00083e 0000
+00083f 0000                      	nop nop nop nop nop nop nop nop nop nop
+000840 0000
+000841 0000
+000842 0000
+000843 0000
+000844 0000
+000845 0000
+000846 0000
+000847 0000
+000848 0000
+000849 0000                      	nop nop nop nop nop nop nop nop nop nop
+00084a 0000
+00084b 0000
+00084c 0000
+00084d 0000
+00084e 0000
+00084f 0000
+000850 0000
+000851 0000
+000852 0000                      	nop nop nop nop nop nop nop nop nop
+                                 
+                                 	; Delay for 1 line minus 1 cycle (527 cycles)
+000853 0000
+000854 0000
+000855 0000
+000856 0000
+000857 0000
+000858 0000
+000859 0000
+00085a 0000
+00085b 0000
+00085c 0000
+00085d 0000
+00085e 0000
+00085f 0000
+000860 0000
+000861 0000
+000862 0000
+000863 0000
+000864 0000
+000865 0000
+000866 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+000867 0000
+000868 0000
+000869 0000
+00086a 0000
+00086b 0000
+00086c 0000
+00086d 0000
+00086e 0000
+00086f 0000
+000870 0000
+000871 0000
+000872 0000
+000873 0000
+000874 0000
+000875 0000
+000876 0000
+000877 0000
+000878 0000
+000879 0000
+00087a 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+00087b 0000
+00087c 0000
+00087d 0000
+00087e 0000
+00087f 0000
+000880 0000
+000881 0000
+000882 0000
+000883 0000
+000884 0000
+000885 0000
+000886 0000
+000887 0000
+000888 0000
+000889 0000
+00088a 0000
+00088b 0000
+00088c 0000
+00088d 0000
+00088e 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+00088f 0000
+000890 0000
+000891 0000
+000892 0000
+000893 0000
+000894 0000
+000895 0000
+000896 0000
+000897 0000
+000898 0000
+000899 0000
+00089a 0000
+00089b 0000
+00089c 0000
+00089d 0000
+00089e 0000
+00089f 0000
+0008a0 0000
+0008a1 0000
+0008a2 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+0008a3 0000
+0008a4 0000
+0008a5 0000
+0008a6 0000
+0008a7 0000
+0008a8 0000
+0008a9 0000
+0008aa 0000
+0008ab 0000
+0008ac 0000
+0008ad 0000
+0008ae 0000
+0008af 0000
+0008b0 0000
+0008b1 0000
+0008b2 0000
+0008b3 0000
+0008b4 0000
+0008b5 0000
+0008b6 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+                                 
+0008b7 0000
+0008b8 0000
+0008b9 0000
+0008ba 0000
+0008bb 0000
+0008bc 0000
+0008bd 0000
+0008be 0000
+0008bf 0000
+0008c0 0000
+0008c1 0000
+0008c2 0000
+0008c3 0000
+0008c4 0000
+0008c5 0000
+0008c6 0000
+0008c7 0000
+0008c8 0000
+0008c9 0000
+0008ca 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+0008cb 0000
+0008cc 0000
+0008cd 0000
+0008ce 0000
+0008cf 0000
+0008d0 0000
+0008d1 0000
+0008d2 0000
+0008d3 0000
+0008d4 0000
+0008d5 0000
+0008d6 0000
+0008d7 0000
+0008d8 0000
+0008d9 0000
+0008da 0000
+0008db 0000
+0008dc 0000
+0008dd 0000
+0008de 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+0008df 0000
+0008e0 0000
+0008e1 0000
+0008e2 0000
+0008e3 0000
+0008e4 0000
+0008e5 0000
+0008e6 0000
+0008e7 0000
+0008e8 0000
+0008e9 0000
+0008ea 0000
+0008eb 0000
+0008ec 0000
+0008ed 0000
+0008ee 0000
+0008ef 0000
+0008f0 0000
+0008f1 0000
+0008f2 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+0008f3 0000
+0008f4 0000
+0008f5 0000
+0008f6 0000
+0008f7 0000
+0008f8 0000
+0008f9 0000
+0008fa 0000
+0008fb 0000
+0008fc 0000
+0008fd 0000
+0008fe 0000
+0008ff 0000
+000900 0000
+000901 0000
+000902 0000
+000903 0000
+000904 0000
+000905 0000
+000906 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000907 0000
+000908 0000
+000909 0000
+00090a 0000
+00090b 0000
+00090c 0000
+00090d 0000
+00090e 0000
+00090f 0000
+000910 0000
+000911 0000
+000912 0000
+000913 0000
+000914 0000
+000915 0000
+000916 0000
+000917 0000
+000918 0000
+000919 0000
+00091a 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+                                 
+00091b 0000
+00091c 0000
+00091d 0000
+00091e 0000
+00091f 0000
+000920 0000
+000921 0000
+000922 0000
+000923 0000
+000924 0000
+000925 0000
+000926 0000
+000927 0000
+000928 0000
+000929 0000
+00092a 0000
+00092b 0000
+00092c 0000
+00092d 0000
+00092e 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+00092f 0000
+000930 0000
+000931 0000
+000932 0000
+000933 0000
+000934 0000
+000935 0000
+000936 0000
+000937 0000
+000938 0000
+000939 0000
+00093a 0000
+00093b 0000
+00093c 0000
+00093d 0000
+00093e 0000
+00093f 0000
+000940 0000
+000941 0000
+000942 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000943 0000
+000944 0000
+000945 0000
+000946 0000
+000947 0000
+000948 0000
+000949 0000
+00094a 0000
+00094b 0000
+00094c 0000
+00094d 0000
+00094e 0000
+00094f 0000
+000950 0000
+000951 0000
+000952 0000
+000953 0000
+000954 0000
+000955 0000
+000956 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000957 0000
+000958 0000
+000959 0000
+00095a 0000
+00095b 0000
+00095c 0000
+00095d 0000
+00095e 0000
+00095f 0000
+000960 0000
+000961 0000
+000962 0000
+000963 0000
+000964 0000
+000965 0000
+000966 0000
+000967 0000
+000968 0000
+000969 0000
+00096a 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+00096b 0000
+00096c 0000
+00096d 0000
+00096e 0000
+00096f 0000
+000970 0000
+000971 0000
+000972 0000
+000973 0000
+000974 0000
+000975 0000
+000976 0000
+000977 0000
+000978 0000
+000979 0000
+00097a 0000
+00097b 0000
+00097c 0000
+00097d 0000
+00097e 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop
+                                 
+00097f 0000
+000980 0000
+000981 0000
+000982 0000
+000983 0000
+000984 0000
+000985 0000
+000986 0000
+000987 0000
+000988 0000
+000989 0000
+00098a 0000
+00098b 0000
+00098c 0000
+00098d 0000
+00098e 0000
+00098f 0000
+000990 0000
+000991 0000
+000992 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000993 0000
+000994 0000
+000995 0000
+000996 0000
+000997 0000
+000998 0000
+000999 0000
+00099a 0000
+00099b 0000
+00099c 0000
+00099d 0000
+00099e 0000
+00099f 0000
+0009a0 0000
+0009a1 0000
+0009a2 0000
+0009a3 0000
+0009a4 0000
+0009a5 0000
+0009a6 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+0009a7 0000
+0009a8 0000
+0009a9 0000
+0009aa 0000
+0009ab 0000
+0009ac 0000
+0009ad 0000
+0009ae 0000
+0009af 0000
+0009b0 0000
+0009b1 0000
+0009b2 0000
+0009b3 0000
+0009b4 0000
+0009b5 0000
+0009b6 0000
+0009b7 0000
+0009b8 0000
+0009b9 0000
+0009ba 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop	nop nop nop
+0009bb 0000
+0009bc 0000
+0009bd 0000
+0009be 0000
+0009bf 0000
+0009c0 0000
+0009c1 0000
+0009c2 0000
+0009c3 0000
+0009c4 0000
+0009c5 0000
+0009c6 0000
+0009c7 0000
+0009c8 0000
+0009c9 0000
+0009ca 0000
+0009cb 0000
+0009cc 0000
+0009cd 0000
+0009ce 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+0009cf 0000
+0009d0 0000
+0009d1 0000
+0009d2 0000
+0009d3 0000
+0009d4 0000
+0009d5 0000
+0009d6 0000
+0009d7 0000
+0009d8 0000
+0009d9 0000
+0009da 0000
+0009db 0000
+0009dc 0000
+0009dd 0000
+0009de 0000
+0009df 0000
+0009e0 0000
+0009e1 0000
+0009e2 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
+                                 	
+0009e3 0000
+0009e4 0000
+0009e5 0000
+0009e6 0000
+0009e7 0000
+0009e8 0000
+0009e9 0000
+0009ea 0000
+0009eb 0000
+0009ec 0000
+0009ed 0000
+0009ee 0000
+0009ef 0000
+0009f0 0000
+0009f1 0000
+0009f2 0000
+0009f3 0000
+0009f4 0000
+0009f5 0000
+0009f6 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop	nop nop nop nop nop nop nop
+0009f7 0000
+0009f8 0000
+0009f9 0000
+0009fa 0000
+0009fb 0000
+0009fc 0000
+0009fd 0000
+0009fe 0000
+0009ff 0000
+000a00 0000
+000a01 0000
+000a02 0000
+000a03 0000
+000a04 0000
+000a05 0000
+000a06 0000
+000a07 0000
+000a08 0000
+000a09 0000
+000a0a 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000a0b 0000
+000a0c 0000
+000a0d 0000
+000a0e 0000
+000a0f 0000
+000a10 0000
+000a11 0000
+000a12 0000
+000a13 0000
+000a14 0000
+000a15 0000
+000a16 0000
+000a17 0000
+000a18 0000
+000a19 0000
+000a1a 0000
+000a1b 0000
+000a1c 0000
+000a1d 0000
+000a1e 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000a1f 0000
+000a20 0000
+000a21 0000
+000a22 0000
+000a23 0000
+000a24 0000
+000a25 0000
+000a26 0000
+000a27 0000
+000a28 0000
+000a29 0000
+000a2a 0000
+000a2b 0000
+000a2c 0000
+000a2d 0000
+000a2e 0000
+000a2f 0000
+000a30 0000
+000a31 0000
+000a32 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000a33 0000
+000a34 0000
+000a35 0000
+000a36 0000
+000a37 0000
+000a38 0000
+000a39 0000
+000a3a 0000
+000a3b 0000
+000a3c 0000
+000a3d 0000
+000a3e 0000
+000a3f 0000
+000a40 0000
+000a41 0000
+000a42 0000
+000a43 0000
+000a44 0000
+000a45 0000
+000a46 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop
+                                 
+000a47 0000
+000a48 0000
+000a49 0000
+000a4a 0000
+000a4b 0000
+000a4c 0000
+000a4d 0000
+000a4e 0000
+000a4f 0000
+000a50 0000
+000a51 0000
+000a52 0000
+000a53 0000
+000a54 0000
+000a55 0000
+000a56 0000
+000a57 0000
+000a58 0000
+000a59 0000
+000a5a 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
+000a5b 0000
+000a5c 0000
+000a5d 0000
+000a5e 0000
+000a5f 0000
+000a60 0000
+000a61 0000                      	nop nop nop nop nop nop nop
                                  	
                                  
-000820 c828                      	rjmp visible_scanline4x
+                                 	; Lower vsync-pulse
+000a62 980c                      	cbi VPORTA_OUT, 4
+                                 	
+                                 	; Delay for 4 lines minus 1 cycles (4 * 528 - 1 cycles)
+000a63 2700                      	clr r16
+000a64 9503
+000a65 9503
+000a66 f7e9                      	loop1: inc r16 inc r16 brne loop1 ; 512 cycles
+000a67 0000
+000a68 0000
+000a69 0000
+000a6a 0000
+000a6b 0000
+000a6c 0000
+000a6d 0000
+000a6e 0000
+000a6f 0000
+000a70 0000
+000a71 0000
+000a72 0000
+000a73 0000
+000a74 0000
+000a75 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+                                 
+000a76 2700                      	clr r16
+000a77 9503
+000a78 9503
+000a79 f7e9                      	loop2: inc r16 inc r16 brne loop2 ; 512 cycles
+000a7a 0000
+000a7b 0000
+000a7c 0000
+000a7d 0000
+000a7e 0000
+000a7f 0000
+000a80 0000
+000a81 0000
+000a82 0000
+000a83 0000
+000a84 0000
+000a85 0000
+000a86 0000
+000a87 0000
+000a88 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+                                 
+000a89 2700                      	clr r16
+000a8a 9503
+000a8b 9503
+000a8c f7e9                      	loop3: inc r16 inc r16 brne loop3 ; 512 cycles
+000a8d 0000
+000a8e 0000
+000a8f 0000
+000a90 0000
+000a91 0000
+000a92 0000
+000a93 0000
+000a94 0000
+000a95 0000
+000a96 0000
+000a97 0000
+000a98 0000
+000a99 0000
+000a9a 0000
+000a9b 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+                                 
+000a9c 2700                      	clr r16
+000a9d 9503
+000a9e 9503
+000a9f f7e9                      	loop4: inc r16 inc r16 brne loop4 ; 512 cycles
+000aa0 0000
+000aa1 0000
+000aa2 0000
+000aa3 0000
+000aa4 0000
+000aa5 0000
+000aa6 0000
+000aa7 0000
+000aa8 0000
+000aa9 0000
+000aaa 0000
+000aab 0000
+000aac 0000
+000aad 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+                                 
+                                 	
+                                 	; Raise vsync-pulse
+000aae 9a0c                      	sbi VPORTA_OUT, 4
+                                 
+                                 
+                                 	; Delay for 19 lines minus the back porch of the last line (approx)
+                                 	
+                                 	; 18 lines
+000aaf e112                      	ldi r17, 18
+                                 	loop6:
+000ab0 2700                      		clr r16
+000ab1 9503
+000ab2 9503
+000ab3 f7e9                      		loop5: inc r16 inc r16 brne loop5 ; 512 cycles
+000ab4 0000
+000ab5 0000
+000ab6 0000
+000ab7 0000
+000ab8 0000
+000ab9 0000
+000aba 0000
+000abb 0000
+000abc 0000
+000abd 0000
+000abe 0000                      		nop nop nop nop nop nop nop nop nop nop nop
+000abf 951a                      		dec r17
+000ac0 f779                      		brne loop6
+                                 
+                                 	; Incomplete 21st line (528-44=484 cycles)
+000ac1 e800                      	ldi r16, 0x80
+000ac2 9503
+000ac3 9503
+000ac4 f7e9                      	loop7: inc r16 inc r16 brne loop7 ; 256 cycles
+                                 
+000ac5 0000
+000ac6 0000
+000ac7 0000
+000ac8 0000
+000ac9 0000
+000aca 0000
+000acb 0000
+000acc 0000
+000acd 0000
+000ace 0000
+000acf 0000
+000ad0 0000
+000ad1 0000
+000ad2 0000
+000ad3 0000
+000ad4 0000
+000ad5 0000
+000ad6 0000
+000ad7 0000
+000ad8 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000ad9 0000
+000ada 0000
+000adb 0000
+000adc 0000
+000add 0000
+000ade 0000
+000adf 0000
+000ae0 0000
+000ae1 0000
+000ae2 0000
+000ae3 0000
+000ae4 0000
+000ae5 0000
+000ae6 0000
+000ae7 0000
+000ae8 0000
+000ae9 0000
+000aea 0000
+000aeb 0000
+000aec 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000aed 0000
+000aee 0000
+000aef 0000
+000af0 0000
+000af1 0000
+000af2 0000
+000af3 0000
+000af4 0000
+000af5 0000
+000af6 0000
+000af7 0000
+000af8 0000
+000af9 0000
+000afa 0000
+000afb 0000
+000afc 0000
+000afd 0000
+000afe 0000
+000aff 0000
+000b00 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000b01 0000
+000b02 0000
+000b03 0000
+000b04 0000
+000b05 0000
+000b06 0000
+000b07 0000
+000b08 0000
+000b09 0000
+000b0a 0000
+000b0b 0000
+000b0c 0000
+000b0d 0000
+000b0e 0000
+000b0f 0000
+000b10 0000
+000b11 0000
+000b12 0000
+000b13 0000
+000b14 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000b15 0000
+000b16 0000
+000b17 0000
+000b18 0000
+000b19 0000
+000b1a 0000
+000b1b 0000
+000b1c 0000
+000b1d 0000
+000b1e 0000
+000b1f 0000
+000b20 0000
+000b21 0000
+000b22 0000
+000b23 0000
+000b24 0000
+000b25 0000
+000b26 0000
+000b27 0000
+000b28 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop
+                                 
+000b29 0000
+000b2a 0000
+000b2b 0000
+000b2c 0000
+000b2d 0000
+000b2e 0000
+000b2f 0000
+000b30 0000
+000b31 0000
+000b32 0000
+000b33 0000
+000b34 0000
+000b35 0000
+000b36 0000
+000b37 0000
+000b38 0000
+000b39 0000
+000b3a 0000
+000b3b 0000
+000b3c 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000b3d 0000
+000b3e 0000
+000b3f 0000
+000b40 0000
+000b41 0000
+000b42 0000
+000b43 0000
+000b44 0000
+000b45 0000
+000b46 0000
+000b47 0000
+000b48 0000
+000b49 0000
+000b4a 0000
+000b4b 0000
+000b4c 0000
+000b4d 0000
+000b4e 0000
+000b4f 0000
+000b50 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000b51 0000
+000b52 0000
+000b53 0000
+000b54 0000
+000b55 0000
+000b56 0000
+000b57 0000
+000b58 0000
+000b59 0000
+000b5a 0000
+000b5b 0000
+000b5c 0000
+000b5d 0000
+000b5e 0000
+000b5f 0000
+000b60 0000
+000b61 0000
+000b62 0000
+000b63 0000
+000b64 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop	nop nop nop
+000b65 0000
+000b66 0000
+000b67 0000
+000b68 0000
+000b69 0000
+000b6a 0000
+000b6b 0000
+000b6c 0000
+000b6d 0000
+000b6e 0000
+000b6f 0000
+000b70 0000
+000b71 0000
+000b72 0000
+000b73 0000
+000b74 0000
+000b75 0000
+000b76 0000
+000b77 0000
+000b78 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000b79 0000
+000b7a 0000
+000b7b 0000
+000b7c 0000
+000b7d 0000
+000b7e 0000
+000b7f 0000
+000b80 0000
+000b81 0000
+000b82 0000
+000b83 0000
+000b84 0000
+000b85 0000
+000b86 0000
+000b87 0000
+000b88 0000
+000b89 0000
+000b8a 0000
+000b8b 0000
+000b8c 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
+                                 
+000b8d 0000
+000b8e 0000
+000b8f 0000
+000b90 0000
+000b91 0000
+000b92 0000
+000b93 0000
+000b94 0000
+000b95 0000
+000b96 0000
+000b97 0000
+000b98 0000
+000b99 0000
+000b9a 0000
+000b9b 0000
+000b9c 0000
+000b9d 0000
+000b9e 0000
+000b9f 0000
+000ba0 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
+000ba1 0000
+000ba2 0000
+000ba3 0000
+000ba4 0000
+000ba5 0000
+000ba6 0000
+000ba7 0000
+000ba8 0000
+000ba9 0000
+000baa 0000
+000bab 0000
+000bac 0000
+000bad 0000
+000bae 0000
+000baf 0000
+000bb0 0000
+000bb1 0000
+000bb2 0000
+000bb3 0000
+000bb4 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+                                 
+000bb5 0000
+000bb6 0000
+000bb7 0000
+000bb8 0000
+000bb9 0000
+000bba 0000
+000bbb 0000
+000bbc 0000
+000bbd 0000
+000bbe 0000
+000bbf 0000
+000bc0 0000
+000bc1 0000
+000bc2 0000
+000bc3 0000
+000bc4 0000
+000bc5 0000
+000bc6 0000
+000bc7 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop	nop nop
+                                 
+                                 	; Reset to line 0, and jump back to the rendering-loop
+000bc8 2799                      	clr r_y
+000bc9 c47f                      	rjmp visible_scanline4x
                                  	
                                  ;.include "tileset.asm"
                                  ;.include "default_leveldata.asm"
@@ -6742,37 +7719,37 @@ counted separately from r26..r31 here.
 "ATtiny817" register use summary:
 x  : 104 y  :   0 z  :   0 r0 :   0 r1 :   0 r2 :   0 r3 :   0 r4 :   0 
 r5 :   0 r6 :   0 r7 :   0 r8 :   0 r9 :   0 r10:   0 r11:   0 r12:   0 
-r13:   0 r14:   0 r15:   0 r16: 250 r17:   0 r18:   0 r19:   0 r20:   0 
-r21:   0 r22:   0 r23:   0 r24:   0 r25:   3 r26:   8 r27:   8 r28:   0 
+r13:   0 r14:   0 r15:   0 r16: 268 r17:   2 r18:   0 r19:   0 r20:   0 
+r21:   0 r22:   0 r23:   0 r24:   0 r25:   5 r26:   8 r27:   8 r28:   0 
 r29:   0 r30:   0 r31:   0 
-Registers used: 5 out of 35 (14.3%)
+Registers used: 6 out of 35 (17.1%)
 
 "ATtiny817" instruction use summary:
 .lds  :   0 .sts  :   0 adc   :   0 add   :   0 adiw  :   0 and   :   0 
 andi  :   0 asr   :   0 bclr  :   0 bld   :   0 brbc  :   0 brbs  :   0 
-brcc  :   0 brcs  :   0 break :   0 breq  :   1 brge  :   0 brhc  :   0 
+brcc  :   0 brcs  :   0 break :   0 breq  :   2 brge  :   0 brhc  :   0 
 brhs  :   0 brid  :   0 brie  :   0 brlo  :   0 brlt  :   0 brmi  :   0 
-brne  :   0 brpl  :   0 brsh  :   0 brtc  :   0 brts  :   0 brvc  :   0 
-brvs  :   0 bset  :   0 bst   :   0 cbi   :   3 cbr   :   0 clc   :   0 
-clh   :   0 cli   :   0 cln   :   0 clr   :   1 cls   :   0 clt   :   0 
-clv   :   0 clz   :   0 com   :   0 cp    :   0 cpc   :   0 cpi   :   1 
-cpse  :   0 dec   :   0 des   :   0 eor   :   0 fmul  :   0 fmuls :   0 
-fmulsu:   0 icall :   0 ijmp  :   0 in    :   0 inc   :   1 ld    : 104 
-ldd   :   0 ldi   :  37 lds   :   0 lpm   :   0 lsl   :   0 lsr   :   0 
+brne  :   7 brpl  :   0 brsh  :   0 brtc  :   0 brts  :   0 brvc  :   0 
+brvs  :   0 bset  :   0 bst   :   0 cbi   :   4 cbr   :   0 clc   :   0 
+clh   :   0 cli   :   0 cln   :   0 clr   :   7 cls   :   0 clt   :   0 
+clv   :   0 clz   :   0 com   :   0 cp    :   0 cpc   :   0 cpi   :   2 
+cpse  :   0 dec   :   1 des   :   0 eor   :   0 fmul  :   0 fmuls :   0 
+fmulsu:   0 icall :   0 ijmp  :   0 in    :   0 inc   :  13 ld    : 104 
+ldd   :   0 ldi   :  39 lds   :   0 lpm   :   0 lsl   :   0 lsr   :   0 
 mov   :   0 movw  :   0 mul   :   0 muls  :   0 mulsu :   0 neg   :   0 
-nop   :1673 or    :   0 ori   :   0 out   :   1 pop   :   0 push  :   0 
+nop   :2579 or    :   0 ori   :   0 out   :   1 pop   :   0 push  :   0 
 rcall :   0 ret   :   0 reti  :   0 rjmp  :   4 rol   :   0 ror   :   0 
 sbc   :   0 sbci  :   0 sbi   :   7 sbic  :   0 sbis  :   0 sbiw  :   0 
 sbr   :   0 sbrc  :   0 sbrs  :   0 sec   :   0 seh   :   0 sei   :   0 
 sen   :   0 ser   :   0 ses   :   0 set   :   0 sev   :   0 sez   :   0 
 sleep :   0 spm   :   0 st    :   0 std   :   0 sts   : 124 sub   :   0 
 subi  :   0 swap  :   0 tst   :   0 wdr   :   0 
-Instructions used: 12 out of 112 (10.7%)
+Instructions used: 14 out of 112 (12.5%)
 
 "ATtiny817" memory use summary [bytes]:
 Segment   Begin    End      Code   Data   Used    Size   Use%
 ---------------------------------------------------------------
-[.cseg] 0x000000 0x001042   4162      0   4162    8192  50.8%
+[.cseg] 0x000000 0x001794   6036      0   6036    8192  73.7%
 [.dseg] 0x003e00 0x003ffd      0    509    509     512  99.4%
 [.eseg] 0x000000 0x000000      0      0      0     128   0.0%
 

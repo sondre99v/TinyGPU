@@ -142,10 +142,7 @@ visible_scanline4x:
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop
-	
-	sbi VPORTA_OUT, 3
-	cbi VPORTA_OUT, 3
+	nop nop nop nop nop nop
 
 	ldi XH, high(scanline_bufferA)
 	ldi XL, low(scanline_bufferA)
@@ -650,15 +647,128 @@ visible_scanline4x:
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop
+	nop nop nop nop nop
 
 	inc r_y
 
+	cpi r_y, (V_VISIBLE / PIXEL_DIV + 1)
+	breq vblank
+
 	rjmp visible_scanline4x
 
+
+; This section lasts for exactly 24 lines, plus the initial NOP at the
+; beginning. The VBLANK interval is really 28 lines, but the final four lines
+; is spent runing the visible_scanline4x loop without streaming out any data,
+; so that row 0 can be rendered to the buffer.
+;   24 lines = 24*1056/2 = 12672 cycles
 vblank:
+	nop ; 1-cycle delay to synchronize with where the visible_scanline4x starts
+
+	; Disable pixel output
+	cbi VPORTA_OUT, 3 ; Ignore for now
+
+	; Wait until start of line
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop
+
+	; Delay for 1 line minus 1 cycle (527 cycles)
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop
+
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop	nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
+	
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop	nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop
+
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop
 	
 
+	; Lower vsync-pulse
+	cbi VPORTA_OUT, 4
+	
+	; Delay for 4 lines minus 1 cycles (4 * 528 - 1 cycles)
+	clr r16
+	loop1: inc r16 inc r16 brne loop1 ; 512 cycles
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+
+	clr r16
+	loop2: inc r16 inc r16 brne loop2 ; 512 cycles
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+
+	clr r16
+	loop3: inc r16 inc r16 brne loop3 ; 512 cycles
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+
+	clr r16
+	loop4: inc r16 inc r16 brne loop4 ; 512 cycles
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+
+	
+	; Raise vsync-pulse
+	sbi VPORTA_OUT, 4
+
+
+	; Delay for 19 lines minus the back porch of the last line (approx)
+	
+	; 18 lines
+	ldi r17, 18
+	loop6:
+		clr r16
+		loop5: inc r16 inc r16 brne loop5 ; 512 cycles
+		nop nop nop nop nop nop nop nop nop nop nop
+		dec r17
+		brne loop6
+
+	; Incomplete 21st line (528-44=484 cycles)
+	ldi r16, 0x80
+	loop7: inc r16 inc r16 brne loop7 ; 256 cycles
+
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop
+
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop	nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
+
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop	nop nop
+
+	; Reset to line 0, and jump back to the rendering-loop
+	clr r_y
 	rjmp visible_scanline4x
 	
 ;.include "tileset.asm"
