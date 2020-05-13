@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm Mon May 11 17:37:51 2020
+AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm Wed May 13 22:49:35 2020
 
 
 EQU  SIGNATURE_000 0000001e
@@ -3209,7 +3209,6 @@ EQU  USART0_TXC_voffset 00000002
 EQU  NVMCTRL_EE_voffset 00000000
 EQU  INT_VECTORS_SIZE 0000001a
 CSEG start        00000001
-EQU  CLK_DIV      00000002
 EQU  H_VISIBLE    00000320
 EQU  H_FRONT      00000028
 EQU  H_SYNC       00000080
@@ -3220,25 +3219,25 @@ EQU  V_FRONT      00000001
 EQU  V_SYNC       00000004
 EQU  V_BACK       00000017
 EQU  V_FULL       00000274
-DEF  r_y          r6
-DEF  r_ty         r8
-DEF  r_x          r7
-DSEG tiledata     00003e00
-CSEG default_leveldata 00000d00
-CSEG load_level_loop 00000045
-CSEG scanline_loop 00000055
-CSEG tileset_data 00000800
-CSEG setup_visible_line 00000085
-CSEG setup_sync_line 0000007d
-CSEG blank_pixel_line 000001bf
-CSEG horizontal_blanking_interval 0000034e
-CSEG y_phase_visible 0000038d
-CSEG y_phase_front 0000039b
-CSEG y_phase_sync 000003a7
-CSEG y_phase_back 000003b1
-CSEG y_phase_wrap 000003b9
-CSEG y_phase_done 000003bf
-CSEG dont_inc_r_y_A 000003ce
-CSEG dont_inc_r_y_B 000003d0
-CSEG ry_wrap      000003cb
-CSEG inc_ry_done  000003d8
+EQU  CLK_DIV      00000002
+EQU  PIXEL_DIV    00000004
+EQU  TILE_WIDTH   00000008
+EQU  TILE_HEIGHT  0000000c
+EQU  TILE_ARRAY_WIDTH 0000001b
+EQU  TILE_ARRAY_HEIGHT 0000000f
+EQU  SCANLINE_BUFFER_TILES 0000001a
+DSEG scanline_bufferA 00003e00
+DEF  r_y          r25
+CSEG visible_scanline4x 00000049
+CSEG enable_output 0000004c
+CSEG enable_output_done 0000004d
+CSEG vblank       00000820
+DSEG scanline_bufferB 00003e1a
+DSEG tiledata     00003e34
+DSEG window_tiles 00003fc9
+DSEG sprite_0     00003fe2
+DSEG sprite_1     00003fec
+DSEG sprite_2     00003ff6
+DSEG scroll_x     00003ffa
+DSEG scroll_y     00003ffb
+DSEG window_y     00003ffc

@@ -1,16 +1,12 @@
 
-AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm Mon May 11 17:37:51 2020
+AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm Wed May 13 22:49:35 2020
 
 [builtin](2): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\1.4.283\avrasm\inc\tn817def.inc'
-C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(11): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\1.4.283\avrasm\inc\tn817def.inc'
-C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(659): Including file 'C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\tileset.asm'
-C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(660): Including file 'C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\default_leveldata.asm'
+C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm(11): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\1.4.283\avrasm\inc\tn817def.inc'
 [builtin](2): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\1.4.283\avrasm\inc\tn817def.inc'
-C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(11): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\1.4.283\avrasm\inc\tn817def.inc'
-C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(659): Including file 'C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\tileset.asm'
-C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(660): Including file 'C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\default_leveldata.asm'
+C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm(11): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\1.4.283\avrasm\inc\tn817def.inc'
                                  
-                                 ;
+                                 /*
                                  
                                  
                                  ;*************************************************************************
@@ -4597,11 +4593,11 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(
                                  
                                  
                                  
-                                 ; VideoGeneration.asm
-                                 ;
-                                 ; Created: 10-05-2020 12:09:00
-                                 ; Author : Sondre
-                                 ;
+                                  * main_2.asm
+                                  *
+                                  *  Created: 11-05-2020 20:12:33
+                                  *   Author: Sondre
+                                  */ 
                                  
                                  .cseg
 000000 c000                      rjmp start
@@ -4638,7 +4634,6 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(
                                  
                                  
                                  ; Define VGA timing parameters
-                                 .EQU CLK_DIV = 2
                                  .EQU H_VISIBLE = 800
                                  .EQU H_FRONT = 40
                                  .EQU H_SYNC = 128
@@ -4649,10 +4644,16 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(
                                  .EQU V_SYNC = 4
                                  .EQU V_BACK = 23
                                  .EQU V_FULL = 628
+                                 .EQU CLK_DIV = 2
+                                 .EQU PIXEL_DIV = 4
                                  
-                                 .def r_y = r6 ; Inter-tile y-index
-                                 .def r_ty = r8 ; Tile y-index
-                                 .def r_x = r7
+                                 ; Tileset parameters
+                                 .EQU TILE_WIDTH = 8
+                                 .EQU TILE_HEIGHT = 12
+                                 .EQU TILE_ARRAY_WIDTH = 27
+                                 .EQU TILE_ARRAY_HEIGHT = 15
+                                 
+                                 .EQU SCANLINE_BUFFER_TILES = 26
                                  
                                  ; Main entry point
                                  .cseg
@@ -4662,578 +4663,500 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(
 000002 bf04                      	out CPU_CCP, r16
 000003 e000                      	ldi r16, 0
 000004 9300 0061                 	sts CLKCTRL_MCLKCTRLB, r16
-                                 
-                                 	; HSYNC on PB0, generated by TCA
-000006 9a20                      	sbi VPORTB_DIR, 0
-000007 9828                      	cbi VPORTB_OUT, 0
                                  	
-                                 	; Configure TCA
-000008 e00f                      	ldi r16, low(H_FULL / CLK_DIV - 1)
-000009 9300 0a26                 	sts TCA0_SINGLE_PER, r16
-00000b e002                      	ldi r16, high(H_FULL / CLK_DIV - 1)
-00000c 9300 0a27                 	sts (TCA0_SINGLE_PER+1), r16
+                                 	; Setup TCA in split mode, to generate:
+                                 	;  - HBLANK mask on WO0, passed into CCL
+                                 	;  - HSYNC pulse on TCA0.WO5 (PA5)
+                                 
+000006 e001                      	ldi r16, TCA_SPLIT_SPLITM_bm
+000007 9300 0a03                 	sts TCA0_SPLIT_CTRLD, r16
+                                 
+                                 	; Setup HSYNC
+000009 e803                      	ldi r16, (H_FULL / CLK_DIV / 4) - 1
+00000a 9300 0a27                 	sts TCA0_SPLIT_HPER, r16
+00000c e100                      	ldi r16, (H_SYNC / CLK_DIV / 4)
+00000d 9300 0a2d                 	sts TCA0_SPLIT_HCMP2, r16
+00000f e000                      	ldi r16, 0
+000010 9300 0a21                 	sts TCA0_SPLIT_HCNT, r16
+                                 
+                                 	; Setup HBLANK
+000012 e803                      	ldi r16, (H_FULL / CLK_DIV / 4) - 1
+000013 9300 0a26                 	sts TCA0_SPLIT_LPER, r16
+000015 e604                      	ldi r16, (H_VISIBLE / CLK_DIV / 4)
+000016 9300 0a28                 	sts TCA0_SPLIT_LCMP0, r16
+000018 e60f                      	ldi r16, ((H_VISIBLE + H_BACK) / CLK_DIV / 4)
+000019 9300 0a20                 	sts TCA0_SPLIT_LCNT, r16
+                                 
+00001b e401                      	ldi r16, TCA_SPLIT_HCMP2EN_bm | TCA_SPLIT_LCMP0EN_bm
+00001c 9300 0a01                 	sts TCA0_SPLIT_CTRLB, r16
+                                 
+                                 	; HSYNC pin on PA5
+00001e 9a05                      	sbi VPORTA_DIR, 5
+00001f e800                      	ldi r16, PORT_INVEN_bm
+000020 9300 0415                 	sts PORTA_PIN5CTRL, r16
+                                 
+                                 	; Setup USART0 to serialize the pixel data, to be passed to the CCL
+000022 ec00                      	ldi r16, USART_MSPI_CMODE_MSPI_gc
+000023 9300 0807                 	sts USART0_CTRLC, r16
+000025 e400                      	ldi r16, (1 << 6)
+000026 9300 0808                 	sts USART0_BAUD, r16
+                                 
+                                 	; Setup CCL to compute AND(TCA0.WO0, USART0.TXD, LUT0.IN2)
+000028 ea08                      	ldi r16, CCL_INSEL1_USART0_gc | CCL_INSEL0_TCA0_gc
+000029 9300 01c6                 	sts CCL_LUT0CTRLB, r16
+00002b e005                      	ldi r16, CCL_INSEL2_IO_gc
+00002c 9300 01c7                 	sts CCL_LUT0CTRLC, r16
+00002e e800                      	ldi r16, 0b10000000
+00002f 9300 01c8                 	sts CCL_TRUTH0, r16
+000031 e009                      	ldi r16, CCL_ENABLE_bm | CCL_OUTEN_bm
+000032 9300 01c5                 	sts CCL_LUT0CTRLA, r16
+000034 e001                      	ldi r16, CCL_ENABLE_bm
+000035 9300 01c0                 	sts CCL_CTRLA, r16
                                  	
-00000e ec0f                      	ldi r16, low((H_BACK + H_VISIBLE + H_FRONT) / CLK_DIV - 1)
-00000f 9300 0a28                 	sts TCA0_SINGLE_CMP0, r16
-000011 e001                      	ldi r16, high((H_BACK + H_VISIBLE + H_FRONT) / CLK_DIV - 1)
-000012 9300 0a29                 	sts (TCA0_SINGLE_CMP0+1), r16
+                                 	; Mask pin on PA3 (fully software controlled) to disable pixel output
+                                 	; during VBLANK
+000037 9a03                      	sbi VPORTA_DIR, 3
+000038 980b                      	cbi VPORTA_OUT, 3
                                  
-000014 e103                      	ldi r16, TCA_SINGLE_CMP0EN_bm | TCA_SINGLE_WGMODE_SINGLESLOPE_gc
-000015 9300 0a01                 	sts TCA0_SINGLE_CTRLB, r16
+                                 	; Pixel pin on LUT0.OUT* (PB4)
+000039 e100                      	ldi r16, PORTMUX_LUT0_bm
+00003a 9300 0200                 	sts PORTMUX_CTRLA, r16
+00003c 9a24                      	sbi VPORTB_DIR, 4
+00003d 980c                      	cbi VPORTA_OUT, 4
                                  
-000017 e001                      	ldi r16, TCA_SINGLE_OVF_bm
-000018 9300 0a0a                 	sts TCA0_SINGLE_INTCTRL, r16
+                                 	; VSYNC pin on PA4 (fully software controlled)
+00003e 9a04                      	sbi VPORTA_DIR, 4
+00003f 9a0c                      	sbi VPORTA_OUT, 4
                                  
-                                 	; Start TCA just before wraparound
-00001a e00f                      	ldi r16, low(H_FULL / CLK_DIV - 1)
-00001b 9300 0a20                 	sts TCA0_SINGLE_CNT, r16
-00001d e002                      	ldi r16, high(H_FULL / CLK_DIV - 1)
-00001e 9300 0a21                 	sts (TCA0_SINGLE_CNT+1), r16
                                  
-                                 	; VSYNC on PC0, generated in software
-000020 9a40                      	sbi VPORTC_DIR, 0
-000021 9a48                      	sbi VPORTC_OUT, 0
+                                 	; Setup registers to control the generation
+000040 e3be                      	ldi XH, high(scanline_bufferA)
+000041 e0a0                      	ldi XL, low(scanline_bufferA)
+                                 	; Register keeping track of the currently drawing line, in pixels
+                                 	.DEF r_y = r25
+000042 2799                      	clr r_y
                                  
+                                 
+                                 	; Enable USART0 and TCA0
+                                 	; Make sure the prescaler of TCA is synchronized with the baud-rate
+                                 	; generator of USART0. Note that the baudrate generator is running even if
+                                 	; no transmission is in progress.
+000043 e400                      	ldi r16, USART_TXEN_bm
+000044 9300 0806                 	sts USART0_CTRLB, r16
+000046 e005                      	ldi r16, TCA_SPLIT_CLKSEL_DIV4_gc | TCA_SPLIT_ENABLE_bm
+000047 9300 0a00                 	sts TCA0_SPLIT_CTRLA, r16
+                                 
+                                 ; Loop across four scanlines
+                                 visible_scanline4x:
+                                 	; ===================
+                                 	; Begin scanline 4k+0
+                                 	; ===================
                                  	
-                                 	; Pixel data output on PA5, generated by USART0 filtered through CCL,LUT0
-000022 9a05                      	sbi VPORTA_DIR, 5
-000023 980d                      	cbi VPORTA_OUT, 5
-                                 
-                                 	; Use PA1 as gate output to disable USART,TXD during blanking intervals
-000024 9a03                      	sbi VPORTA_DIR, 3
-000025 980b                      	cbi VPORTA_OUT, 3
-                                 
-                                 	; Configure CCL
-000026 ea00                      	ldi r16, CCL_INSEL1_USART0_gc | CCL_INSEL0_MASK_gc
-000027 9300 01c6                 	sts CCL_LUT0CTRLB, r16
-000029 e005                      	ldi r16, CCL_INSEL2_IO_gc
-00002a 9300 01c7                 	sts CCL_LUT0CTRLC, r16
-00002c e400                      	ldi r16, 0b01000000
-00002d 9300 01c8                 	sts CCL_TRUTH0, r16
-00002f e009                      	ldi r16, CCL_ENABLE_bm | CCL_OUTEN_bm
-000030 9300 01c5                 	sts CCL_LUT0CTRLA, r16
-000032 e001                      	ldi r16, CCL_ENABLE_bm
-000033 9300 01c0                 	sts CCL_CTRLA, r16
-                                 
-                                 	; Configure USART0
-000035 ec00                      	ldi r16, USART_MSPI_CMODE_MSPI_gc
-000036 9300 0807                 	sts USART0_CTRLC, r16
-000038 e400                      	ldi r16, (1 << 6)
-000039 9300 0808                 	sts USART0_BAUD, r16
-                                 
-                                 
-                                 	; Setup 16 bit register Y to count scanlines
-00003b 27cc                      	clr YL
-00003c 27dd                      	clr YH
                                  	
-                                 	; Setup registers for tile-decoding
-00003d 2466                      	clr r_y
-00003e 2488                      	clr r_ty
-00003f 2477                      	clr r_x
+                                 	; Check if this is a really visible line, or if it is "line -1"
+000049 3091                      	cpi r_y, 1
+00004a f009                      	breq enable_output
+00004b c001                      		rjmp enable_output_done
+                                 	enable_output:
+00004c 9a0b                      		sbi VPORTA_OUT, 3
+                                 	enable_output_done:
                                  
-                                 	; Load default level into tiledata
-000040 e0a0                      	ldi XL, low(tiledata)
-000041 e3be                      	ldi XH, high(tiledata)
-000042 e0e0                      	ldi ZL, low(default_leveldata << 1)
-000043 e1fa                      	ldi ZH, high(default_leveldata << 1)
-000044 2711                      	clr r17
-                                 	load_level_loop:
-000045 9105                      		lpm r16, Z+
-000046 930d                      		st X+, r16
-000047 9105                      		lpm r16, Z+
-000048 930d                      		st X+, r16
-000049 9513                      		inc r17
-00004a 3e10                      		cpi r17, 224
-00004b f7c9                      		brne load_level_loop
-                                 
-                                 
-                                 	; Enable TCA and USART to start video signal
-                                 	; Note! USART clock starts counting when the USART is enabled, meaning it could
-                                 	; get out of phase if odd number of clock cycles occur between this enable and the TCA enable
-00004c e400                      	ldi r16, USART_TXEN_bm
-00004d e011                      	ldi r17, TCA_SINGLE_ENABLE_bm
-00004e 9300 0806                 	sts USART0_CTRLB, r16
-000050 9310 0a00                 	sts TCA0_SINGLE_CTRLA, r17
-000052 0000                      	nop ; TCA0 wraps to 0x0000
-000053 0000                      	nop ; TCA0 counts to 0x0001
-000054 0000                      	nop ; TCA0 counts to 0x0002, as sync line goes high
-                                 
-                                 ; This loop should be synchronous with TCA, so it must run exactly H_FULL/CLK_DIV (1056/2=528) clock cycles
-                                 ;	TCA0.CNT is H_BACK/CLK_DIV-LOOP_HEADSTART at the top of this loop
-                                 scanline_loop:
-                                 	; Starting at TCA.CNT = 2
+                                 	; Wait until HBLANK is done
+00004d 0000
+00004e 0000
+00004f 0000
+000050 0000
+000051 0000
+000052 0000
+000053 0000
+000054 0000
+000055 0000
+000056 0000                      	nop nop nop nop nop nop nop nop nop nop
+000057 0000
+000058 0000
+000059 0000
+00005a 0000
+00005b 0000
+00005c 0000
+00005d 0000
+00005e 0000
+00005f 0000
+000060 0000                      	nop nop nop nop nop nop nop nop nop nop
+000061 0000
+000062 0000
+000063 0000
+000064 0000
+000065 0000
+000066 0000
+000067 0000
+000068 0000
+000069 0000
+00006a 0000                      	nop nop nop nop nop nop nop nop nop nop
+00006b 0000
+00006c 0000
+00006d 0000
+00006e 0000                      	nop nop nop nop
                                  	
-000055 e03c                      	ldi r19, 12
-000056 2744                      	clr r20
-000057 2477                      	clr r_x
+00006f 9a0b                      	sbi VPORTA_OUT, 3
+000070 980b                      	cbi VPORTA_OUT, 3
                                  
-                                 	; Lookup first tile index
-000058 e3be                      	ldi XH, high(tiledata)
-000059 e0a0                      	ldi XL, low(tiledata)
-                                 
-00005a e10c                      	ldi r16, 28
-00005b 9d08                      	mul r16, r_ty
-                                 
-00005c 0da0                      	add XL, r0
-00005d 1db1                      	adc XH, r1
-                                 
-00005e 0000                      	nop
-00005f 0000                      	nop
-000060 0000                      	nop
-000061 0000                      	nop
-000062 0000                      	nop
-000063 0000                      	nop
-                                 
-000064 910d                      	ld r16, X+
-000065 9f03                      	mul r16, r19
+000071 e3be                      	ldi XH, high(scanline_bufferA)
+000072 e0a0                      	ldi XL, low(scanline_bufferA)
                                  	
-                                 	; Set Z to base of tileset
-000066 e1f0                      	ldi ZH, high(tileset_data << 1)
-000067 e0e0                      	ldi ZL, low(tileset_data << 1)
-                                 
-                                 	; Add index to correct tile
-000068 0de0                      	add ZL, r0
-000069 1df1                      	adc ZH, r1
-                                 
-                                 	; Add index to row in tile
-00006a 0de6                      	add ZL, r_y
-00006b 1ff4                      	adc ZH, r20
-                                 	
-                                 	; Load correct byte
-00006c 9114                      	lpm r17, Z
-                                 
-00006d 0000                      	nop
-00006e 0000                      	nop
-00006f 0000                      	nop
-                                 	
-                                 
-                                 	; Setup line
-000070 fe50                      	sbrs r5, 0																				  ; 34
-                                 		; Line is in the visible portion
-000071 c013                      		rjmp setup_visible_line																  ; 35-36
-000072 fc51                      	sbrc r5, 1																				  ; 36
-                                 		; Line is in the vertical sync pulse
-000073 c009                      		rjmp setup_sync_line																  ; 37-38
-                                 	
-000074 0000
-000075 0000
+000073 910d                      	ld r16, X+
+000074 9300 0802                 	sts USART0_TXDATAL, r16
 000076 0000
 000077 0000
 000078 0000
 000079 0000
-00007a 0000                      	nop nop nop nop nop nop nop																  ; 38-44
-00007b 9a48                      	sbi VPORTC_OUT, 0 ; Set sync pulse high													  ; 45
-00007c c142                      	rjmp blank_pixel_line																	  ; 46-47
-                                 	
-                                 	setup_sync_line:
+00007a 0000
+00007b 0000
+00007c 0000                      	nop nop nop nop nop nop nop
 00007d 0000
 00007e 0000
 00007f 0000
 000080 0000
-000081 0000
-000082 0000                      		nop nop nop nop nop nop																  ; 39-44
-000083 9848                      		cbi VPORTC_OUT, 0 ; Set sync pulse low												  ; 45
-000084 c13a                      		rjmp blank_pixel_line																  ; 46-47
-                                 
-                                 
-                                 	setup_visible_line:
-                                 	
-                                 	; Start preparing next byte
-000085 910d                      	ld r16, X+																	              ; 37-38
-000086 0000                      	nop 																					  ; 39
-                                 
-000087 9310 0802                 	sts USART0_TXDATAL, r17 ; Output byte 0													  ; 40-41
-                                 	
-000089 9f03                      	mul r16, r19
-00008a e1f0                      	ldi ZH, high(tileset_data << 1)
-                                 
-                                 	; Enable pixel data output at the same time as USART starts transmitting
-00008b 9a0b                      	sbi VPORTA_OUT, 3
-                                 
-00008c e0e0                      	ldi ZL, low(tileset_data << 1)
-00008d 0de0                      	add ZL, r0
-00008e 1df1                      	adc ZH, r1
-00008f 0de6                      	add ZL, r_y
-000090 1ff4                      	adc ZH, r20
-000091 9104                      	lpm r16, Z
-000092 0000
-000093 0000
-000094 0000                      	nop nop nop
-                                 
-000095 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 1
-                                 
-                                 	; Load next byte
-000097 910d                      	ld r16, X+
-000098 9f03                      	mul r16, r19
-000099 e1f0                      	ldi ZH, high(tileset_data << 1)
-00009a e0e0                      	ldi ZL, low(tileset_data << 1)
-00009b 0de0                      	add ZL, r0
-00009c 1df1                      	adc ZH, r1
-00009d 0de6                      	add ZL, r_y
-00009e 1ff4                      	adc ZH, r20
-00009f 9104                      	lpm r16, Z
-0000a0 0000                      	nop
-0000a1 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 2
-                                 	
-                                 	; Load next byte
-0000a3 910d                      	ld r16, X+
-0000a4 9f03                      	mul r16, r19
-0000a5 e1f0                      	ldi ZH, high(tileset_data << 1)
-0000a6 e0e0                      	ldi ZL, low(tileset_data << 1)
-0000a7 0de0                      	add ZL, r0
-0000a8 1df1                      	adc ZH, r1
-0000a9 0de6                      	add ZL, r_y
-0000aa 1ff4                      	adc ZH, r20
-0000ab 9104                      	lpm r16, Z
-0000ac 0000                      	nop
-0000ad 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 3
-                                 	
-                                 	; Load next byte
+000081 0000                      	nop nop nop nop nop
+000082 910d                      	ld r16, X+
+000083 9300 0802                 	sts USART0_TXDATAL, r16
+000085 0000
+000086 0000
+000087 0000
+000088 0000
+000089 0000
+00008a 0000
+00008b 0000                      	nop nop nop nop nop nop nop
+00008c 0000
+00008d 0000
+00008e 0000
+00008f 0000
+000090 0000                      	nop nop nop nop nop
+000091 910d                      	ld r16, X+
+000092 9300 0802                 	sts USART0_TXDATAL, r16
+000094 0000
+000095 0000
+000096 0000
+000097 0000
+000098 0000
+000099 0000
+00009a 0000                      	nop nop nop nop nop nop nop
+00009b 0000
+00009c 0000
+00009d 0000
+00009e 0000
+00009f 0000                      	nop nop nop nop nop
+0000a0 910d                      	ld r16, X+
+0000a1 9300 0802                 	sts USART0_TXDATAL, r16
+0000a3 0000
+0000a4 0000
+0000a5 0000
+0000a6 0000
+0000a7 0000
+0000a8 0000
+0000a9 0000                      	nop nop nop nop nop nop nop
+0000aa 0000
+0000ab 0000
+0000ac 0000
+0000ad 0000
+0000ae 0000                      	nop nop nop nop nop
 0000af 910d                      	ld r16, X+
-0000b0 9f03                      	mul r16, r19
-0000b1 e1f0                      	ldi ZH, high(tileset_data << 1)
-0000b2 e0e0                      	ldi ZL, low(tileset_data << 1)
-0000b3 0de0                      	add ZL, r0
-0000b4 1df1                      	adc ZH, r1
-0000b5 0de6                      	add ZL, r_y
-0000b6 1ff4                      	adc ZH, r20
-0000b7 9104                      	lpm r16, Z
-0000b8 0000                      	nop
-0000b9 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 4
-                                 	
-                                 	; Load next byte
-0000bb 910d                      	ld r16, X+
-0000bc 9f03                      	mul r16, r19
-0000bd e1f0                      	ldi ZH, high(tileset_data << 1)
-0000be e0e0                      	ldi ZL, low(tileset_data << 1)
-0000bf 0de0                      	add ZL, r0
-0000c0 1df1                      	adc ZH, r1
-0000c1 0de6                      	add ZL, r_y
-0000c2 1ff4                      	adc ZH, r20
-0000c3 9104                      	lpm r16, Z
-0000c4 0000                      	nop
-0000c5 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 5
-                                 	
-                                 	; Load next byte
-0000c7 910d                      	ld r16, X+
-0000c8 9f03                      	mul r16, r19
-0000c9 e1f0                      	ldi ZH, high(tileset_data << 1)
-0000ca e0e0                      	ldi ZL, low(tileset_data << 1)
-0000cb 0de0                      	add ZL, r0
-0000cc 1df1                      	adc ZH, r1
-0000cd 0de6                      	add ZL, r_y
-0000ce 1ff4                      	adc ZH, r20
-0000cf 9104                      	lpm r16, Z
-0000d0 0000                      	nop
-0000d1 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 6
-                                 	
-                                 	; Load next byte
-0000d3 910d                      	ld r16, X+
-0000d4 9f03                      	mul r16, r19
-0000d5 e1f0                      	ldi ZH, high(tileset_data << 1)
-0000d6 e0e0                      	ldi ZL, low(tileset_data << 1)
-0000d7 0de0                      	add ZL, r0
-0000d8 1df1                      	adc ZH, r1
-0000d9 0de6                      	add ZL, r_y
-0000da 1ff4                      	adc ZH, r20
-0000db 9104                      	lpm r16, Z
-0000dc 0000                      	nop
-0000dd 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 7
-                                 	
-                                 	; Load next byte
-0000df 910d                      	ld r16, X+
-0000e0 9f03                      	mul r16, r19
-0000e1 e1f0                      	ldi ZH, high(tileset_data << 1)
-0000e2 e0e0                      	ldi ZL, low(tileset_data << 1)
-0000e3 0de0                      	add ZL, r0
-0000e4 1df1                      	adc ZH, r1
-0000e5 0de6                      	add ZL, r_y
-0000e6 1ff4                      	adc ZH, r20
-0000e7 9104                      	lpm r16, Z
-0000e8 0000                      	nop
-0000e9 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 8
-                                 	
-                                 	; Load next byte
+0000b0 9300 0802                 	sts USART0_TXDATAL, r16
+0000b2 0000
+0000b3 0000
+0000b4 0000
+0000b5 0000
+0000b6 0000
+0000b7 0000
+0000b8 0000                      	nop nop nop nop nop nop nop
+0000b9 0000
+0000ba 0000
+0000bb 0000
+0000bc 0000
+0000bd 0000                      	nop nop nop nop nop
+0000be 910d                      	ld r16, X+
+0000bf 9300 0802                 	sts USART0_TXDATAL, r16
+0000c1 0000
+0000c2 0000
+0000c3 0000
+0000c4 0000
+0000c5 0000
+0000c6 0000
+0000c7 0000                      	nop nop nop nop nop nop nop
+0000c8 0000
+0000c9 0000
+0000ca 0000
+0000cb 0000
+0000cc 0000                      	nop nop nop nop nop
+0000cd 910d                      	ld r16, X+
+0000ce 9300 0802                 	sts USART0_TXDATAL, r16
+0000d0 0000
+0000d1 0000
+0000d2 0000
+0000d3 0000
+0000d4 0000
+0000d5 0000
+0000d6 0000                      	nop nop nop nop nop nop nop
+0000d7 0000
+0000d8 0000
+0000d9 0000
+0000da 0000
+0000db 0000                      	nop nop nop nop nop
+0000dc 910d                      	ld r16, X+
+0000dd 9300 0802                 	sts USART0_TXDATAL, r16
+0000df 0000
+0000e0 0000
+0000e1 0000
+0000e2 0000
+0000e3 0000
+0000e4 0000
+0000e5 0000                      	nop nop nop nop nop nop nop
+0000e6 0000
+0000e7 0000
+0000e8 0000
+0000e9 0000
+0000ea 0000                      	nop nop nop nop nop
 0000eb 910d                      	ld r16, X+
-0000ec 9f03                      	mul r16, r19
-0000ed e1f0                      	ldi ZH, high(tileset_data << 1)
-0000ee e0e0                      	ldi ZL, low(tileset_data << 1)
-0000ef 0de0                      	add ZL, r0
-0000f0 1df1                      	adc ZH, r1
-0000f1 0de6                      	add ZL, r_y
-0000f2 1ff4                      	adc ZH, r20
-0000f3 9104                      	lpm r16, Z
-0000f4 0000                      	nop
-0000f5 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 9
-                                 	
-                                 	; Load next byte
-0000f7 910d                      	ld r16, X+
-0000f8 9f03                      	mul r16, r19
-0000f9 e1f0                      	ldi ZH, high(tileset_data << 1)
-0000fa e0e0                      	ldi ZL, low(tileset_data << 1)
-0000fb 0de0                      	add ZL, r0
-0000fc 1df1                      	adc ZH, r1
-0000fd 0de6                      	add ZL, r_y
-0000fe 1ff4                      	adc ZH, r20
-0000ff 9104                      	lpm r16, Z
-000100 0000                      	nop
-000101 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 10
-                                 	
-                                 	; Load next byte
-000103 910d                      	ld r16, X+
-000104 9f03                      	mul r16, r19
-000105 e1f0                      	ldi ZH, high(tileset_data << 1)
-000106 e0e0                      	ldi ZL, low(tileset_data << 1)
-000107 0de0                      	add ZL, r0
-000108 1df1                      	adc ZH, r1
-000109 0de6                      	add ZL, r_y
-00010a 1ff4                      	adc ZH, r20
-00010b 9104                      	lpm r16, Z
-00010c 0000                      	nop
-00010d 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 11
-                                 	
-                                 	; Load next byte
-00010f 910d                      	ld r16, X+
-000110 9f03                      	mul r16, r19
-000111 e1f0                      	ldi ZH, high(tileset_data << 1)
-000112 e0e0                      	ldi ZL, low(tileset_data << 1)
-000113 0de0                      	add ZL, r0
-000114 1df1                      	adc ZH, r1
-000115 0de6                      	add ZL, r_y
-000116 1ff4                      	adc ZH, r20
-000117 9104                      	lpm r16, Z
-000118 0000                      	nop
-000119 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 12
-                                 	
-                                 	; Load next byte
-00011b 910d                      	ld r16, X+
-00011c 9f03                      	mul r16, r19
-00011d e1f0                      	ldi ZH, high(tileset_data << 1)
-00011e e0e0                      	ldi ZL, low(tileset_data << 1)
-00011f 0de0                      	add ZL, r0
-000120 1df1                      	adc ZH, r1
-000121 0de6                      	add ZL, r_y
-000122 1ff4                      	adc ZH, r20
-000123 9104                      	lpm r16, Z
-000124 0000                      	nop
-000125 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 13
-                                 	
-                                 	; Load next byte
+0000ec 9300 0802                 	sts USART0_TXDATAL, r16
+0000ee 0000
+0000ef 0000
+0000f0 0000
+0000f1 0000
+0000f2 0000
+0000f3 0000
+0000f4 0000                      	nop nop nop nop nop nop nop
+0000f5 0000
+0000f6 0000
+0000f7 0000
+0000f8 0000
+0000f9 0000                      	nop nop nop nop nop
+0000fa 910d                      	ld r16, X+
+0000fb 9300 0802                 	sts USART0_TXDATAL, r16
+0000fd 0000
+0000fe 0000
+0000ff 0000
+000100 0000
+000101 0000
+000102 0000
+000103 0000                      	nop nop nop nop nop nop nop
+000104 0000
+000105 0000
+000106 0000
+000107 0000
+000108 0000                      	nop nop nop nop nop
+000109 910d                      	ld r16, X+
+00010a 9300 0802                 	sts USART0_TXDATAL, r16
+00010c 0000
+00010d 0000
+00010e 0000
+00010f 0000
+000110 0000
+000111 0000
+000112 0000                      	nop nop nop nop nop nop nop
+000113 0000
+000114 0000
+000115 0000
+000116 0000
+000117 0000                      	nop nop nop nop nop
+000118 910d                      	ld r16, X+
+000119 9300 0802                 	sts USART0_TXDATAL, r16
+00011b 0000
+00011c 0000
+00011d 0000
+00011e 0000
+00011f 0000
+000120 0000
+000121 0000                      	nop nop nop nop nop nop nop
+000122 0000
+000123 0000
+000124 0000
+000125 0000
+000126 0000                      	nop nop nop nop nop
 000127 910d                      	ld r16, X+
-000128 9f03                      	mul r16, r19
-000129 e1f0                      	ldi ZH, high(tileset_data << 1)
-00012a e0e0                      	ldi ZL, low(tileset_data << 1)
-00012b 0de0                      	add ZL, r0
-00012c 1df1                      	adc ZH, r1
-00012d 0de6                      	add ZL, r_y
-00012e 1ff4                      	adc ZH, r20
-00012f 9104                      	lpm r16, Z
-000130 0000                      	nop
-000131 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 14
-                                 	
-                                 	; Load next byte
-000133 910d                      	ld r16, X+
-000134 9f03                      	mul r16, r19
-000135 e1f0                      	ldi ZH, high(tileset_data << 1)
-000136 e0e0                      	ldi ZL, low(tileset_data << 1)
-000137 0de0                      	add ZL, r0
-000138 1df1                      	adc ZH, r1
-000139 0de6                      	add ZL, r_y
-00013a 1ff4                      	adc ZH, r20
-00013b 9104                      	lpm r16, Z
-00013c 0000                      	nop
-00013d 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 15
-                                 	
-                                 	; Load next byte
-00013f 910d                      	ld r16, X+
-000140 9f03                      	mul r16, r19
-000141 e1f0                      	ldi ZH, high(tileset_data << 1)
-000142 e0e0                      	ldi ZL, low(tileset_data << 1)
-000143 0de0                      	add ZL, r0
-000144 1df1                      	adc ZH, r1
-000145 0de6                      	add ZL, r_y
-000146 1ff4                      	adc ZH, r20
-000147 9104                      	lpm r16, Z
-000148 0000                      	nop
-000149 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 16
-                                 	
-                                 	; Load next byte
-00014b 910d                      	ld r16, X+
-00014c 9f03                      	mul r16, r19
-00014d e1f0                      	ldi ZH, high(tileset_data << 1)
-00014e e0e0                      	ldi ZL, low(tileset_data << 1)
-00014f 0de0                      	add ZL, r0
-000150 1df1                      	adc ZH, r1
-000151 0de6                      	add ZL, r_y
-000152 1ff4                      	adc ZH, r20
-000153 9104                      	lpm r16, Z
-000154 0000                      	nop
-000155 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 17
-                                 	
-                                 	; Load next byte
-000157 910d                      	ld r16, X+
-000158 9f03                      	mul r16, r19
-000159 e1f0                      	ldi ZH, high(tileset_data << 1)
-00015a e0e0                      	ldi ZL, low(tileset_data << 1)
-00015b 0de0                      	add ZL, r0
-00015c 1df1                      	adc ZH, r1
-00015d 0de6                      	add ZL, r_y
-00015e 1ff4                      	adc ZH, r20
-00015f 9104                      	lpm r16, Z
-000160 0000                      	nop
-000161 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 18
-                                 	
-                                 	; Load next byte
+000128 9300 0802                 	sts USART0_TXDATAL, r16
+00012a 0000
+00012b 0000
+00012c 0000
+00012d 0000
+00012e 0000
+00012f 0000
+000130 0000                      	nop nop nop nop nop nop nop
+000131 0000
+000132 0000
+000133 0000
+000134 0000
+000135 0000                      	nop nop nop nop nop
+000136 910d                      	ld r16, X+
+000137 9300 0802                 	sts USART0_TXDATAL, r16
+000139 0000
+00013a 0000
+00013b 0000
+00013c 0000
+00013d 0000
+00013e 0000
+00013f 0000                      	nop nop nop nop nop nop nop
+000140 0000
+000141 0000
+000142 0000
+000143 0000
+000144 0000                      	nop nop nop nop nop
+000145 910d                      	ld r16, X+
+000146 9300 0802                 	sts USART0_TXDATAL, r16
+000148 0000
+000149 0000
+00014a 0000
+00014b 0000
+00014c 0000
+00014d 0000
+00014e 0000                      	nop nop nop nop nop nop nop
+00014f 0000
+000150 0000
+000151 0000
+000152 0000
+000153 0000                      	nop nop nop nop nop
+000154 910d                      	ld r16, X+
+000155 9300 0802                 	sts USART0_TXDATAL, r16
+000157 0000
+000158 0000
+000159 0000
+00015a 0000
+00015b 0000
+00015c 0000
+00015d 0000                      	nop nop nop nop nop nop nop
+00015e 0000
+00015f 0000
+000160 0000
+000161 0000
+000162 0000                      	nop nop nop nop nop
 000163 910d                      	ld r16, X+
-000164 9f03                      	mul r16, r19
-000165 e1f0                      	ldi ZH, high(tileset_data << 1)
-000166 e0e0                      	ldi ZL, low(tileset_data << 1)
-000167 0de0                      	add ZL, r0
-000168 1df1                      	adc ZH, r1
-000169 0de6                      	add ZL, r_y
-00016a 1ff4                      	adc ZH, r20
-00016b 9104                      	lpm r16, Z
-00016c 0000                      	nop
-00016d 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 19
-                                 	
-                                 	; Load next byte
-00016f 910d                      	ld r16, X+
-000170 9f03                      	mul r16, r19
-000171 e1f0                      	ldi ZH, high(tileset_data << 1)
-000172 e0e0                      	ldi ZL, low(tileset_data << 1)
-000173 0de0                      	add ZL, r0
-000174 1df1                      	adc ZH, r1
-000175 0de6                      	add ZL, r_y
-000176 1ff4                      	adc ZH, r20
-000177 9104                      	lpm r16, Z
-000178 0000                      	nop
-000179 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 20
-                                 	
-                                 	; Load next byte
-00017b 910d                      	ld r16, X+
-00017c 9f03                      	mul r16, r19
-00017d e1f0                      	ldi ZH, high(tileset_data << 1)
-00017e e0e0                      	ldi ZL, low(tileset_data << 1)
-00017f 0de0                      	add ZL, r0
-000180 1df1                      	adc ZH, r1
-000181 0de6                      	add ZL, r_y
-000182 1ff4                      	adc ZH, r20
-000183 9104                      	lpm r16, Z
-000184 0000                      	nop
-000185 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 21
-                                 	
-                                 	; Load next byte
-000187 910d                      	ld r16, X+
-000188 9f03                      	mul r16, r19
-000189 e1f0                      	ldi ZH, high(tileset_data << 1)
-00018a e0e0                      	ldi ZL, low(tileset_data << 1)
-00018b 0de0                      	add ZL, r0
-00018c 1df1                      	adc ZH, r1
-00018d 0de6                      	add ZL, r_y
-00018e 1ff4                      	adc ZH, r20
-00018f 9104                      	lpm r16, Z
-000190 0000                      	nop
-000191 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 22
-                                 	
-                                 	; Load next byte
-000193 910d                      	ld r16, X+
-000194 9f03                      	mul r16, r19
-000195 e1f0                      	ldi ZH, high(tileset_data << 1)
-000196 e0e0                      	ldi ZL, low(tileset_data << 1)
-000197 0de0                      	add ZL, r0
-000198 1df1                      	adc ZH, r1
-000199 0de6                      	add ZL, r_y
-00019a 1ff4                      	adc ZH, r20
-00019b 9104                      	lpm r16, Z
-00019c 0000                      	nop
-00019d 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 23
-                                 	
-                                 	; Load next byte
+000164 9300 0802                 	sts USART0_TXDATAL, r16
+000166 0000
+000167 0000
+000168 0000
+000169 0000
+00016a 0000
+00016b 0000
+00016c 0000                      	nop nop nop nop nop nop nop
+00016d 0000
+00016e 0000
+00016f 0000
+000170 0000
+000171 0000                      	nop nop nop nop nop
+000172 910d                      	ld r16, X+
+000173 9300 0802                 	sts USART0_TXDATAL, r16
+000175 0000
+000176 0000
+000177 0000
+000178 0000
+000179 0000
+00017a 0000
+00017b 0000                      	nop nop nop nop nop nop nop
+00017c 0000
+00017d 0000
+00017e 0000
+00017f 0000
+000180 0000                      	nop nop nop nop nop
+000181 910d                      	ld r16, X+
+000182 9300 0802                 	sts USART0_TXDATAL, r16
+000184 0000
+000185 0000
+000186 0000
+000187 0000
+000188 0000
+000189 0000
+00018a 0000                      	nop nop nop nop nop nop nop
+00018b 0000
+00018c 0000
+00018d 0000
+00018e 0000
+00018f 0000                      	nop nop nop nop nop
+000190 910d                      	ld r16, X+
+000191 9300 0802                 	sts USART0_TXDATAL, r16
+000193 0000
+000194 0000
+000195 0000
+000196 0000
+000197 0000
+000198 0000
+000199 0000                      	nop nop nop nop nop nop nop
+00019a 0000
+00019b 0000
+00019c 0000
+00019d 0000
+00019e 0000                      	nop nop nop nop nop
 00019f 910d                      	ld r16, X+
-0001a0 9f03                      	mul r16, r19
-0001a1 e1f0                      	ldi ZH, high(tileset_data << 1)
-0001a2 e0e0                      	ldi ZL, low(tileset_data << 1)
-0001a3 0de0                      	add ZL, r0
-0001a4 1df1                      	adc ZH, r1
-0001a5 0de6                      	add ZL, r_y
-0001a6 1ff4                      	adc ZH, r20
-0001a7 9104                      	lpm r16, Z
-0001a8 0000                      	nop
-0001a9 9300 0802                 	sts USART0_TXDATAL, r16 ; Output byte 24
-                                 
+0001a0 9300 0802                 	sts USART0_TXDATAL, r16
+0001a2 0000
+0001a3 0000
+0001a4 0000
+0001a5 0000
+0001a6 0000
+0001a7 0000
+0001a8 0000                      	nop nop nop nop nop nop nop
+0001a9 0000
+0001aa 0000
 0001ab 0000
 0001ac 0000
-0001ad 0000
-0001ae 0000
-0001af 0000
-0001b0 0000
+0001ad 0000                      	nop nop nop nop nop
+0001ae 910d                      	ld r16, X+
+0001af 9300 0802                 	sts USART0_TXDATAL, r16
 0001b1 0000
 0001b2 0000
 0001b3 0000
 0001b4 0000
 0001b5 0000
 0001b6 0000
-0001b7 0000
+0001b7 0000                      	nop nop nop nop nop nop nop
 0001b8 0000
 0001b9 0000
 0001ba 0000
 0001bb 0000
-0001bc 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop					  ; 427-444
-                                 	
-                                 
-                                 
-                                 	; Turn off pixel data
-0001bd 980b                      	cbi VPORTA_OUT, 3																		  ; 445
-0001be c18f                      	rjmp horizontal_blanking_interval
-                                 	
-                                 
-                                 	blank_pixel_line:
-0001bf 0000
+0001bc 0000                      	nop nop nop nop nop
+0001bd 910d                      	ld r16, X+
+0001be 9300 0802                 	sts USART0_TXDATAL, r16
 0001c0 0000
 0001c1 0000
 0001c2 0000
 0001c3 0000
 0001c4 0000
 0001c5 0000
-0001c6 0000
+0001c6 0000                      	nop nop nop nop nop nop nop
 0001c7 0000
 0001c8 0000
 0001c9 0000
 0001ca 0000
-0001cb 0000
-0001cc 0000
-0001cd 0000
-0001ce 0000
+0001cb 0000                      	nop nop nop nop nop
+0001cc 910d                      	ld r16, X+
+0001cd 9300 0802                 	sts USART0_TXDATAL, r16
 0001cf 0000
 0001d0 0000
 0001d1 0000
-0001d2 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 48-67
+0001d2 0000
 0001d3 0000
 0001d4 0000
-0001d5 0000
+0001d5 0000                      	nop nop nop nop nop nop nop
 0001d6 0000
 0001d7 0000
 0001d8 0000
 0001d9 0000
-0001da 0000
-0001db 0000
-0001dc 0000
-0001dd 0000
+0001da 0000                      	nop nop nop nop nop
+0001db 910d                      	ld r16, X+
+0001dc 9300 0802                 	sts USART0_TXDATAL, r16
 0001de 0000
 0001df 0000
 0001e0 0000
 0001e1 0000
 0001e2 0000
 0001e3 0000
-0001e4 0000
+0001e4 0000                      	nop nop nop nop nop nop nop
 0001e5 0000
-0001e6 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 68-87
+0001e6 0000
 0001e7 0000
 0001e8 0000
-0001e9 0000
-0001ea 0000
-0001eb 0000
-0001ec 0000
+0001e9 0000                      	nop nop nop nop nop
+0001ea 910d                      	ld r16, X+
+0001eb 9300 0802                 	sts USART0_TXDATAL, r16
+                                 
+                                 
 0001ed 0000
 0001ee 0000
 0001ef 0000
@@ -5243,17 +5166,17 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(
 0001f3 0000
 0001f4 0000
 0001f5 0000
-0001f6 0000
+0001f6 0000                      	nop nop nop nop nop nop nop nop nop nop
 0001f7 0000
 0001f8 0000
 0001f9 0000
-0001fa 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 88-107
+0001fa 0000
 0001fb 0000
 0001fc 0000
 0001fd 0000
 0001fe 0000
 0001ff 0000
-000200 0000
+000200 0000                      	nop nop nop nop nop nop nop nop nop nop
 000201 0000
 000202 0000
 000203 0000
@@ -5263,17 +5186,17 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(
 000207 0000
 000208 0000
 000209 0000
-00020a 0000
+00020a 0000                      	nop nop nop nop nop nop nop nop nop nop
 00020b 0000
 00020c 0000
 00020d 0000
-00020e 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 108-127
+00020e 0000
 00020f 0000
 000210 0000
 000211 0000
 000212 0000
 000213 0000
-000214 0000
+000214 0000                      	nop nop nop nop nop nop nop nop nop nop
 000215 0000
 000216 0000
 000217 0000
@@ -5283,17 +5206,17 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(
 00021b 0000
 00021c 0000
 00021d 0000
-00021e 0000
+00021e 0000                      	nop nop nop nop nop nop nop nop nop nop
 00021f 0000
 000220 0000
 000221 0000
-000222 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 128-147
+000222 0000
 000223 0000
 000224 0000
 000225 0000
 000226 0000
 000227 0000
-000228 0000
+000228 0000                      	nop nop nop nop nop nop nop nop nop nop
 000229 0000
 00022a 0000
 00022b 0000
@@ -5303,19 +5226,26 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(
 00022f 0000
 000230 0000
 000231 0000
-000232 0000
+000232 0000                      	nop nop nop nop nop nop nop nop nop nop
 000233 0000
 000234 0000
 000235 0000
-000236 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 148-167
+000236 0000
 000237 0000
 000238 0000
 000239 0000
 00023a 0000
 00023b 0000
-00023c 0000
+00023c 0000                      	nop nop nop nop nop nop nop nop nop nop
 00023d 0000
-00023e 0000
+00023e 0000                      	nop nop
+                                 	
+                                 	
+                                 	; ===================
+                                 	; Begin scanline 4k+1
+                                 	; ===================
+                                 
+                                 	; Wait until HBLANK is done
 00023f 0000
 000240 0000
 000241 0000
@@ -5325,9 +5255,9 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(
 000245 0000
 000246 0000
 000247 0000
-000248 0000
+000248 0000                      	nop nop nop nop nop nop nop nop nop nop
 000249 0000
-00024a 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 168-187
+00024a 0000
 00024b 0000
 00024c 0000
 00024d 0000
@@ -5335,7 +5265,7 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(
 00024f 0000
 000250 0000
 000251 0000
-000252 0000
+000252 0000                      	nop nop nop nop nop nop nop nop nop nop
 000253 0000
 000254 0000
 000255 0000
@@ -5345,9 +5275,9 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(
 000259 0000
 00025a 0000
 00025b 0000
-00025c 0000
+00025c 0000                      	nop nop nop nop nop nop nop nop nop nop
 00025d 0000
-00025e 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 188-207
+00025e 0000
 00025f 0000
 000260 0000
 000261 0000
@@ -5355,1464 +5285,1444 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main.asm(
 000263 0000
 000264 0000
 000265 0000
-000266 0000
-000267 0000
-000268 0000
-000269 0000
-00026a 0000
-00026b 0000
+000266 0000                      	nop nop nop nop nop nop nop nop nop nop
+                                 
+000267 e3be                      	ldi XH, high(scanline_bufferA)
+000268 e0a0                      	ldi XL, low(scanline_bufferA)
+                                 
+000269 910d                      	ld r16, X+
+00026a 9300 0802                 	sts USART0_TXDATAL, r16
 00026c 0000
 00026d 0000
 00026e 0000
 00026f 0000
 000270 0000
 000271 0000
-000272 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 208-227
+000272 0000                      	nop nop nop nop nop nop nop
 000273 0000
 000274 0000
 000275 0000
 000276 0000
-000277 0000
-000278 0000
-000279 0000
-00027a 0000
+000277 0000                      	nop nop nop nop nop
+000278 910d                      	ld r16, X+
+000279 9300 0802                 	sts USART0_TXDATAL, r16
 00027b 0000
 00027c 0000
 00027d 0000
 00027e 0000
 00027f 0000
 000280 0000
-000281 0000
+000281 0000                      	nop nop nop nop nop nop nop
 000282 0000
 000283 0000
 000284 0000
 000285 0000
-000286 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 228-247
-000287 0000
-000288 0000
-000289 0000
+000286 0000                      	nop nop nop nop nop
+000287 910d                      	ld r16, X+
+000288 9300 0802                 	sts USART0_TXDATAL, r16
 00028a 0000
 00028b 0000
 00028c 0000
 00028d 0000
 00028e 0000
 00028f 0000
-000290 0000
+000290 0000                      	nop nop nop nop nop nop nop
 000291 0000
 000292 0000
 000293 0000
 000294 0000
-000295 0000
-000296 0000
-000297 0000
-000298 0000
+000295 0000                      	nop nop nop nop nop
+000296 910d                      	ld r16, X+
+000297 9300 0802                 	sts USART0_TXDATAL, r16
 000299 0000
-00029a 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 248-267
+00029a 0000
 00029b 0000
 00029c 0000
 00029d 0000
 00029e 0000
-00029f 0000
+00029f 0000                      	nop nop nop nop nop nop nop
 0002a0 0000
 0002a1 0000
 0002a2 0000
 0002a3 0000
-0002a4 0000
-0002a5 0000
-0002a6 0000
-0002a7 0000
+0002a4 0000                      	nop nop nop nop nop
+0002a5 910d                      	ld r16, X+
+0002a6 9300 0802                 	sts USART0_TXDATAL, r16
 0002a8 0000
 0002a9 0000
 0002aa 0000
 0002ab 0000
 0002ac 0000
 0002ad 0000
-0002ae 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 268-287
+0002ae 0000                      	nop nop nop nop nop nop nop
 0002af 0000
 0002b0 0000
 0002b1 0000
 0002b2 0000
-0002b3 0000
-0002b4 0000
-0002b5 0000
-0002b6 0000
+0002b3 0000                      	nop nop nop nop nop
+0002b4 910d                      	ld r16, X+
+0002b5 9300 0802                 	sts USART0_TXDATAL, r16
 0002b7 0000
 0002b8 0000
 0002b9 0000
 0002ba 0000
 0002bb 0000
 0002bc 0000
-0002bd 0000
+0002bd 0000                      	nop nop nop nop nop nop nop
 0002be 0000
 0002bf 0000
 0002c0 0000
 0002c1 0000
-0002c2 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 288-307
-0002c3 0000
-0002c4 0000
-0002c5 0000
+0002c2 0000                      	nop nop nop nop nop
+0002c3 910d                      	ld r16, X+
+0002c4 9300 0802                 	sts USART0_TXDATAL, r16
 0002c6 0000
 0002c7 0000
 0002c8 0000
 0002c9 0000
 0002ca 0000
 0002cb 0000
-0002cc 0000
+0002cc 0000                      	nop nop nop nop nop nop nop
 0002cd 0000
 0002ce 0000
 0002cf 0000
 0002d0 0000
-0002d1 0000
-0002d2 0000
-0002d3 0000
-0002d4 0000
+0002d1 0000                      	nop nop nop nop nop
+0002d2 910d                      	ld r16, X+
+0002d3 9300 0802                 	sts USART0_TXDATAL, r16
 0002d5 0000
-0002d6 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 308-327
+0002d6 0000
 0002d7 0000
 0002d8 0000
 0002d9 0000
 0002da 0000
-0002db 0000
+0002db 0000                      	nop nop nop nop nop nop nop
 0002dc 0000
 0002dd 0000
 0002de 0000
 0002df 0000
-0002e0 0000
-0002e1 0000
-0002e2 0000
-0002e3 0000
+0002e0 0000                      	nop nop nop nop nop
+0002e1 910d                      	ld r16, X+
+0002e2 9300 0802                 	sts USART0_TXDATAL, r16
 0002e4 0000
 0002e5 0000
 0002e6 0000
 0002e7 0000
 0002e8 0000
 0002e9 0000
-0002ea 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 328-347
+0002ea 0000                      	nop nop nop nop nop nop nop
 0002eb 0000
 0002ec 0000
 0002ed 0000
 0002ee 0000
-0002ef 0000
-0002f0 0000
-0002f1 0000
-0002f2 0000
+0002ef 0000                      	nop nop nop nop nop
+0002f0 910d                      	ld r16, X+
+0002f1 9300 0802                 	sts USART0_TXDATAL, r16
 0002f3 0000
 0002f4 0000
 0002f5 0000
 0002f6 0000
 0002f7 0000
 0002f8 0000
-0002f9 0000
+0002f9 0000                      	nop nop nop nop nop nop nop
 0002fa 0000
 0002fb 0000
 0002fc 0000
 0002fd 0000
-0002fe 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 348-367
-0002ff 0000
-000300 0000
-000301 0000
+0002fe 0000                      	nop nop nop nop nop
+0002ff 910d                      	ld r16, X+
+000300 9300 0802                 	sts USART0_TXDATAL, r16
 000302 0000
 000303 0000
 000304 0000
 000305 0000
 000306 0000
 000307 0000
-000308 0000
+000308 0000                      	nop nop nop nop nop nop nop
 000309 0000
 00030a 0000
 00030b 0000
 00030c 0000
-00030d 0000
-00030e 0000
-00030f 0000
-000310 0000
+00030d 0000                      	nop nop nop nop nop
+00030e 910d                      	ld r16, X+
+00030f 9300 0802                 	sts USART0_TXDATAL, r16
 000311 0000
-000312 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 368-387
+000312 0000
 000313 0000
 000314 0000
 000315 0000
 000316 0000
-000317 0000
+000317 0000                      	nop nop nop nop nop nop nop
 000318 0000
 000319 0000
 00031a 0000
 00031b 0000
-00031c 0000
-00031d 0000
-00031e 0000
-00031f 0000
+00031c 0000                      	nop nop nop nop nop
+00031d 910d                      	ld r16, X+
+00031e 9300 0802                 	sts USART0_TXDATAL, r16
 000320 0000
 000321 0000
 000322 0000
 000323 0000
 000324 0000
 000325 0000
-000326 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 388-407
+000326 0000                      	nop nop nop nop nop nop nop
 000327 0000
 000328 0000
 000329 0000
 00032a 0000
-00032b 0000
-00032c 0000
-00032d 0000
-00032e 0000
+00032b 0000                      	nop nop nop nop nop
+00032c 910d                      	ld r16, X+
+00032d 9300 0802                 	sts USART0_TXDATAL, r16
 00032f 0000
 000330 0000
 000331 0000
 000332 0000
 000333 0000
 000334 0000
-000335 0000
+000335 0000                      	nop nop nop nop nop nop nop
 000336 0000
 000337 0000
 000338 0000
 000339 0000
-00033a 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 408-427
-00033b 0000
-00033c 0000
-00033d 0000
+00033a 0000                      	nop nop nop nop nop
+00033b 910d                      	ld r16, X+
+00033c 9300 0802                 	sts USART0_TXDATAL, r16
 00033e 0000
 00033f 0000
 000340 0000
 000341 0000
 000342 0000
 000343 0000
-000344 0000
+000344 0000                      	nop nop nop nop nop nop nop
 000345 0000
 000346 0000
 000347 0000
 000348 0000
-000349 0000
-00034a 0000
-00034b 0000
-00034c 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop					  ; 428-445
-                                 	
-                                 	
-00034d c000                      	rjmp horizontal_blanking_interval														  ; 446-447
-                                 
-                                 	horizontal_blanking_interval:
+000349 0000                      	nop nop nop nop nop
+00034a 910d                      	ld r16, X+
+00034b 9300 0802                 	sts USART0_TXDATAL, r16
+00034d 0000
 00034e 0000
 00034f 0000
 000350 0000
 000351 0000
 000352 0000
-000353 0000
+000353 0000                      	nop nop nop nop nop nop nop
 000354 0000
 000355 0000
 000356 0000
 000357 0000
-000358 0000
-000359 0000
-00035a 0000
-00035b 0000
+000358 0000                      	nop nop nop nop nop
+000359 910d                      	ld r16, X+
+00035a 9300 0802                 	sts USART0_TXDATAL, r16
 00035c 0000
 00035d 0000
 00035e 0000
-00035f 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop					  ; 448-465 (front porch)
-                                 	
+00035f 0000
 000360 0000
 000361 0000
-000362 0000
+000362 0000                      	nop nop nop nop nop nop nop
 000363 0000
 000364 0000
 000365 0000
 000366 0000
-000367 0000
-000368 0000
-000369 0000
-00036a 0000
+000367 0000                      	nop nop nop nop nop
+000368 910d                      	ld r16, X+
+000369 9300 0802                 	sts USART0_TXDATAL, r16
 00036b 0000
 00036c 0000
 00036d 0000
 00036e 0000
 00036f 0000
 000370 0000
-000371 0000
+000371 0000                      	nop nop nop nop nop nop nop
 000372 0000
-000373 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop			  ; 466-485
+000373 0000
 000374 0000
 000375 0000
-000376 0000
-000377 0000
-000378 0000
-000379 0000
-00037a 0000                      	nop nop nop nop nop nop nop 															  ; 486-492
-                                 
-                                 	
-                                 
-                                 	; Increment and wrap line counter, and set r5 to 0, 1, 2 or 3 depending on
-                                 	; which vertical phase we are in (visible, front, sync, or back)
-00037b 9621                      	adiw YH:YL, 1																			  ; 493-494
-                                 
-                                 	; First, check top byte. If this is not 0x02, we are in the visible phase
-00037c 30d2                      	cpi YH, 0x02
-00037d f479                      	brne y_phase_visible
-                                 
-00037e 35c8                      	cpi YL, low(V_VISIBLE)
-00037f f0d9                      	breq y_phase_front
-                                 
-000380 35c9                      	cpi YL, low(V_VISIBLE+V_FRONT)
-000381 f129                      	breq y_phase_sync
-                                 
-000382 35cd                      	cpi YL, low(V_VISIBLE+V_FRONT+V_SYNC)
-000383 f169                      	breq y_phase_back
-                                 
-000384 37c4                      	cpi YL, low(V_FULL)
-000385 f199                      	breq y_phase_wrap
-                                 
-000386 0000
-000387 0000
-000388 0000
+000376 0000                      	nop nop nop nop nop
+000377 910d                      	ld r16, X+
+000378 9300 0802                 	sts USART0_TXDATAL, r16
+00037a 0000
+00037b 0000
+00037c 0000
+00037d 0000
+00037e 0000
+00037f 0000
+000380 0000                      	nop nop nop nop nop nop nop
+000381 0000
+000382 0000
+000383 0000
+000384 0000
+000385 0000                      	nop nop nop nop nop
+000386 910d                      	ld r16, X+
+000387 9300 0802                 	sts USART0_TXDATAL, r16
 000389 0000
 00038a 0000
-00038b 0000                      	nop nop nop nop nop nop
-00038c c032                      	rjmp y_phase_done
-                                 
-                                 	; Handle each phase separatly
-                                 	y_phase_visible:
-                                 		; No changes here, so just wait the right amount of time
+00038b 0000
+00038c 0000
 00038d 0000
 00038e 0000
-00038f 0000
+00038f 0000                      	nop nop nop nop nop nop nop
 000390 0000
 000391 0000
 000392 0000
 000393 0000
-000394 0000
-000395 0000
-000396 0000
-000397 0000
+000394 0000                      	nop nop nop nop nop
+000395 910d                      	ld r16, X+
+000396 9300 0802                 	sts USART0_TXDATAL, r16
 000398 0000
-000399 0000                      		nop nop nop nop nop nop nop nop nop nop nop nop nop
-00039a c024                      	rjmp y_phase_done
-                                 
-                                 	y_phase_front:
-                                 		; Start of front porch
-00039b 9453                      		inc r5
+000399 0000
+00039a 0000
+00039b 0000
 00039c 0000
 00039d 0000
-00039e 0000
+00039e 0000                      	nop nop nop nop nop nop nop
 00039f 0000
 0003a0 0000
 0003a1 0000
 0003a2 0000
-0003a3 0000
-0003a4 0000
-0003a5 0000                      		nop nop nop nop nop nop nop nop nop nop
-0003a6 c018                      	rjmp y_phase_done
-                                 
-                                 	y_phase_sync:
-                                 		; Start of sync pulse
-0003a7 9453                      		inc r5
-0003a8 9453                      		inc r5
+0003a3 0000                      	nop nop nop nop nop
+0003a4 910d                      	ld r16, X+
+0003a5 9300 0802                 	sts USART0_TXDATAL, r16
+0003a7 0000
+0003a8 0000
 0003a9 0000
 0003aa 0000
 0003ab 0000
 0003ac 0000
-0003ad 0000
+0003ad 0000                      	nop nop nop nop nop nop nop
 0003ae 0000
-0003af 0000                      		nop nop nop nop nop nop nop
-0003b0 c00e                      	rjmp y_phase_done
-                                 
-                                 	y_phase_back:
-                                 		; Start of back porch
-0003b1 945a                      		dec r5
-0003b2 945a                      		dec r5
-0003b3 0000
-0003b4 0000
-0003b5 0000
+0003af 0000
+0003b0 0000
+0003b1 0000
+0003b2 0000                      	nop nop nop nop nop
+0003b3 910d                      	ld r16, X+
+0003b4 9300 0802                 	sts USART0_TXDATAL, r16
 0003b6 0000
-0003b7 0000                      		nop nop nop nop nop
-0003b8 c006                      	rjmp y_phase_done
-                                 
-                                 	y_phase_wrap:
-0003b9 2455                      		clr r5
-0003ba 27dd                      		clr YH
-0003bb 27cc                      		clr YL
-0003bc 2488                      		clr r_ty
-0003bd 2466                      		clr r_y
-0003be c000                      	rjmp y_phase_done
-                                 
-                                 
-                                 	y_phase_done: ; 16 cycles after adiw YH:YL, 1
-                                 
-                                 
-                                 	; Increment r_y if line is multiple of 4
-0003bf fdc0                      	sbrc YL, 0
-0003c0 c00d                      	rjmp dont_inc_r_y_A
-0003c1 fdc1                      	sbrc YL, 1
-0003c2 c00d                      	rjmp dont_inc_r_y_B
-                                 		; Increment r_y and r_ty
-0003c3 9463                      		inc r_y
-0003c4 e00c                      		ldi r16, 12
-0003c5 1660                      		cp r_y, r16
-0003c6 f021                      		breq ry_wrap
+0003b7 0000
+0003b8 0000
+0003b9 0000
+0003ba 0000
+0003bb 0000
+0003bc 0000                      	nop nop nop nop nop nop nop
+0003bd 0000
+0003be 0000
+0003bf 0000
+0003c0 0000
+0003c1 0000                      	nop nop nop nop nop
+0003c2 910d                      	ld r16, X+
+0003c3 9300 0802                 	sts USART0_TXDATAL, r16
+0003c5 0000
+0003c6 0000
 0003c7 0000
 0003c8 0000
-0003c9 0000                      		nop nop nop
-0003ca c00d                      		rjmp inc_ry_done
-                                 		ry_wrap:
-0003cb 2466                      		clr r_y
-0003cc 9483                      		inc r_ty
-0003cd c00a                      		rjmp inc_ry_done
-                                 
-                                 	dont_inc_r_y_A:
+0003c9 0000
+0003ca 0000
+0003cb 0000                      	nop nop nop nop nop nop nop
+0003cc 0000
+0003cd 0000
 0003ce 0000
-0003cf 0000                      		nop nop
-                                 	dont_inc_r_y_B:
-0003d0 0000
-0003d1 0000
-0003d2 0000
-0003d3 0000
+0003cf 0000
+0003d0 0000                      	nop nop nop nop nop
+0003d1 910d                      	ld r16, X+
+0003d2 9300 0802                 	sts USART0_TXDATAL, r16
 0003d4 0000
 0003d5 0000
 0003d6 0000
-0003d7 0000                      		nop nop nop nop nop nop nop nop
+0003d7 0000
+0003d8 0000
+0003d9 0000
+0003da 0000                      	nop nop nop nop nop nop nop
+0003db 0000
+0003dc 0000
+0003dd 0000
+0003de 0000
+0003df 0000                      	nop nop nop nop nop
+0003e0 910d                      	ld r16, X+
+0003e1 9300 0802                 	sts USART0_TXDATAL, r16
                                  
-                                 	inc_ry_done:
+0003e3 e3be                      	ldi XH, high(scanline_bufferA)
+0003e4 e0a0                      	ldi XL, low(scanline_bufferA)
+                                 
+0003e5 0000
+0003e6 0000
+0003e7 0000
+0003e8 0000
+0003e9 0000
+0003ea 0000
+0003eb 0000
+0003ec 0000
+0003ed 0000
+0003ee 0000                      	nop nop nop nop nop nop nop nop nop nop
+0003ef 0000
+0003f0 0000
+0003f1 0000
+0003f2 0000
+0003f3 0000
+0003f4 0000
+0003f5 0000
+0003f6 0000
+0003f7 0000
+0003f8 0000                      	nop nop nop nop nop nop nop nop nop nop
+0003f9 0000
+0003fa 0000
+0003fb 0000
+0003fc 0000
+0003fd 0000
+0003fe 0000
+0003ff 0000
+000400 0000
+000401 0000
+000402 0000                      	nop nop nop nop nop nop nop nop nop nop
+000403 0000
+000404 0000
+000405 0000
+000406 0000
+000407 0000
+000408 0000
+000409 0000
+00040a 0000
+00040b 0000
+00040c 0000                      	nop nop nop nop nop nop nop nop nop nop
+00040d 0000
+00040e 0000
+00040f 0000
+000410 0000
+000411 0000
+000412 0000
+000413 0000
+000414 0000
+000415 0000
+000416 0000                      	nop nop nop nop nop nop nop nop nop nop
+000417 0000
+000418 0000
+000419 0000
+00041a 0000
+00041b 0000
+00041c 0000
+00041d 0000
+00041e 0000
+00041f 0000
+000420 0000                      	nop nop nop nop nop nop nop nop nop nop
+000421 0000
+000422 0000
+000423 0000
+000424 0000
+000425 0000
+000426 0000
+000427 0000
+000428 0000
+000429 0000
+00042a 0000                      	nop nop nop nop nop nop nop nop nop nop
+00042b 0000
+00042c 0000
+00042d 0000
+00042e 0000
+00042f 0000
+000430 0000
+000431 0000
+000432 0000
+000433 0000
+000434 0000                      	nop nop nop nop nop nop nop nop nop nop
+                                 	
+                                 	
+                                 	; ===================
+                                 	; Begin scanline 4k+2
+                                 	; ===================
+                                 
+                                 	; Wait until HBLANK is done
+000435 0000
+000436 0000
+000437 0000
+000438 0000
+000439 0000
+00043a 0000
+00043b 0000
+00043c 0000
+00043d 0000
+00043e 0000                      	nop nop nop nop nop nop nop nop nop nop
+00043f 0000
+000440 0000
+000441 0000
+000442 0000
+000443 0000
+000444 0000
+000445 0000
+000446 0000
+000447 0000
+000448 0000                      	nop nop nop nop nop nop nop nop nop nop
+000449 0000
+00044a 0000
+00044b 0000
+00044c 0000
+00044d 0000
+00044e 0000
+00044f 0000
+000450 0000
+000451 0000
+000452 0000                      	nop nop nop nop nop nop nop nop nop nop
+000453 0000
+000454 0000
+000455 0000
+000456 0000
+000457 0000
+000458 0000
+000459 0000
+00045a 0000
+00045b 0000
+00045c 0000                      	nop nop nop nop nop nop nop nop nop nop
+                                 
+00045d e3be                      	ldi XH, high(scanline_bufferA)
+00045e e0a0                      	ldi XL, low(scanline_bufferA)
+                                 
+00045f 910d                      	ld r16, X+
+000460 9300 0802                 	sts USART0_TXDATAL, r16
+000462 0000
+000463 0000
+000464 0000
+000465 0000
+000466 0000
+000467 0000
+000468 0000                      	nop nop nop nop nop nop nop
+000469 0000
+00046a 0000
+00046b 0000
+00046c 0000
+00046d 0000                      	nop nop nop nop nop
+00046e 910d                      	ld r16, X+
+00046f 9300 0802                 	sts USART0_TXDATAL, r16
+000471 0000
+000472 0000
+000473 0000
+000474 0000
+000475 0000
+000476 0000
+000477 0000                      	nop nop nop nop nop nop nop
+000478 0000
+000479 0000
+00047a 0000
+00047b 0000
+00047c 0000                      	nop nop nop nop nop
+00047d 910d                      	ld r16, X+
+00047e 9300 0802                 	sts USART0_TXDATAL, r16
+000480 0000
+000481 0000
+000482 0000
+000483 0000
+000484 0000
+000485 0000
+000486 0000                      	nop nop nop nop nop nop nop
+000487 0000
+000488 0000
+000489 0000
+00048a 0000
+00048b 0000                      	nop nop nop nop nop
+00048c 910d                      	ld r16, X+
+00048d 9300 0802                 	sts USART0_TXDATAL, r16
+00048f 0000
+000490 0000
+000491 0000
+000492 0000
+000493 0000
+000494 0000
+000495 0000                      	nop nop nop nop nop nop nop
+000496 0000
+000497 0000
+000498 0000
+000499 0000
+00049a 0000                      	nop nop nop nop nop
+00049b 910d                      	ld r16, X+
+00049c 9300 0802                 	sts USART0_TXDATAL, r16
+00049e 0000
+00049f 0000
+0004a0 0000
+0004a1 0000
+0004a2 0000
+0004a3 0000
+0004a4 0000                      	nop nop nop nop nop nop nop
+0004a5 0000
+0004a6 0000
+0004a7 0000
+0004a8 0000
+0004a9 0000                      	nop nop nop nop nop
+0004aa 910d                      	ld r16, X+
+0004ab 9300 0802                 	sts USART0_TXDATAL, r16
+0004ad 0000
+0004ae 0000
+0004af 0000
+0004b0 0000
+0004b1 0000
+0004b2 0000
+0004b3 0000                      	nop nop nop nop nop nop nop
+0004b4 0000
+0004b5 0000
+0004b6 0000
+0004b7 0000
+0004b8 0000                      	nop nop nop nop nop
+0004b9 910d                      	ld r16, X+
+0004ba 9300 0802                 	sts USART0_TXDATAL, r16
+0004bc 0000
+0004bd 0000
+0004be 0000
+0004bf 0000
+0004c0 0000
+0004c1 0000
+0004c2 0000                      	nop nop nop nop nop nop nop
+0004c3 0000
+0004c4 0000
+0004c5 0000
+0004c6 0000
+0004c7 0000                      	nop nop nop nop nop
+0004c8 910d                      	ld r16, X+
+0004c9 9300 0802                 	sts USART0_TXDATAL, r16
+0004cb 0000
+0004cc 0000
+0004cd 0000
+0004ce 0000
+0004cf 0000
+0004d0 0000
+0004d1 0000                      	nop nop nop nop nop nop nop
+0004d2 0000
+0004d3 0000
+0004d4 0000
+0004d5 0000
+0004d6 0000                      	nop nop nop nop nop
+0004d7 910d                      	ld r16, X+
+0004d8 9300 0802                 	sts USART0_TXDATAL, r16
+0004da 0000
+0004db 0000
+0004dc 0000
+0004dd 0000
+0004de 0000
+0004df 0000
+0004e0 0000                      	nop nop nop nop nop nop nop
+0004e1 0000
+0004e2 0000
+0004e3 0000
+0004e4 0000
+0004e5 0000                      	nop nop nop nop nop
+0004e6 910d                      	ld r16, X+
+0004e7 9300 0802                 	sts USART0_TXDATAL, r16
+0004e9 0000
+0004ea 0000
+0004eb 0000
+0004ec 0000
+0004ed 0000
+0004ee 0000
+0004ef 0000                      	nop nop nop nop nop nop nop
+0004f0 0000
+0004f1 0000
+0004f2 0000
+0004f3 0000
+0004f4 0000                      	nop nop nop nop nop
+0004f5 910d                      	ld r16, X+
+0004f6 9300 0802                 	sts USART0_TXDATAL, r16
+0004f8 0000
+0004f9 0000
+0004fa 0000
+0004fb 0000
+0004fc 0000
+0004fd 0000
+0004fe 0000                      	nop nop nop nop nop nop nop
+0004ff 0000
+000500 0000
+000501 0000
+000502 0000
+000503 0000                      	nop nop nop nop nop
+000504 910d                      	ld r16, X+
+000505 9300 0802                 	sts USART0_TXDATAL, r16
+000507 0000
+000508 0000
+000509 0000
+00050a 0000
+00050b 0000
+00050c 0000
+00050d 0000                      	nop nop nop nop nop nop nop
+00050e 0000
+00050f 0000
+000510 0000
+000511 0000
+000512 0000                      	nop nop nop nop nop
+000513 910d                      	ld r16, X+
+000514 9300 0802                 	sts USART0_TXDATAL, r16
+000516 0000
+000517 0000
+000518 0000
+000519 0000
+00051a 0000
+00051b 0000
+00051c 0000                      	nop nop nop nop nop nop nop
+00051d 0000
+00051e 0000
+00051f 0000
+000520 0000
+000521 0000                      	nop nop nop nop nop
+000522 910d                      	ld r16, X+
+000523 9300 0802                 	sts USART0_TXDATAL, r16
+000525 0000
+000526 0000
+000527 0000
+000528 0000
+000529 0000
+00052a 0000
+00052b 0000                      	nop nop nop nop nop nop nop
+00052c 0000
+00052d 0000
+00052e 0000
+00052f 0000
+000530 0000                      	nop nop nop nop nop
+000531 910d                      	ld r16, X+
+000532 9300 0802                 	sts USART0_TXDATAL, r16
+000534 0000
+000535 0000
+000536 0000
+000537 0000
+000538 0000
+000539 0000
+00053a 0000                      	nop nop nop nop nop nop nop
+00053b 0000
+00053c 0000
+00053d 0000
+00053e 0000
+00053f 0000                      	nop nop nop nop nop
+000540 910d                      	ld r16, X+
+000541 9300 0802                 	sts USART0_TXDATAL, r16
+000543 0000
+000544 0000
+000545 0000
+000546 0000
+000547 0000
+000548 0000
+000549 0000                      	nop nop nop nop nop nop nop
+00054a 0000
+00054b 0000
+00054c 0000
+00054d 0000
+00054e 0000                      	nop nop nop nop nop
+00054f 910d                      	ld r16, X+
+000550 9300 0802                 	sts USART0_TXDATAL, r16
+000552 0000
+000553 0000
+000554 0000
+000555 0000
+000556 0000
+000557 0000
+000558 0000                      	nop nop nop nop nop nop nop
+000559 0000
+00055a 0000
+00055b 0000
+00055c 0000
+00055d 0000                      	nop nop nop nop nop
+00055e 910d                      	ld r16, X+
+00055f 9300 0802                 	sts USART0_TXDATAL, r16
+000561 0000
+000562 0000
+000563 0000
+000564 0000
+000565 0000
+000566 0000
+000567 0000                      	nop nop nop nop nop nop nop
+000568 0000
+000569 0000
+00056a 0000
+00056b 0000
+00056c 0000                      	nop nop nop nop nop
+00056d 910d                      	ld r16, X+
+00056e 9300 0802                 	sts USART0_TXDATAL, r16
+000570 0000
+000571 0000
+000572 0000
+000573 0000
+000574 0000
+000575 0000
+000576 0000                      	nop nop nop nop nop nop nop
+000577 0000
+000578 0000
+000579 0000
+00057a 0000
+00057b 0000                      	nop nop nop nop nop
+00057c 910d                      	ld r16, X+
+00057d 9300 0802                 	sts USART0_TXDATAL, r16
+00057f 0000
+000580 0000
+000581 0000
+000582 0000
+000583 0000
+000584 0000
+000585 0000                      	nop nop nop nop nop nop nop
+000586 0000
+000587 0000
+000588 0000
+000589 0000
+00058a 0000                      	nop nop nop nop nop
+00058b 910d                      	ld r16, X+
+00058c 9300 0802                 	sts USART0_TXDATAL, r16
+00058e 0000
+00058f 0000
+000590 0000
+000591 0000
+000592 0000
+000593 0000
+000594 0000                      	nop nop nop nop nop nop nop
+000595 0000
+000596 0000
+000597 0000
+000598 0000
+000599 0000                      	nop nop nop nop nop
+00059a 910d                      	ld r16, X+
+00059b 9300 0802                 	sts USART0_TXDATAL, r16
+00059d 0000
+00059e 0000
+00059f 0000
+0005a0 0000
+0005a1 0000
+0005a2 0000
+0005a3 0000                      	nop nop nop nop nop nop nop
+0005a4 0000
+0005a5 0000
+0005a6 0000
+0005a7 0000
+0005a8 0000                      	nop nop nop nop nop
+0005a9 910d                      	ld r16, X+
+0005aa 9300 0802                 	sts USART0_TXDATAL, r16
+0005ac 0000
+0005ad 0000
+0005ae 0000
+0005af 0000
+0005b0 0000
+0005b1 0000
+0005b2 0000                      	nop nop nop nop nop nop nop
+0005b3 0000
+0005b4 0000
+0005b5 0000
+0005b6 0000
+0005b7 0000                      	nop nop nop nop nop
+0005b8 910d                      	ld r16, X+
+0005b9 9300 0802                 	sts USART0_TXDATAL, r16
+0005bb 0000
+0005bc 0000
+0005bd 0000
+0005be 0000
+0005bf 0000
+0005c0 0000
+0005c1 0000                      	nop nop nop nop nop nop nop
+0005c2 0000
+0005c3 0000
+0005c4 0000
+0005c5 0000
+0005c6 0000                      	nop nop nop nop nop
+0005c7 910d                      	ld r16, X+
+0005c8 9300 0802                 	sts USART0_TXDATAL, r16
+0005ca 0000
+0005cb 0000
+0005cc 0000
+0005cd 0000
+0005ce 0000
+0005cf 0000
+0005d0 0000                      	nop nop nop nop nop nop nop
+0005d1 0000
+0005d2 0000
+0005d3 0000
+0005d4 0000
+0005d5 0000                      	nop nop nop nop nop
+0005d6 910d                      	ld r16, X+
+0005d7 9300 0802                 	sts USART0_TXDATAL, r16
+                                 
+0005d9 e3be                      	ldi XH, high(scanline_bufferA)
+0005da e0a0                      	ldi XL, low(scanline_bufferA)
+                                 
+0005db 0000
+0005dc 0000
+0005dd 0000
+0005de 0000
+0005df 0000
+0005e0 0000
+0005e1 0000
+0005e2 0000
+0005e3 0000
+0005e4 0000                      	nop nop nop nop nop nop nop nop nop nop
+0005e5 0000
+0005e6 0000
+0005e7 0000
+0005e8 0000
+0005e9 0000
+0005ea 0000
+0005eb 0000
+0005ec 0000
+0005ed 0000
+0005ee 0000                      	nop nop nop nop nop nop nop nop nop nop
+0005ef 0000
+0005f0 0000
+0005f1 0000
+0005f2 0000
+0005f3 0000
+0005f4 0000
+0005f5 0000
+0005f6 0000
+0005f7 0000
+0005f8 0000                      	nop nop nop nop nop nop nop nop nop nop
+0005f9 0000
+0005fa 0000
+0005fb 0000
+0005fc 0000
+0005fd 0000
+0005fe 0000
+0005ff 0000
+000600 0000
+000601 0000
+000602 0000                      	nop nop nop nop nop nop nop nop nop nop
+000603 0000
+000604 0000
+000605 0000
+000606 0000
+000607 0000
+000608 0000
+000609 0000
+00060a 0000
+00060b 0000
+00060c 0000                      	nop nop nop nop nop nop nop nop nop nop
+00060d 0000
+00060e 0000
+00060f 0000
+000610 0000
+000611 0000
+000612 0000
+000613 0000
+000614 0000
+000615 0000
+000616 0000                      	nop nop nop nop nop nop nop nop nop nop
+000617 0000
+000618 0000
+000619 0000
+00061a 0000
+00061b 0000
+00061c 0000
+00061d 0000
+00061e 0000
+00061f 0000
+000620 0000                      	nop nop nop nop nop nop nop nop nop nop
+000621 0000
+000622 0000
+000623 0000
+000624 0000
+000625 0000
+000626 0000
+000627 0000
+000628 0000
+000629 0000
+00062a 0000                      	nop nop nop nop nop nop nop nop nop nop
+                                 	
+                                 	
+                                 	; ===================
+                                 	; Begin scanline 4k+3
+                                 	; ===================
+                                 
+                                 	; Wait until HBLANK is done
+00062b 0000
+00062c 0000
+00062d 0000
+00062e 0000
+00062f 0000
+000630 0000
+000631 0000
+000632 0000
+000633 0000
+000634 0000                      	nop nop nop nop nop nop nop nop nop nop
+000635 0000
+000636 0000
+000637 0000
+000638 0000
+000639 0000
+00063a 0000
+00063b 0000
+00063c 0000
+00063d 0000
+00063e 0000                      	nop nop nop nop nop nop nop nop nop nop
+00063f 0000
+000640 0000
+000641 0000
+000642 0000
+000643 0000
+000644 0000
+000645 0000
+000646 0000
+000647 0000
+000648 0000                      	nop nop nop nop nop nop nop nop nop nop
+000649 0000
+00064a 0000
+00064b 0000
+00064c 0000
+00064d 0000
+00064e 0000
+00064f 0000
+000650 0000
+000651 0000
+000652 0000                      	nop nop nop nop nop nop nop nop nop nop
+                                 
+000653 e3be                      	ldi XH, high(scanline_bufferA)
+000654 e0a0                      	ldi XL, low(scanline_bufferA)
+                                 
+000655 910d                      	ld r16, X+
+000656 9300 0802                 	sts USART0_TXDATAL, r16
+000658 0000
+000659 0000
+00065a 0000
+00065b 0000
+00065c 0000
+00065d 0000
+00065e 0000                      	nop nop nop nop nop nop nop
+00065f 0000
+000660 0000
+000661 0000
+000662 0000
+000663 0000                      	nop nop nop nop nop
+000664 910d                      	ld r16, X+
+000665 9300 0802                 	sts USART0_TXDATAL, r16
+000667 0000
+000668 0000
+000669 0000
+00066a 0000
+00066b 0000
+00066c 0000
+00066d 0000                      	nop nop nop nop nop nop nop
+00066e 0000
+00066f 0000
+000670 0000
+000671 0000
+000672 0000                      	nop nop nop nop nop
+000673 910d                      	ld r16, X+
+000674 9300 0802                 	sts USART0_TXDATAL, r16
+000676 0000
+000677 0000
+000678 0000
+000679 0000
+00067a 0000
+00067b 0000
+00067c 0000                      	nop nop nop nop nop nop nop
+00067d 0000
+00067e 0000
+00067f 0000
+000680 0000
+000681 0000                      	nop nop nop nop nop
+000682 910d                      	ld r16, X+
+000683 9300 0802                 	sts USART0_TXDATAL, r16
+000685 0000
+000686 0000
+000687 0000
+000688 0000
+000689 0000
+00068a 0000
+00068b 0000                      	nop nop nop nop nop nop nop
+00068c 0000
+00068d 0000
+00068e 0000
+00068f 0000
+000690 0000                      	nop nop nop nop nop
+000691 910d                      	ld r16, X+
+000692 9300 0802                 	sts USART0_TXDATAL, r16
+000694 0000
+000695 0000
+000696 0000
+000697 0000
+000698 0000
+000699 0000
+00069a 0000                      	nop nop nop nop nop nop nop
+00069b 0000
+00069c 0000
+00069d 0000
+00069e 0000
+00069f 0000                      	nop nop nop nop nop
+0006a0 910d                      	ld r16, X+
+0006a1 9300 0802                 	sts USART0_TXDATAL, r16
+0006a3 0000
+0006a4 0000
+0006a5 0000
+0006a6 0000
+0006a7 0000
+0006a8 0000
+0006a9 0000                      	nop nop nop nop nop nop nop
+0006aa 0000
+0006ab 0000
+0006ac 0000
+0006ad 0000
+0006ae 0000                      	nop nop nop nop nop
+0006af 910d                      	ld r16, X+
+0006b0 9300 0802                 	sts USART0_TXDATAL, r16
+0006b2 0000
+0006b3 0000
+0006b4 0000
+0006b5 0000
+0006b6 0000
+0006b7 0000
+0006b8 0000                      	nop nop nop nop nop nop nop
+0006b9 0000
+0006ba 0000
+0006bb 0000
+0006bc 0000
+0006bd 0000                      	nop nop nop nop nop
+0006be 910d                      	ld r16, X+
+0006bf 9300 0802                 	sts USART0_TXDATAL, r16
+0006c1 0000
+0006c2 0000
+0006c3 0000
+0006c4 0000
+0006c5 0000
+0006c6 0000
+0006c7 0000                      	nop nop nop nop nop nop nop
+0006c8 0000
+0006c9 0000
+0006ca 0000
+0006cb 0000
+0006cc 0000                      	nop nop nop nop nop
+0006cd 910d                      	ld r16, X+
+0006ce 9300 0802                 	sts USART0_TXDATAL, r16
+0006d0 0000
+0006d1 0000
+0006d2 0000
+0006d3 0000
+0006d4 0000
+0006d5 0000
+0006d6 0000                      	nop nop nop nop nop nop nop
+0006d7 0000
+0006d8 0000
+0006d9 0000
+0006da 0000
+0006db 0000                      	nop nop nop nop nop
+0006dc 910d                      	ld r16, X+
+0006dd 9300 0802                 	sts USART0_TXDATAL, r16
+0006df 0000
+0006e0 0000
+0006e1 0000
+0006e2 0000
+0006e3 0000
+0006e4 0000
+0006e5 0000                      	nop nop nop nop nop nop nop
+0006e6 0000
+0006e7 0000
+0006e8 0000
+0006e9 0000
+0006ea 0000                      	nop nop nop nop nop
+0006eb 910d                      	ld r16, X+
+0006ec 9300 0802                 	sts USART0_TXDATAL, r16
+0006ee 0000
+0006ef 0000
+0006f0 0000
+0006f1 0000
+0006f2 0000
+0006f3 0000
+0006f4 0000                      	nop nop nop nop nop nop nop
+0006f5 0000
+0006f6 0000
+0006f7 0000
+0006f8 0000
+0006f9 0000                      	nop nop nop nop nop
+0006fa 910d                      	ld r16, X+
+0006fb 9300 0802                 	sts USART0_TXDATAL, r16
+0006fd 0000
+0006fe 0000
+0006ff 0000
+000700 0000
+000701 0000
+000702 0000
+000703 0000                      	nop nop nop nop nop nop nop
+000704 0000
+000705 0000
+000706 0000
+000707 0000
+000708 0000                      	nop nop nop nop nop
+000709 910d                      	ld r16, X+
+00070a 9300 0802                 	sts USART0_TXDATAL, r16
+00070c 0000
+00070d 0000
+00070e 0000
+00070f 0000
+000710 0000
+000711 0000
+000712 0000                      	nop nop nop nop nop nop nop
+000713 0000
+000714 0000
+000715 0000
+000716 0000
+000717 0000                      	nop nop nop nop nop
+000718 910d                      	ld r16, X+
+000719 9300 0802                 	sts USART0_TXDATAL, r16
+00071b 0000
+00071c 0000
+00071d 0000
+00071e 0000
+00071f 0000
+000720 0000
+000721 0000                      	nop nop nop nop nop nop nop
+000722 0000
+000723 0000
+000724 0000
+000725 0000
+000726 0000                      	nop nop nop nop nop
+000727 910d                      	ld r16, X+
+000728 9300 0802                 	sts USART0_TXDATAL, r16
+00072a 0000
+00072b 0000
+00072c 0000
+00072d 0000
+00072e 0000
+00072f 0000
+000730 0000                      	nop nop nop nop nop nop nop
+000731 0000
+000732 0000
+000733 0000
+000734 0000
+000735 0000                      	nop nop nop nop nop
+000736 910d                      	ld r16, X+
+000737 9300 0802                 	sts USART0_TXDATAL, r16
+000739 0000
+00073a 0000
+00073b 0000
+00073c 0000
+00073d 0000
+00073e 0000
+00073f 0000                      	nop nop nop nop nop nop nop
+000740 0000
+000741 0000
+000742 0000
+000743 0000
+000744 0000                      	nop nop nop nop nop
+000745 910d                      	ld r16, X+
+000746 9300 0802                 	sts USART0_TXDATAL, r16
+000748 0000
+000749 0000
+00074a 0000
+00074b 0000
+00074c 0000
+00074d 0000
+00074e 0000                      	nop nop nop nop nop nop nop
+00074f 0000
+000750 0000
+000751 0000
+000752 0000
+000753 0000                      	nop nop nop nop nop
+000754 910d                      	ld r16, X+
+000755 9300 0802                 	sts USART0_TXDATAL, r16
+000757 0000
+000758 0000
+000759 0000
+00075a 0000
+00075b 0000
+00075c 0000
+00075d 0000                      	nop nop nop nop nop nop nop
+00075e 0000
+00075f 0000
+000760 0000
+000761 0000
+000762 0000                      	nop nop nop nop nop
+000763 910d                      	ld r16, X+
+000764 9300 0802                 	sts USART0_TXDATAL, r16
+000766 0000
+000767 0000
+000768 0000
+000769 0000
+00076a 0000
+00076b 0000
+00076c 0000                      	nop nop nop nop nop nop nop
+00076d 0000
+00076e 0000
+00076f 0000
+000770 0000
+000771 0000                      	nop nop nop nop nop
+000772 910d                      	ld r16, X+
+000773 9300 0802                 	sts USART0_TXDATAL, r16
+000775 0000
+000776 0000
+000777 0000
+000778 0000
+000779 0000
+00077a 0000
+00077b 0000                      	nop nop nop nop nop nop nop
+00077c 0000
+00077d 0000
+00077e 0000
+00077f 0000
+000780 0000                      	nop nop nop nop nop
+000781 910d                      	ld r16, X+
+000782 9300 0802                 	sts USART0_TXDATAL, r16
+000784 0000
+000785 0000
+000786 0000
+000787 0000
+000788 0000
+000789 0000
+00078a 0000                      	nop nop nop nop nop nop nop
+00078b 0000
+00078c 0000
+00078d 0000
+00078e 0000
+00078f 0000                      	nop nop nop nop nop
+000790 910d                      	ld r16, X+
+000791 9300 0802                 	sts USART0_TXDATAL, r16
+000793 0000
+000794 0000
+000795 0000
+000796 0000
+000797 0000
+000798 0000
+000799 0000                      	nop nop nop nop nop nop nop
+00079a 0000
+00079b 0000
+00079c 0000
+00079d 0000
+00079e 0000                      	nop nop nop nop nop
+00079f 910d                      	ld r16, X+
+0007a0 9300 0802                 	sts USART0_TXDATAL, r16
+0007a2 0000
+0007a3 0000
+0007a4 0000
+0007a5 0000
+0007a6 0000
+0007a7 0000
+0007a8 0000                      	nop nop nop nop nop nop nop
+0007a9 0000
+0007aa 0000
+0007ab 0000
+0007ac 0000
+0007ad 0000                      	nop nop nop nop nop
+0007ae 910d                      	ld r16, X+
+0007af 9300 0802                 	sts USART0_TXDATAL, r16
+0007b1 0000
+0007b2 0000
+0007b3 0000
+0007b4 0000
+0007b5 0000
+0007b6 0000
+0007b7 0000                      	nop nop nop nop nop nop nop
+0007b8 0000
+0007b9 0000
+0007ba 0000
+0007bb 0000
+0007bc 0000                      	nop nop nop nop nop
+0007bd 910d                      	ld r16, X+
+0007be 9300 0802                 	sts USART0_TXDATAL, r16
+0007c0 0000
+0007c1 0000
+0007c2 0000
+0007c3 0000
+0007c4 0000
+0007c5 0000
+0007c6 0000                      	nop nop nop nop nop nop nop
+0007c7 0000
+0007c8 0000
+0007c9 0000
+0007ca 0000
+0007cb 0000                      	nop nop nop nop nop
+0007cc 910d                      	ld r16, X+
+0007cd 9300 0802                 	sts USART0_TXDATAL, r16
+                                 
+0007cf e3be                      	ldi XH, high(scanline_bufferA)
+0007d0 e0a0                      	ldi XL, low(scanline_bufferA)
                                  
                                  
-0003d8 0000                      	nop
-0003d9 0000                      	nop																						  ; 527
-                                 
-                                 
-0003da cc7a                          rjmp scanline_loop ; Jump back takes 2 cycles											  ; 0-1
-                                 
-                                 
-                                 .include "tileset.asm"
-                                 
-                                  * tileset.asm
-                                  *
-                                  *  Created: 10-05-2020 23:05:59
-                                  *   Author: Sondre
-                                  */ 
-                                 
-                                 .cseg
-                                 .org 0x800
-                                 tileset_data:
+0007d1 0000
+0007d2 0000
+0007d3 0000
+0007d4 0000
+0007d5 0000
+0007d6 0000
+0007d7 0000
+0007d8 0000
+0007d9 0000
+0007da 0000                      	nop nop nop nop nop nop nop nop nop nop
+0007db 0000
+0007dc 0000
+0007dd 0000
+0007de 0000
+0007df 0000
+0007e0 0000
+0007e1 0000
+0007e2 0000
+0007e3 0000
+0007e4 0000                      	nop nop nop nop nop nop nop nop nop nop
+0007e5 0000
+0007e6 0000
+0007e7 0000
+0007e8 0000
+0007e9 0000
+0007ea 0000
+0007eb 0000
+0007ec 0000
+0007ed 0000
+0007ee 0000                      	nop nop nop nop nop nop nop nop nop nop
+0007ef 0000
+0007f0 0000
+0007f1 0000
+0007f2 0000
+0007f3 0000
+0007f4 0000
+0007f5 0000
+0007f6 0000
+0007f7 0000
+0007f8 0000                      	nop nop nop nop nop nop nop nop nop nop
+0007f9 0000
+0007fa 0000
+0007fb 0000
+0007fc 0000
+0007fd 0000
+0007fe 0000
+0007ff 0000
 000800 0000
 000801 0000
-000802 0000
+000802 0000                      	nop nop nop nop nop nop nop nop nop nop
 000803 0000
-000804 0000                      .db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x00, Full Black*/ \
+000804 0000
 000805 0000
-000806 ffff
-000807 ffff
-000808 ffff
-000809 ffff
-00080a ffff                          0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* 0x01, Full White */ \
-00080b ffff
-00080c 81ff
-00080d 8181
-00080e 8181
-00080f 8181
-000810 8181                      	0xFF, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xFF, /* 0x02, Rectangle, 1px white */ \
-000811 ff81
-000812 ffff
-000813 c3c3
-000814 c3c3
-000815 c3c3
-000816 c3c3                      	0xFF, 0xFF, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0xFF, 0xFF, /* 0x03, Rectangle, 2px white */ \
-000817 ffff
-000818 b4fc
-000819 3030
-00081a 3030
-00081b 3030
-00081c 7830                      	0xFC, 0xB4, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x78, 0x00, 0x00, /* 0x04, Letter, T */ \
-00081d 0000
-00081e 3000
-00081f 0030
-000820 30f0
-000821 3030
-000822 fc30                          0x00, 0x30, 0x30, 0x00, 0xF0, 0x30, 0x30, 0x30, 0x30, 0xFC, 0x00, 0x00, /* 0x05, Letter, i */ \
-000823 0000
-000824 0000
-000825 0000
-000826 ccf8
-000827 cccc
-000828 cccc                      	0x00, 0x00, 0x00, 0x00, 0xF8, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0x00, 0x00, /* 0x06, Letter, n */ \
-000829 0000
-00082a 0000
-00082b 0000
-00082c 6666
-00082d 6666
-00082e 0c3c                      	0x00, 0x00, 0x00, 0x00, 0x66, 0x66, 0x66, 0x66, 0x3C, 0x0C, 0x18, 0xF0, /* 0x07, Letter, y */ \
-00082f f018
-000830 663c
-000831 c0c6
-000832 cec0
-000833 c6c6
-000834 3e66                      	0x3C, 0x66, 0xC6, 0xC0, 0xC0, 0xCE, 0xC6, 0xC6, 0x66, 0x3E, 0x00, 0x00, /* 0x08, Letter, G */ \
-000835 0000
-000836 66fc
-000837 6666
-000838 607c
-000839 6060
-00083a f060                          0xFC, 0x66, 0x66, 0x66, 0x7C, 0x60, 0x60, 0x60, 0x60, 0xF0, 0x00, 0x00, /* 0x09, Letter, P */ \
-00083b 0000
-00083c cccc
-00083d cccc
-00083e cccc
-00083f cccc
-000840 78cc                      	0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0x78, 0x00, 0x00, /* 0x0A, Letter, U */ \
-000841 0000
-000842 0000
-000843 0000
-000844 0000
-000845 0000
-000846 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x0B, <unused> */ \
-000847 0000
-000848 0000
-000849 0000
-00084a 0000
-00084b 0000
-00084c 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x0C, <unused> */ \
-00084d 0000
-00084e 0000
-00084f 0000
-000850 0000
-000851 0000
-000852 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x0D, <unused> */ \
-000853 0000
-000854 0000
-000855 0000
-000856 0000
-000857 0000
-000858 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x0E, <unused> */ \
-000859 0000
-00085a 0000
-00085b 0000
-00085c 0000
-00085d 0000
-00085e 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x0F, <unused> */ \
-00085f 0000
-000860 0000
-000861 0000
-000862 0000
-000863 0000
-000864 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x10, Sub-blocks, empty */ \
-000865 0000
-000866 f0f0
-000867 f0f0
-000868 f0f0
-000869 0000
-00086a 0000                          0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x11, Sub-blocks, top-left */ \
-00086b 0000
-00086c 0f0f
-00086d 0f0f
-00086e 0f0f
-00086f 0000
-000870 0000                      	0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x12, Sub-blocks, top-right */ \
-000871 0000
-000872 ffff
-000873 ffff
-000874 ffff
-000875 0000
-000876 0000                      	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x13, Sub-blocks, top */ \
-000877 0000
-000878 0000
-000879 0000
-00087a 0000
-00087b f0f0
-00087c f0f0                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, /* 0x14, Sub-blocks, bottom-left */ \
-00087d f0f0
-00087e f0f0
-00087f f0f0
-000880 f0f0
-000881 f0f0
-000882 f0f0                          0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, /* 0x15, Sub-blocks, left */ \
-000883 f0f0
-000884 0f0f
-000885 0f0f
-000886 0f0f
-000887 f0f0
-000888 f0f0                      	0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, /* 0x16, Sub-blocks, antidiagonal */ \
-000889 f0f0
-00088a ffff
-00088b ffff
-00088c ffff
-00088d f0f0
-00088e f0f0                      	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, /* 0x17, Sub-blocks, not bottom-right */ \
-00088f f0f0
-000890 0000
-000891 0000
-000892 0000
-000893 0f0f
-000894 0f0f                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, /* 0x18, Sub-blocks, bottom-right */ \
-000895 0f0f
-000896 f0f0
-000897 f0f0
-000898 f0f0
-000899 0f0f
-00089a 0f0f                          0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, /* 0x19, Sub-blocks, diagonal */ \
-00089b 0f0f
-00089c 0f0f
-00089d 0f0f
-00089e 0f0f
-00089f 0f0f
-0008a0 0f0f                      	0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, /* 0x1A, Sub-blocks, right */ \
-0008a1 0f0f
-0008a2 ffff
-0008a3 ffff
-0008a4 ffff
-0008a5 0f0f
-0008a6 0f0f                      	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, /* 0x1B, Sub-blocks, not bottom-left */ \
-0008a7 0f0f
-0008a8 0000
-0008a9 0000
-0008aa 0000
-0008ab ffff
-0008ac ffff                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* 0x1C, Sub-blocks, bottom */ \
-0008ad ffff
-0008ae f0f0
-0008af f0f0
-0008b0 f0f0
-0008b1 ffff
-0008b2 ffff                          0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* 0x1D, Sub-blocks, not top-right */ \
-0008b3 ffff
-0008b4 0f0f
-0008b5 0f0f
-0008b6 0f0f
-0008b7 ffff
-0008b8 ffff                      	0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* 0x1E, Sub-blocks, not top-left */ \
-0008b9 ffff
-0008ba ffff
-0008bb ffff
-0008bc ffff
-0008bd ffff
-0008be ffff                      	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* 0x1F, Sub-blocks, full */ \
-0008bf ffff
-0008c0 0000
-0008c1 0000
-0008c2 0000
-0008c3 0000
-0008c4 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x20, <unused> */ \
-0008c5 0000
-0008c6 0000
-0008c7 0000
-0008c8 0000
-0008c9 0000
-0008ca 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x21, <unused> */ \
-0008cb 0000
-0008cc 0000
-0008cd 0000
-0008ce 0000
-0008cf 0000
-0008d0 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x22, <unused> */ \
-0008d1 0000
-0008d2 0000
-0008d3 0000
-0008d4 0000
-0008d5 0000
-0008d6 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x23, <unused> */ \
-0008d7 0000
-0008d8 0000
-0008d9 0000
-0008da 0000
-0008db 0000
-0008dc 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x24, <unused> */ \
-0008dd 0000
-0008de 0000
-0008df 0000
-0008e0 0000
-0008e1 0000
-0008e2 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x25, <unused> */ \
-0008e3 0000
-0008e4 0000
-0008e5 0000
-0008e6 0000
-0008e7 0000
-0008e8 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x26, <unused> */ \
-0008e9 0000
-0008ea 0000
-0008eb 0000
-0008ec 0000
-0008ed 0000
-0008ee 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x27, <unused> */ \
-0008ef 0000
-0008f0 0000
-0008f1 0000
-0008f2 0000
-0008f3 0000
-0008f4 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x28, <unused> */ \
-0008f5 0000
-0008f6 0000
-0008f7 0000
-0008f8 0000
-0008f9 0000
-0008fa 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x29, <unused> */ \
-0008fb 0000
-0008fc 0000
-0008fd 0000
-0008fe 0000
-0008ff 0000
-000900 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2A, <unused> */ \
-000901 0000
-000902 0000
-000903 0000
-000904 0000
-000905 0000
-000906 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2B, <unused> */ \
-000907 0000
-000908 0000
-000909 0000
-00090a 0000
-00090b 0000
-00090c 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2C, <unused> */ \
-00090d 0000
-00090e 0000
-00090f 0000
-000910 0000
-000911 0000
-000912 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2D, <unused> */ \
-000913 0000
-000914 0000
-000915 0000
-000916 0000
-000917 0000
-000918 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2E, <unused> */ \
-000919 0000
-00091a 0000
-00091b 0000
-00091c 0000
-00091d 0000
-00091e 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2F, <unused> */ \
-00091f 0000
-000920 0000
-000921 0000
-000922 0000
-000923 0000
-000924 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x30, <unused> */ \
-000925 0000
-000926 0000
-000927 0000
-000928 0000
-000929 0000
-00092a 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x31, <unused> */ \
-00092b 0000
-00092c 0000
-00092d 0000
-00092e 0000
-00092f 0000
-000930 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x32, <unused> */ \
-000931 0000
-000932 0000
-000933 0000
-000934 0000
-000935 0000
-000936 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x33, <unused> */ \
-000937 0000
-000938 0000
-000939 0000
-00093a 0000
-00093b 0000
-00093c 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x34, <unused> */ \
-00093d 0000
-00093e 0000
-00093f 0000
-000940 0000
-000941 0000
-000942 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x35, <unused> */ \
-000943 0000
-000944 0000
-000945 0000
-000946 0000
-000947 0000
-000948 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x36, <unused> */ \
-000949 0000
-00094a 0000
-00094b 0000
-00094c 0000
-00094d 0000
-00094e 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x37, <unused> */ \
-00094f 0000
-000950 0000
-000951 0000
-000952 0000
-000953 0000
-000954 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x38, <unused> */ \
-000955 0000
-000956 0000
-000957 0000
-000958 0000
-000959 0000
-00095a 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x39, <unused> */ \
-00095b 0000
-00095c 0000
-00095d 0000
-00095e 0000
-00095f 0000
-000960 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3A, <unused> */ \
-000961 0000
-000962 0000
-000963 0000
-000964 0000
-000965 0000
-000966 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3B, <unused> */ \
-000967 0000
-000968 0000
-000969 0000
-00096a 0000
-00096b 0000
-00096c 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3C, <unused> */ \
-00096d 0000
-00096e 0000
-00096f 0000
-000970 0000
-000971 0000
-000972 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3D, <unused> */ \
-000973 0000
-000974 0000
-000975 0000
-000976 0000
-000977 0000
-000978 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3E, <unused> */ \
-000979 0000
-00097a 0000
-00097b 0000
-00097c 0000
-00097d 0000
-00097e 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3F, <unused> */ \
-00097f 0000
-000980 0000
-000981 0000
-000982 0000
-000983 0000
-000984 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x40, <unused> */ \
-000985 0000
-000986 0000
-000987 0000
-000988 0000
-000989 0000
-00098a 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x41, <unused> */ \
-00098b 0000
-00098c 0000
-00098d 0000
-00098e 0000
-00098f 0000
-000990 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x42, <unused> */ \
-000991 0000
-000992 0000
-000993 0000
-000994 0000
-000995 0000
-000996 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x43, <unused> */ \
-000997 0000
-000998 0000
-000999 0000
-00099a 0000
-00099b 0000
-00099c 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x44, <unused> */ \
-00099d 0000
-00099e 0000
-00099f 0000
-0009a0 0000
-0009a1 0000
-0009a2 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x45, <unused> */ \
-0009a3 0000
-0009a4 0000
-0009a5 0000
-0009a6 0000
-0009a7 0000
-0009a8 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x46, <unused> */ \
-0009a9 0000
-0009aa 0000
-0009ab 0000
-0009ac 0000
-0009ad 0000
-0009ae 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x47, <unused> */ \
-0009af 0000
-0009b0 0000
-0009b1 0000
-0009b2 0000
-0009b3 0000
-0009b4 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x48, <unused> */ \
-0009b5 0000
-0009b6 0000
-0009b7 0000
-0009b8 0000
-0009b9 0000
-0009ba 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x49, <unused> */ \
-0009bb 0000
-0009bc 0000
-0009bd 0000
-0009be 0000
-0009bf 0000
-0009c0 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x4A, <unused> */ \
-0009c1 0000
-0009c2 0000
-0009c3 0000
-0009c4 0000
-0009c5 0000
-0009c6 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x4B, <unused> */ \
-0009c7 0000
-0009c8 0000
-0009c9 0000
-0009ca 0000
-0009cb 0000
-0009cc 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x4C, <unused> */ \
-0009cd 0000
-0009ce 0000
-0009cf 0000
-0009d0 0000
-0009d1 0000
-0009d2 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x4D, <unused> */ \
-0009d3 0000
-0009d4 0000
-0009d5 0000
-0009d6 0000
-0009d7 0000
-0009d8 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x4E, <unused> */ \
-0009d9 0000
-0009da 0000
-0009db 0000
-0009dc 0000
-0009dd 0000
-0009de 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x4F, <unused> */ \
-0009df 0000
-0009e0 0000
-0009e1 0000
-0009e2 0000
-0009e3 0000
-0009e4 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x50, <unused> */ \
-0009e5 0000
-0009e6 0000
-0009e7 0000
-0009e8 0000
-0009e9 0000
-0009ea 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x51, <unused> */ \
-0009eb 0000
-0009ec 0000
-0009ed 0000
-0009ee 0000
-0009ef 0000
-0009f0 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x52, <unused> */ \
-0009f1 0000
-0009f2 0000
-0009f3 0000
-0009f4 0000
-0009f5 0000
-0009f6 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x53, <unused> */ \
-0009f7 0000
-0009f8 0000
-0009f9 0000
-0009fa 0000
-0009fb 0000
-0009fc 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x54, <unused> */ \
-0009fd 0000
-0009fe 0000
-0009ff 0000
-000a00 0000
-000a01 0000
-000a02 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x55, <unused> */ \
-000a03 0000
-000a04 0000
-000a05 0000
-000a06 0000
-000a07 0000
-000a08 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x56, <unused> */ \
-000a09 0000
-000a0a 0000
-000a0b 0000
-000a0c 0000
-000a0d 0000
-000a0e 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x57, <unused> */ \
-000a0f 0000
-000a10 0000
-000a11 0000
-000a12 0000
-000a13 0000
-000a14 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x58, <unused> */ \
-000a15 0000
-000a16 0000
-000a17 0000
-000a18 0000
-000a19 0000
-000a1a 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x59, <unused> */ \
-000a1b 0000
-000a1c 0000
-000a1d 0000
-000a1e 0000
-000a1f 0000
-000a20 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x5A, <unused> */ \
-000a21 0000
-000a22 0000
-000a23 0000
-000a24 0000
-000a25 0000
-000a26 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x5B, <unused> */ \
-000a27 0000
-000a28 0000
-000a29 0000
-000a2a 0000
-000a2b 0000
-000a2c 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x5C, <unused> */ \
-000a2d 0000
-000a2e 0000
-000a2f 0000
-000a30 0000
-000a31 0000
-000a32 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x5D, <unused> */ \
-000a33 0000
-000a34 0000
-000a35 0000
-000a36 0000
-000a37 0000
-000a38 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x5E, <unused> */ \
-000a39 0000
-000a3a 0000
-000a3b 0000
-000a3c 0000
-000a3d 0000
-000a3e 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x5F, <unused> */ \
-000a3f 0000
-000a40 0000
-000a41 0000
-000a42 0000
-000a43 0000
-000a44 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x60, <unused> */ \
-000a45 0000
-000a46 0000
-000a47 0000
-000a48 0000
-000a49 0000
-000a4a 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x61, <unused> */ \
-000a4b 0000
-000a4c 0000
-000a4d 0000
-000a4e 0000
-000a4f 0000
-000a50 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x62, <unused> */ \
-000a51 0000
-000a52 0000
-000a53 0000
-000a54 0000
-000a55 0000
-000a56 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x63, <unused> */ \
-000a57 0000
-000a58 0000
-000a59 0000
-000a5a 0000
-000a5b 0000
-000a5c 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x64, <unused> */ \
-000a5d 0000
-000a5e 0000
-000a5f 0000
-000a60 0000
-000a61 0000
-000a62 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x65, <unused> */ \
-000a63 0000
-000a64 0000
-000a65 0000
-000a66 0000
-000a67 0000
-000a68 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x66, <unused> */ \
-000a69 0000
-000a6a 0000
-000a6b 0000
-000a6c 0000
-000a6d 0000
-000a6e 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x67, <unused> */ \
-000a6f 0000
-000a70 0000
-000a71 0000
-000a72 0000
-000a73 0000
-000a74 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x68, <unused> */ \
-000a75 0000
-000a76 0000
-000a77 0000
-000a78 0000
-000a79 0000
-000a7a 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x69, <unused> */ \
-000a7b 0000
-000a7c 0000
-000a7d 0000
-000a7e 0000
-000a7f 0000
-000a80 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x6A, <unused> */ \
-000a81 0000
-000a82 0000
-000a83 0000
-000a84 0000
-000a85 0000
-000a86 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x6B, <unused> */ \
-000a87 0000
-000a88 0000
-000a89 0000
-000a8a 0000
-000a8b 0000
-000a8c 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x6C, <unused> */ \
-000a8d 0000
-000a8e 0000
-000a8f 0000
-000a90 0000
-000a91 0000
-000a92 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x6D, <unused> */ \
-000a93 0000
-000a94 0000
-000a95 0000
-000a96 0000
-000a97 0000
-000a98 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x6E, <unused> */ \
-000a99 0000
-000a9a 0000
-000a9b 0000
-000a9c 0000
-000a9d 0000
-000a9e 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x6F, <unused> */ \
-000a9f 0000
-000aa0 0000
-000aa1 0000
-000aa2 0000
-000aa3 0000
-000aa4 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x70, <unused> */ \
-000aa5 0000
-000aa6 0000
-000aa7 0000
-000aa8 0000
-000aa9 0000
-000aaa 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x71, <unused> */ \
-000aab 0000
-000aac 0000
-000aad 0000
-000aae 0000
-000aaf 0000
-000ab0 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x72, <unused> */ \
-000ab1 0000
-000ab2 0000
-000ab3 0000
-000ab4 0000
-000ab5 0000
-000ab6 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x73, <unused> */ \
-000ab7 0000
-000ab8 0000
-000ab9 0000
-000aba 0000
-000abb 0000
-000abc 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x74, <unused> */ \
-000abd 0000
-000abe 0000
-000abf 0000
-000ac0 0000
-000ac1 0000
-000ac2 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x75, <unused> */ \
-000ac3 0000
-000ac4 0000
-000ac5 0000
-000ac6 0000
-000ac7 0000
-000ac8 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x76, <unused> */ \
-000ac9 0000
-000aca 0000
-000acb 0000
-000acc 0000
-000acd 0000
-000ace 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x77, <unused> */ \
-000acf 0000
-000ad0 0000
-000ad1 0000
-000ad2 0000
-000ad3 0000
-000ad4 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x78, <unused> */ \
-000ad5 0000
-000ad6 0000
-000ad7 0000
-000ad8 0000
-000ad9 0000
-000ada 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x79, <unused> */ \
-000adb 0000
-000adc 0000
-000add 0000
-000ade 0000
-000adf 0000
-000ae0 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x7A, <unused> */ \
-000ae1 0000
-000ae2 0000
-000ae3 0000
-000ae4 0000
-000ae5 0000
-000ae6 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x7B, <unused> */ \
-000ae7 0000
-000ae8 0000
-000ae9 0000
-000aea 0000
-000aeb 0000
-000aec 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x7C, <unused> */ \
-000aed 0000
-000aee 0000
-000aef 0000
-000af0 0000
-000af1 0000
-000af2 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x7D, <unused> */ \
-000af3 0000
-000af4 0000
-000af5 0000
-000af6 0000
-000af7 0000
-000af8 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x7E, <unused> */ \
-000af9 0000
-000afa 0000
-000afb 0000
-000afc 0000
-000afd 0000
-000afe 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x7F, <unused> */ \
-000aff 0000
-000b00 0000
-000b01 4301
-000b02 3c66
-000b03 7f7f
-000b04 7679                      	0x00, 0x00, 0x01, 0x43, 0x66, 0x3C, 0x7F, 0x7F, 0x79, 0x76, 0x09, 0x06, /* 0x80, Car, rear */ \
-000b05 0609
-000b06 0000
-000b07 10ff
-000b08 1010
-000b09 f3ff
-000b0a ffff                      	0x00, 0x00, 0xFF, 0x10, 0x10, 0x10, 0xFF, 0xF3, 0xFF, 0xFF, 0x00, 0x00, /* 0x81, Car, middle */ \
-000b0b 0000
-000b0c 0000
-000b0d 8000
-000b0e 2040
-000b0f fefe
-000b10 6e9e                      .include "default_leveldata.asm"
-000b11 6090                      
-                                  * default_leveldata.asm
-                                  *
-                                  *  Created: 10-05-2020 23:38:03
-                                  *   Author: Sondre
-                                  */ 
-                                  
-                                 .cseg
-                                 .org 0xD00
-                                 default_leveldata:
-000d00 0101
-000d01 0101
-000d02 0101
-000d03 0101
-000d04 0101
-000d05 0101
-000d06 0101
-000d07 0101
-000d08 0101
-000d09 0101
-000d0a 0101
-000d0b 0101
-000d0c 0001                      .db 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, \
-000d0d 0000
-000d0e 0001
-000d0f 0000
-000d10 0000
-000d11 0000
-000d12 0000
-000d13 0000
-000d14 0000
-000d15 0000
-000d16 0000
-000d17 0000
-000d18 0000
-000d19 0000
-000d1a 0001                          0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, \
-000d1b 0000
-000d1c 0001
-000d1d 0504
-000d1e 0706
-000d1f 0908
-000d20 000a
-000d21 0000
-000d22 0002
-000d23 0003
-000d24 0002
-000d25 0000
-000d26 0000
-000d27 0000
-000d28 0001                          0x01, 0x00, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x00, 0x00, 0x00, 0x02, 0x00, 0x03, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, \
-000d29 0000
-000d2a 0001
-000d2b 0000
-000d2c 0000
-000d2d 0000
-000d2e 0000
-000d2f 0000
-000d30 0000
-000d31 0000
-000d32 0000
-000d33 0000
-000d34 0000
-000d35 0000
-000d36 0001                          0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, \
-000d37 0000
-000d38 0001
-000d39 111b
-000d3a 1715
-000d3b 1915
-000d3c 0011
-000d3d 0000
-000d3e 0003
-000d3f 0002
-000d40 0003
-000d41 0000
-000d42 0000
-000d43 0000
-000d44 0001                          0x01, 0x00, 0x1B, 0x11, 0x15, 0x17, 0x15, 0x19, 0x11, 0x00, 0x00, 0x00, 0x03, 0x00, 0x02, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, \
-000d45 0000
-000d46 0001
-000d47 1012
-000d48 1111
-000d49 1111
-000d4a 0010
-000d4b 0000
-000d4c 0000
-000d4d 0000
-000d4e 0000
-000d4f 0000
-000d50 0000
-000d51 0000
-000d52 0001                          0x01, 0x00, 0x12, 0x10, 0x11, 0x11, 0x11, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, \
-000d53 0000
-000d54 0001
-000d55 0000
-000d56 0000
-000d57 0000
-000d58 0000
-000d59 0000
-000d5a 0002
-000d5b 0003
-000d5c 0002
-000d5d 0000
-000d5e 0000
-000d5f 0000
-000d60 0001                          0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x03, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, \
-000d61 0000
-000d62 0001
-000d63 0000
-000d64 0000
-000d65 0000
-000d66 0000
-000d67 0000
-000d68 0000
-000d69 0000
-000d6a 0000
-000d6b 0000
-000d6c 0000
-000d6d 0000
-000d6e 0001                          0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, \
-000d6f 0000
-000d70 0001
-000d71 8180
-000d72 0082
-000d73 8180
-000d74 8181
-000d75 0082
-000d76 0000
-000d77 0000
-000d78 0000
-000d79 0000
-000d7a 0000
-000d7b 0000
-000d7c 0001                          0x01, 0x00, 0x80, 0x81, 0x82, 0x00, 0x80, 0x81, 0x81, 0x81, 0x82, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, \
-000d7d 0000
-000d7e 0001
-000d7f 0000
-000d80 0000
-000d81 0000
-000d82 0000
-000d83 0000
-000d84 0000
-000d85 0000
-000d86 0000
-000d87 0000
-000d88 0000
-000d89 0000
-000d8a 0001                          0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, \
-000d8b 0000
-000d8c 0001
-000d8d 0000
-000d8e 0000
-000d8f 0000
-000d90 0000
-000d91 0000
-000d92 0000
-000d93 0000
-000d94 0000
-000d95 0000
-000d96 0000
-000d97 0000
-000d98 0001                          0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, \
-000d99 0000
-000d9a 0101
-000d9b 0101
-000d9c 0101
-000d9d 0101
-000d9e 0101
-000d9f 0101
-000da0 0101
-000da1 0101
-000da2 0101
-000da3 0101
-000da4 0101
-000da5 0101
-000da6 0001                          0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, \
-000da7 0000
-000da8 0200
-000da9 0203
-000daa 0000
-000dab 0000
-000dac 0000
-000dad 0000
-000dae 0000
-000daf 0000
-000db0 0000
-000db1 0000
-000db2 0200
-000db3 0203
-000db4 0000                          0x00, 0x02, 0x03, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x03, 0x02, 0x00, 0x00, 0x00, 0x00, \
-000db5 0000
-000db6 0000
-000db7 0000
-000db8 0000
-000db9 0000
-000dba 0000
-000dbb 0000
-000dbc 0000
-000dbd 0000
-000dbe 0000
-000dbf 0000
-000dc0 0000
-000dc1 0000
-000dc2 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
-000dc3 0000
-000dc4 0000
-000dc5 0000
-000dc6 0000
-000dc7 0000
-000dc8 0000
-000dc9 0000
-000dca 0000
-000dcb 0000
-000dcc 0000
-000dcd 0000
-000dce 0000
-000dcf 0000
-000dd0 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
-000dd1 0000
-000dd2 0000
-000dd3 0000
-000dd4 0000
-000dd5 0000
-000dd6 0000
-000dd7 0000
-000dd8 0000
-000dd9 0000
-000dda 0000
-000ddb 0000
-000ddc 0000
-000ddd 0000
-000dde 0000
-000ddf 0000                      
+000806 0000
+000807 0000
+000808 0000
+000809 0000
+00080a 0000
+00080b 0000
+00080c 0000                      	nop nop nop nop nop nop nop nop nop nop
+00080d 0000
+00080e 0000
+00080f 0000
+000810 0000
+000811 0000
+000812 0000
+000813 0000
+000814 0000
+000815 0000
+000816 0000                      	nop nop nop nop nop nop nop nop nop nop
+000817 0000
+000818 0000
+000819 0000
+00081a 0000
+00081b 0000
+00081c 0000
+00081d 0000                      	nop nop nop nop nop nop nop
+                                 
+00081e 9593                      	inc r_y
+                                 
+00081f c829                      	rjmp visible_scanline4x
+                                 
+                                 vblank:
+                                 	
+                                 
+000820 c828                      	rjmp visible_scanline4x
+                                 	
+                                 ;.include "tileset.asm"
+                                 ;.include "default_leveldata.asm"
+                                 
+                                 ; Tiledata array in RAM
                                  .dseg
                                  .org 0x3E00
-                                 tiledata:
-003e00                           .byte 28*16
+003e00                           scanline_bufferA: .byte SCANLINE_BUFFER_TILES
+003e1a                           scanline_bufferB: .byte SCANLINE_BUFFER_TILES
+003e34                           tiledata: .byte (TILE_ARRAY_WIDTH * TILE_ARRAY_HEIGHT)
+003fc9                           window_tiles: .byte (H_VISIBLE / PIXEL_DIV / TILE_WIDTH)
+003fe2                           sprite_0: .byte 10
+003fec                           sprite_1: .byte 10
+003ff6                           sprite_2: .byte 4
+003ffa                           scroll_x: .byte 1
+003ffb                           scroll_y: .byte 1
 
 
 RESOURCE USE INFORMATION
@@ -6830,40 +6740,40 @@ counted separately from r26..r31 here.
 .dseg memory usage only counts static data declared with .byte
 
 "ATtiny817" register use summary:
-x  :  27 y  :   0 z  :  27 r0 :  26 r1 :  26 r2 :   0 r3 :   0 r4 :   0 
-r5 :   8 r6 :  30 r7 :   2 r8 :   4 r9 :   0 r10:   0 r11:   0 r12:   0 
-r13:   0 r14:   0 r15:   0 r16: 142 r17:   7 r18:   0 r19:  26 r20:  26 
-r21:   0 r22:   0 r23:   0 r24:   0 r25:   0 r26:   3 r27:   3 r28:   9 
-r29:   4 r30:  76 r31:  76 
-Registers used: 18 out of 35 (51.4%)
+x  : 104 y  :   0 z  :   0 r0 :   0 r1 :   0 r2 :   0 r3 :   0 r4 :   0 
+r5 :   0 r6 :   0 r7 :   0 r8 :   0 r9 :   0 r10:   0 r11:   0 r12:   0 
+r13:   0 r14:   0 r15:   0 r16: 250 r17:   0 r18:   0 r19:   0 r20:   0 
+r21:   0 r22:   0 r23:   0 r24:   0 r25:   3 r26:   8 r27:   8 r28:   0 
+r29:   0 r30:   0 r31:   0 
+Registers used: 5 out of 35 (14.3%)
 
 "ATtiny817" instruction use summary:
-.lds  :   0 .sts  :   0 adc   :  51 add   :  51 adiw  :   1 and   :   0 
+.lds  :   0 .sts  :   0 adc   :   0 add   :   0 adiw  :   0 and   :   0 
 andi  :   0 asr   :   0 bclr  :   0 bld   :   0 brbc  :   0 brbs  :   0 
-brcc  :   0 brcs  :   0 break :   0 breq  :   5 brge  :   0 brhc  :   0 
+brcc  :   0 brcs  :   0 break :   0 breq  :   1 brge  :   0 brhc  :   0 
 brhs  :   0 brid  :   0 brie  :   0 brlo  :   0 brlt  :   0 brmi  :   0 
-brne  :   2 brpl  :   0 brsh  :   0 brtc  :   0 brts  :   0 brvc  :   0 
-brvs  :   0 bset  :   0 bst   :   0 cbi   :   5 cbr   :   0 clc   :   0 
-clh   :   0 cli   :   0 cln   :   0 clr   :  14 cls   :   0 clt   :   0 
-clv   :   0 clz   :   0 com   :   0 cp    :   1 cpc   :   0 cpi   :   6 
-cpse  :   0 dec   :   2 des   :   0 eor   :   0 fmul  :   0 fmuls :   0 
-fmulsu:   0 icall :   0 ijmp  :   0 in    :   0 inc   :   6 ld    :  25 
-ldd   :   0 ldi   :  78 lds   :   0 lpm   :  52 lsl   :   0 lsr   :   0 
-mov   :   0 movw  :   0 mul   :  26 muls  :   0 mulsu :   0 neg   :   0 
-nop   : 569 or    :   0 ori   :   0 out   :   1 pop   :   0 push  :   0 
-rcall :   0 ret   :   0 reti  :   0 rjmp  :  18 rol   :   0 ror   :   0 
+brne  :   0 brpl  :   0 brsh  :   0 brtc  :   0 brts  :   0 brvc  :   0 
+brvs  :   0 bset  :   0 bst   :   0 cbi   :   3 cbr   :   0 clc   :   0 
+clh   :   0 cli   :   0 cln   :   0 clr   :   1 cls   :   0 clt   :   0 
+clv   :   0 clz   :   0 com   :   0 cp    :   0 cpc   :   0 cpi   :   1 
+cpse  :   0 dec   :   0 des   :   0 eor   :   0 fmul  :   0 fmuls :   0 
+fmulsu:   0 icall :   0 ijmp  :   0 in    :   0 inc   :   1 ld    : 104 
+ldd   :   0 ldi   :  37 lds   :   0 lpm   :   0 lsl   :   0 lsr   :   0 
+mov   :   0 movw  :   0 mul   :   0 muls  :   0 mulsu :   0 neg   :   0 
+nop   :1673 or    :   0 ori   :   0 out   :   1 pop   :   0 push  :   0 
+rcall :   0 ret   :   0 reti  :   0 rjmp  :   4 rol   :   0 ror   :   0 
 sbc   :   0 sbci  :   0 sbi   :   7 sbic  :   0 sbis  :   0 sbiw  :   0 
-sbr   :   0 sbrc  :   3 sbrs  :   1 sec   :   0 seh   :   0 sei   :   0 
+sbr   :   0 sbrc  :   0 sbrs  :   0 sec   :   0 seh   :   0 sei   :   0 
 sen   :   0 ser   :   0 ses   :   0 set   :   0 sev   :   0 sez   :   0 
-sleep :   0 spm   :   0 st    :   2 std   :   0 sts   :  43 sub   :   0 
+sleep :   0 spm   :   0 st    :   0 std   :   0 sts   : 124 sub   :   0 
 subi  :   0 swap  :   0 tst   :   0 wdr   :   0 
-Instructions used: 23 out of 112 (20.5%)
+Instructions used: 12 out of 112 (10.7%)
 
 "ATtiny817" memory use summary [bytes]:
 Segment   Begin    End      Code   Data   Used    Size   Use%
 ---------------------------------------------------------------
-[.cseg] 0x000000 0x001bc0   1974   2020   3994    8192  48.8%
-[.dseg] 0x003e00 0x003fc0      0    448    448     512  87.5%
+[.cseg] 0x000000 0x001042   4162      0   4162    8192  50.8%
+[.dseg] 0x003e00 0x003ffd      0    509    509     512  99.4%
 [.eseg] 0x000000 0x000000      0      0      0     128   0.0%
 
 Assembly complete, 0 errors, 0 warnings
