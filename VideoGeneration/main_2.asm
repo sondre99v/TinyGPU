@@ -114,6 +114,12 @@ start:
 	; Register keeping track of the currently drawing line, in pixels
 	.DEF r_y = r25
 	clr r_y
+	; Initialize scroll_x
+	ldi r16, 0
+	sts scroll_x, r16
+	; Initialize scroll_y
+	ldi r16, 0
+	sts scroll_y, r16
 
 
 	; Enable USART0 and TCA0
@@ -142,9 +148,28 @@ visible_scanline4x:
 
 	; Wait until HBLANK is done
 	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop
+
+
+	; This block takes between 12 and 26 cycles, depending on the value loaded into r16
+	lds r16, scroll_x
+	lsl r16
+	andi r16, 0xF ; Ensure no infinite loop occurs if scroll_x > 7
+	clr r17
+	ldi ZL, low(timingjmpA_0)
+	ldi ZH, high(timingjmpA_0)
+	sub ZL, r16
+	sbc ZH, r17
+	ijmp
+	timingjmpA_14: nop nop
+	timingjmpA_12: nop nop
+	timingjmpA_10: nop nop
+	timingjmpA_8: nop nop
+	timingjmpA_6: nop nop
+	timingjmpA_4: nop nop
+	timingjmpA_2: nop nop
+	timingjmpA_0:
+
+
 	
 	ld r16, X+
 	sts USART0_TXDATAL, r16
@@ -635,45 +660,71 @@ visible_scanline4x:
 
 	nop;ldi XH, high(scanline_bufferA)
 	subi XL, 26; ldi XL, low(scanline_bufferA)
-
-
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
 	
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
+
+	nop nop nop nop nop nop ;nop nop nop nop
+	lds r16, scroll_y
+	add r16, r_y
+
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
 	
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
-	st Y+, r_y
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
+	st Y+, r16
 	subi YL, 26
 
 	;nop nop nop nop nop nop nop nop nop nop
 	;nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop ;nop nop nop nop nop nop
+	nop nop nop ;nop ;nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop ;nop
+	nop nop nop nop nop nop nop nop nop ;nop
+	;nop nop nop nop nop nop nop nop nop
+	
+
+
+	; Compensation for the scroll-delay at the top
+	; This block takes between 12 and 26 cycles, depending on the value loaded into r16
+	lds r16, scroll_x
+	lsl r16
+	andi r16, 0xF ; Ensure no infinite loop occurs if scroll_x > 7
+	clr r17
+	ldi ZL, low(timingjmpB_14)
+	ldi ZH, high(timingjmpB_14)
+	add ZL, r16
+	adc ZH, r17
+	ijmp
+	timingjmpB_14: nop nop
+	timingjmpB_12: nop nop
+	timingjmpB_10: nop nop
+	timingjmpB_8: nop nop
+	timingjmpB_6: nop nop
+	timingjmpB_4: nop nop
+	timingjmpB_2: nop nop
+	timingjmpB_0:
+
 
 	; Swap buffers
 	eor YL, XL
@@ -800,7 +851,20 @@ vblank:
 	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
 
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop
+
+	; Test x- and y-scrolling functionality
+	;nop ;nop nop ;nop nop nop nop nop nop ;nop nop nop nop nop nop
+	
+	lds r16, scroll_x
+	inc r16
+	andi r16, 0xF
+	sts scroll_x, r16
+	lds r17, scroll_y
+	lsr r16
+	lsr r16
+	add r17, r16
+	sts scroll_y, r17
+
 
 	; Reset to line 0, set the A to be output, and the B buffer as the
 	; rendertarget, then jump back to the rendering-loop

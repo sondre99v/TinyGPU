@@ -23,26 +23,42 @@
  </OUTPUT_FILES>
  <LABELS>
   <start><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>37</LINE></start>
-  <scanline_bufferA><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>826</LINE></scanline_bufferA>
-  <scanline_bufferB><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>827</LINE></scanline_bufferB>
-  <visible_scanline4x><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>129</LINE></visible_scanline4x>
-  <enable_output><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>139</LINE></enable_output>
-  <enable_output_done><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>141</LINE></enable_output_done>
-  <vblank><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>704</LINE></vblank>
-  <loop1><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>757</LINE></loop1>
-  <loop2><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>761</LINE></loop2>
-  <loop3><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>765</LINE></loop3>
-  <loop4><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>769</LINE></loop4>
-  <loop6><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>781</LINE></loop6>
-  <loop5><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>783</LINE></loop5>
-  <loop7><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>790</LINE></loop7>
-  <tiledata><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>828</LINE></tiledata>
-  <window_tiles><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>829</LINE></window_tiles>
-  <sprite_0><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>830</LINE></sprite_0>
-  <sprite_1><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>831</LINE></sprite_1>
-  <sprite_2><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>832</LINE></sprite_2>
-  <scroll_x><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>833</LINE></scroll_x>
-  <scroll_y><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>834</LINE></scroll_y>
-  <window_y><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>835</LINE></window_y>
+  <scanline_bufferA><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>886</LINE></scanline_bufferA>
+  <scanline_bufferB><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>887</LINE></scanline_bufferB>
+  <scroll_x><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>893</LINE></scroll_x>
+  <scroll_y><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>894</LINE></scroll_y>
+  <visible_scanline4x><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>135</LINE></visible_scanline4x>
+  <enable_output><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>145</LINE></enable_output>
+  <enable_output_done><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>147</LINE></enable_output_done>
+  <timingjmpA_0><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>170</LINE></timingjmpA_0>
+  <timingjmpA_14><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>163</LINE></timingjmpA_14>
+  <timingjmpA_12><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>164</LINE></timingjmpA_12>
+  <timingjmpA_10><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>165</LINE></timingjmpA_10>
+  <timingjmpA_8><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>166</LINE></timingjmpA_8>
+  <timingjmpA_6><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>167</LINE></timingjmpA_6>
+  <timingjmpA_4><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>168</LINE></timingjmpA_4>
+  <timingjmpA_2><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>169</LINE></timingjmpA_2>
+  <timingjmpB_14><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>719</LINE></timingjmpB_14>
+  <timingjmpB_12><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>720</LINE></timingjmpB_12>
+  <timingjmpB_10><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>721</LINE></timingjmpB_10>
+  <timingjmpB_8><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>722</LINE></timingjmpB_8>
+  <timingjmpB_6><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>723</LINE></timingjmpB_6>
+  <timingjmpB_4><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>724</LINE></timingjmpB_4>
+  <timingjmpB_2><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>725</LINE></timingjmpB_2>
+  <timingjmpB_0><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>726</LINE></timingjmpB_0>
+  <vblank><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>751</LINE></vblank>
+  <loop1><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>804</LINE></loop1>
+  <loop2><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>808</LINE></loop2>
+  <loop3><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>812</LINE></loop3>
+  <loop4><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>816</LINE></loop4>
+  <loop6><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>828</LINE></loop6>
+  <loop5><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>830</LINE></loop5>
+  <loop7><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>837</LINE></loop7>
+  <tiledata><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>888</LINE></tiledata>
+  <window_tiles><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>889</LINE></window_tiles>
+  <sprite_0><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>890</LINE></sprite_0>
+  <sprite_1><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>891</LINE></sprite_1>
+  <sprite_2><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>892</LINE></sprite_2>
+  <window_y><FILE>C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm</FILE><LINE>895</LINE></window_y>
  </LABELS>
 </ASSEMBLER_INFO>
