@@ -109,6 +109,8 @@ start:
 	; Setup registers to control the generation
 	ldi XH, high(scanline_bufferA)
 	ldi XL, low(scanline_bufferA)
+	ldi YH, high(scanline_bufferB)
+	ldi YL, low(scanline_bufferB)
 	; Register keeping track of the currently drawing line, in pixels
 	.DEF r_y = r25
 	clr r_y
@@ -142,10 +144,7 @@ visible_scanline4x:
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop
-
-	ldi XH, high(scanline_bufferA)
-	ldi XL, low(scanline_bufferA)
+	nop nop nop nop nop nop nop nop
 	
 	ld r16, X+
 	sts USART0_TXDATAL, r16
@@ -272,8 +271,8 @@ visible_scanline4x:
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
 
-	ldi XH, high(scanline_bufferA)
-	ldi XL, low(scanline_bufferA)
+	nop;ldi XH, high(scanline_bufferA)
+	subi XL, 26; ldi XL, low(scanline_bufferA)
 
 	ld r16, X+
 	sts USART0_TXDATAL, r16
@@ -378,8 +377,7 @@ visible_scanline4x:
 	ld r16, X+
 	sts USART0_TXDATAL, r16
 
-	ldi XH, high(scanline_bufferA)
-	ldi XL, low(scanline_bufferA)
+	nop nop
 
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
@@ -400,10 +398,10 @@ visible_scanline4x:
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
+	
+	nop;ldi XH, high(scanline_bufferA)
+	subi XL, 26; ldi XL, low(scanline_bufferA)
 
-	ldi XH, high(scanline_bufferA)
-	ldi XL, low(scanline_bufferA)
-
 	ld r16, X+
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop
@@ -507,8 +505,7 @@ visible_scanline4x:
 	ld r16, X+
 	sts USART0_TXDATAL, r16
 
-	ldi XH, high(scanline_bufferA)
-	ldi XL, low(scanline_bufferA)
+	nop nop
 
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
@@ -529,10 +526,10 @@ visible_scanline4x:
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
+	
+	nop;ldi XH, high(scanline_bufferA)
+	subi XL, 26; ldi XL, low(scanline_bufferA)
 
-	ldi XH, high(scanline_bufferA)
-	ldi XL, low(scanline_bufferA)
-
 	ld r16, X+
 	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop
@@ -636,21 +633,59 @@ visible_scanline4x:
 	ld r16, X+
 	sts USART0_TXDATAL, r16
 
-	ldi XH, high(scanline_bufferA)
-	ldi XL, low(scanline_bufferA)
+	nop;ldi XH, high(scanline_bufferA)
+	subi XL, 26; ldi XL, low(scanline_bufferA)
 
 
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	st Y+, r_y
+	subi YL, 26
 
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop ;nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop ;nop
+
+	; Swap buffers
+	eor YL, XL
+	eor XL, YL
+	eor YL, XL
+	eor YH, XH
+	eor XH, YH
+	eor YH, XH
+
+	; Advance line counter, and jump to either the next visible line, or into
+	; vblank.
 	inc r_y
-
 	cpi r_y, (V_VISIBLE / PIXEL_DIV + 1)
 	breq vblank
 
@@ -765,10 +800,17 @@ vblank:
 	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
 
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop	nop nop
+	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop
 
-	; Reset to line 0, and jump back to the rendering-loop
+	; Reset to line 0, set the A to be output, and the B buffer as the
+	; rendertarget, then jump back to the rendering-loop
 	clr r_y
+	
+	ldi XH, high(scanline_bufferA)
+	ldi XL, low(scanline_bufferA)
+	ldi YH, high(scanline_bufferB)
+	ldi YL, low(scanline_bufferB)
+
 	rjmp visible_scanline4x
 	
 ;.include "tileset.asm"

@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm Wed May 13 23:59:37 2020
+AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm Thu May 14 01:18:07 2020
 
 
 EQU  SIGNATURE_000 0000001e
@@ -3227,19 +3227,19 @@ EQU  TILE_ARRAY_WIDTH 0000001b
 EQU  TILE_ARRAY_HEIGHT 0000000f
 EQU  SCANLINE_BUFFER_TILES 0000001a
 DSEG scanline_bufferA 00003e00
-DEF  r_y          r25
-CSEG visible_scanline4x 00000049
-CSEG enable_output 0000004c
-CSEG enable_output_done 0000004d
-CSEG vblank       00000820
-CSEG loop1        00000a64
-CSEG loop2        00000a77
-CSEG loop3        00000a8a
-CSEG loop4        00000a9d
-CSEG loop6        00000ab0
-CSEG loop5        00000ab1
-CSEG loop7        00000ac2
 DSEG scanline_bufferB 00003e1a
+DEF  r_y          r25
+CSEG visible_scanline4x 0000004b
+CSEG enable_output 0000004e
+CSEG enable_output_done 0000004f
+CSEG vblank       00000822
+CSEG loop1        00000a66
+CSEG loop2        00000a79
+CSEG loop3        00000a8c
+CSEG loop4        00000a9f
+CSEG loop6        00000ab2
+CSEG loop5        00000ab3
+CSEG loop7        00000ac4
 DSEG tiledata     00003e34
 DSEG window_tiles 00003fc9
 DSEG sprite_0     00003fe2
