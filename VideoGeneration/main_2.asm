@@ -234,7 +234,7 @@ sts USART0_TXDATAL, r2
 	; Set r19 to the y-index within the tile
 	mov r19, r_tile_y
 	andi r19, 0x0F
-		; 20 cycles so far
+
 		
 	rcall render_byte
 	
@@ -244,56 +244,15 @@ sts USART0_TXDATAL, r2
 
 	rcall render_byte
 	
-	nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-
-
-	nop nop nop nop nop nop nop nop nop nop
+	rcall render_byte
+	
+	rcall render_byte
+	
+	rcall render_byte
+	
+	rcall render_byte
+	
+	nop nop
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
@@ -685,7 +644,7 @@ sts USART0_TXDATAL, r2
 	subi XL, 26
 
 	; Rewind to start of renderbuffer
-	sbiw Y, 4
+	sbiw Y, 8
 	
 
 
@@ -877,7 +836,7 @@ vblank:
 	; Reset to line 0, set the A to be output, and the B buffer as the
 	; rendertarget, then jump back to the rendering-loop
 	clr r_y
-	clr r_tile_y
+	clr r_tile_y ;TODO here is to load in scroll_y, instead of clearing
 	
 	ldi XH, high(scanline_bufferA)
 	ldi XL, low(scanline_bufferA)
@@ -933,6 +892,7 @@ render_byte:
 	nop nop nop nop
 	; Return jump takes 4 cycles
 	ret
+
 
 .include "default_leveldata.asm"
 .include "tileset.asm"

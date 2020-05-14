@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm Thu May 14 23:42:14 2020
+AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm Fri May 15 00:09:21 2020
 
 
 EQU  SIGNATURE_000 0000001e
@@ -3234,7 +3234,7 @@ DSEG scanline_bufferB 00003e1a
 DSEG scroll_x     00003ffa
 DSEG scroll_y     00003ffb
 DSEG tiledata     00003e34
-CSEG default_leveldata 00000b5e
+CSEG default_leveldata 00000aae
 CSEG load_level_loop 00000052
 CSEG visible_scanline4x 0000005f
 CSEG enable_output 00000062
@@ -3247,28 +3247,28 @@ CSEG timingjmpA_8 0000007d
 CSEG timingjmpA_6 0000007f
 CSEG timingjmpA_4 00000081
 CSEG timingjmpA_2 00000083
-CSEG render_byte  00000b38
-CSEG timingjmpB_14 0000075f
-CSEG timingjmpB_12 00000761
-CSEG timingjmpB_10 00000763
-CSEG timingjmpB_8 00000765
-CSEG timingjmpB_6 00000767
-CSEG timingjmpB_4 00000769
-CSEG timingjmpB_2 0000076b
-CSEG timingjmpB_0 0000076d
-CSEG r_tile_y_wrap 00000788
-CSEG r_tile_y_wrap_done 0000078a
-CSEG vblank       0000078e
-CSEG loop1        000009d2
-CSEG loop2        000009e5
-CSEG loop3        000009f8
-CSEG loop4        00000a0b
-CSEG loop6        00000a1e
-CSEG loop5        00000a1f
-CSEG loop7        00000a30
-CSEG tileset_data 00000c29
-CSEG wrap_index_x 00000b53
-CSEG wrap_index_x_done 00000b56
+CSEG render_byte  00000a88
+CSEG timingjmpB_14 000006af
+CSEG timingjmpB_12 000006b1
+CSEG timingjmpB_10 000006b3
+CSEG timingjmpB_8 000006b5
+CSEG timingjmpB_6 000006b7
+CSEG timingjmpB_4 000006b9
+CSEG timingjmpB_2 000006bb
+CSEG timingjmpB_0 000006bd
+CSEG r_tile_y_wrap 000006d8
+CSEG r_tile_y_wrap_done 000006da
+CSEG vblank       000006de
+CSEG loop1        00000922
+CSEG loop2        00000935
+CSEG loop3        00000948
+CSEG loop4        0000095b
+CSEG loop6        0000096e
+CSEG loop5        0000096f
+CSEG loop7        00000980
+CSEG tileset_data 00000b79
+CSEG wrap_index_x 00000aa3
+CSEG wrap_index_x_done 00000aa6
 DSEG window_tiles 00003fc9
 DSEG sprite_0     00003fe2
 DSEG sprite_1     00003fec
