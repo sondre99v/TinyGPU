@@ -1,14 +1,14 @@
 
-AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm Fri May 15 00:09:21 2020
+AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm Fri May 15 00:34:25 2020
 
 [builtin](2): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\1.4.283\avrasm\inc\tn817def.inc'
 C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm(11): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\1.4.283\avrasm\inc\tn817def.inc'
-C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm(897): Including file 'C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\default_leveldata.asm'
-C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm(898): Including file 'C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\tileset.asm'
+C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm(902): Including file 'C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\default_leveldata.asm'
+C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm(903): Including file 'C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\tileset.asm'
 [builtin](2): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\1.4.283\avrasm\inc\tn817def.inc'
 C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm(11): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\1.4.283\avrasm\inc\tn817def.inc'
-C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm(897): Including file 'C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\default_leveldata.asm'
-C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm(898): Including file 'C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\tileset.asm'
+C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm(902): Including file 'C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\default_leveldata.asm'
+C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm(903): Including file 'C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\tileset.asm'
                                  
                                  /*
                                  
@@ -4673,117 +4673,122 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000002 bf04                      	out CPU_CCP, r16
 000003 e000                      	ldi r16, 0
 000004 9300 0061                 	sts CLKCTRL_MCLKCTRLB, r16
+                                 
+000006 ed08                      	ldi r16, CPU_CCP_IOREG_gc
+000007 bf04                      	out CPU_CCP, r16
+000008 e800                      	ldi r16, CLKCTRL_CLKOUT_bm
+000009 9300 0060                 	sts CLKCTRL_MCLKCTRLA, r16
                                  	
                                  	; Setup TCA in split mode, to generate:
                                  	;  - HBLANK mask on WO0, passed into CCL
                                  	;  - HSYNC pulse on TCA0.WO5 (PA5)
                                  
-000006 e001                      	ldi r16, TCA_SPLIT_SPLITM_bm
-000007 9300 0a03                 	sts TCA0_SPLIT_CTRLD, r16
+00000b e001                      	ldi r16, TCA_SPLIT_SPLITM_bm
+00000c 9300 0a03                 	sts TCA0_SPLIT_CTRLD, r16
                                  
                                  	; Setup HSYNC
-000009 e803                      	ldi r16, (H_FULL / CLK_DIV / 4) - 1
-00000a 9300 0a27                 	sts TCA0_SPLIT_HPER, r16
-00000c e100                      	ldi r16, (H_SYNC / CLK_DIV / 4)
-00000d 9300 0a2d                 	sts TCA0_SPLIT_HCMP2, r16
-00000f e000                      	ldi r16, 0
-000010 9300 0a21                 	sts TCA0_SPLIT_HCNT, r16
+00000e e803                      	ldi r16, (H_FULL / CLK_DIV / 4) - 1
+00000f 9300 0a27                 	sts TCA0_SPLIT_HPER, r16
+000011 e100                      	ldi r16, (H_SYNC / CLK_DIV / 4)
+000012 9300 0a2d                 	sts TCA0_SPLIT_HCMP2, r16
+000014 e000                      	ldi r16, 0
+000015 9300 0a21                 	sts TCA0_SPLIT_HCNT, r16
                                  
                                  	; Setup HBLANK
-000012 e803                      	ldi r16, (H_FULL / CLK_DIV / 4) - 1
-000013 9300 0a26                 	sts TCA0_SPLIT_LPER, r16
-000015 e604                      	ldi r16, (H_VISIBLE / CLK_DIV / 4)
-000016 9300 0a28                 	sts TCA0_SPLIT_LCMP0, r16
-000018 e60f                      	ldi r16, ((H_VISIBLE + H_BACK) / CLK_DIV / 4)
-000019 9300 0a20                 	sts TCA0_SPLIT_LCNT, r16
+000017 e803                      	ldi r16, (H_FULL / CLK_DIV / 4) - 1
+000018 9300 0a26                 	sts TCA0_SPLIT_LPER, r16
+00001a e604                      	ldi r16, (H_VISIBLE / CLK_DIV / 4)
+00001b 9300 0a28                 	sts TCA0_SPLIT_LCMP0, r16
+00001d e60f                      	ldi r16, ((H_VISIBLE + H_BACK) / CLK_DIV / 4)
+00001e 9300 0a20                 	sts TCA0_SPLIT_LCNT, r16
                                  
-00001b e401                      	ldi r16, TCA_SPLIT_HCMP2EN_bm | TCA_SPLIT_LCMP0EN_bm
-00001c 9300 0a01                 	sts TCA0_SPLIT_CTRLB, r16
+000020 e401                      	ldi r16, TCA_SPLIT_HCMP2EN_bm | TCA_SPLIT_LCMP0EN_bm
+000021 9300 0a01                 	sts TCA0_SPLIT_CTRLB, r16
                                  
                                  	; HSYNC pin on PA5
-00001e 9a05                      	sbi VPORTA_DIR, 5
-00001f e800                      	ldi r16, PORT_INVEN_bm
-000020 9300 0415                 	sts PORTA_PIN5CTRL, r16
+000023 9a05                      	sbi VPORTA_DIR, 5
+000024 e800                      	ldi r16, PORT_INVEN_bm
+000025 9300 0415                 	sts PORTA_PIN5CTRL, r16
                                  
                                  	; Setup USART0 to serialize the pixel data, to be passed to the CCL
-000022 ec00                      	ldi r16, USART_MSPI_CMODE_MSPI_gc
-000023 9300 0807                 	sts USART0_CTRLC, r16
-000025 e400                      	ldi r16, (1 << 6)
-000026 9300 0808                 	sts USART0_BAUD, r16
+000027 ec00                      	ldi r16, USART_MSPI_CMODE_MSPI_gc
+000028 9300 0807                 	sts USART0_CTRLC, r16
+00002a e400                      	ldi r16, (1 << 6)
+00002b 9300 0808                 	sts USART0_BAUD, r16
                                  
                                  	; Setup CCL to compute AND(TCA0.WO0, USART0.TXD, LUT0.IN2)
-000028 ea08                      	ldi r16, CCL_INSEL1_USART0_gc | CCL_INSEL0_TCA0_gc
-000029 9300 01c6                 	sts CCL_LUT0CTRLB, r16
-00002b e005                      	ldi r16, CCL_INSEL2_IO_gc
-00002c 9300 01c7                 	sts CCL_LUT0CTRLC, r16
-00002e e800                      	ldi r16, 0b10000000
-00002f 9300 01c8                 	sts CCL_TRUTH0, r16
-000031 e009                      	ldi r16, CCL_ENABLE_bm | CCL_OUTEN_bm
-000032 9300 01c5                 	sts CCL_LUT0CTRLA, r16
-000034 e001                      	ldi r16, CCL_ENABLE_bm
-000035 9300 01c0                 	sts CCL_CTRLA, r16
+00002d ea08                      	ldi r16, CCL_INSEL1_USART0_gc | CCL_INSEL0_TCA0_gc
+00002e 9300 01c6                 	sts CCL_LUT0CTRLB, r16
+000030 e005                      	ldi r16, CCL_INSEL2_IO_gc
+000031 9300 01c7                 	sts CCL_LUT0CTRLC, r16
+000033 e800                      	ldi r16, 0b10000000
+000034 9300 01c8                 	sts CCL_TRUTH0, r16
+000036 e009                      	ldi r16, CCL_ENABLE_bm | CCL_OUTEN_bm
+000037 9300 01c5                 	sts CCL_LUT0CTRLA, r16
+000039 e001                      	ldi r16, CCL_ENABLE_bm
+00003a 9300 01c0                 	sts CCL_CTRLA, r16
                                  	
                                  	; Mask pin on PA3 (fully software controlled) to disable pixel output
                                  	; during VBLANK
-000037 9a03                      	sbi VPORTA_DIR, 3
-000038 980b                      	cbi VPORTA_OUT, 3
+00003c 9a03                      	sbi VPORTA_DIR, 3
+00003d 980b                      	cbi VPORTA_OUT, 3
                                  
                                  	; Pixel pin on LUT0.OUT* (PB4)
-000039 e100                      	ldi r16, PORTMUX_LUT0_bm
-00003a 9300 0200                 	sts PORTMUX_CTRLA, r16
-00003c 9a24                      	sbi VPORTB_DIR, 4
-00003d 980c                      	cbi VPORTA_OUT, 4
+00003e e100                      	ldi r16, PORTMUX_LUT0_bm
+00003f 9300 0200                 	sts PORTMUX_CTRLA, r16
+000041 9a24                      	sbi VPORTB_DIR, 4
+000042 980c                      	cbi VPORTA_OUT, 4
                                  
                                  	; VSYNC pin on PA4 (fully software controlled)
-00003e 9a04                      	sbi VPORTA_DIR, 4
-00003f 9a0c                      	sbi VPORTA_OUT, 4
+000043 9a04                      	sbi VPORTA_DIR, 4
+000044 9a0c                      	sbi VPORTA_OUT, 4
                                  
                                  	
                                  	; ====================
                                  	; State Initialization
                                  	; ====================
                                  	; Always-zero register
-000040 2433                      	clr r_zero
+000045 2433                      	clr r_zero
                                  	; Setup registers to control the generation
-000041 e3be                      	ldi XH, high(scanline_bufferA)
-000042 e0a0                      	ldi XL, low(scanline_bufferA)
-000043 e3de                      	ldi YH, high(scanline_bufferB)
-000044 e1ca                      	ldi YL, low(scanline_bufferB)
+000046 e3be                      	ldi XH, high(scanline_bufferA)
+000047 e0a0                      	ldi XL, low(scanline_bufferA)
+000048 e3de                      	ldi YH, high(scanline_bufferB)
+000049 e1ca                      	ldi YL, low(scanline_bufferB)
                                  	; Register keeping track of the currently drawing line, in pixels
-000045 2799                      	clr r_y
+00004a 2799                      	clr r_y
                                  	; Register keeping track of the current tile y-index, and position in that
                                  	; tile. High nibble is tile index, low nibble is index in that tile
-000046 2788                      	clr r_tile_y
+00004b 2788                      	clr r_tile_y
                                  	; Initialize scroll_x
-000047 e000                      	ldi r16, 0
-000048 9300 3ffa                 	sts scroll_x, r16
+00004c e000                      	ldi r16, 0
+00004d 9300 3ffa                 	sts scroll_x, r16
                                  	; Initialize scroll_y
-00004a e000                      	ldi r16, 0
-00004b 9300 3ffb                 	sts scroll_y, r16
+00004f e000                      	ldi r16, 0
+000050 9300 3ffb                 	sts scroll_y, r16
                                  	; Initialize tiledata
-00004d e3a4                      	ldi XL, low(tiledata)
-00004e e3be                      	ldi XH, high(tiledata)
-00004f e5ec                      	ldi ZL, low(default_leveldata << 1)
-000050 e1f5                      	ldi ZH, high(default_leveldata << 1)
-000051 2711                      	clr r17
+000052 e3a4                      	ldi XL, low(tiledata)
+000053 e3be                      	ldi XH, high(tiledata)
+000054 e6e6                      	ldi ZL, low(default_leveldata << 1)
+000055 e1f5                      	ldi ZH, high(default_leveldata << 1)
+000056 2711                      	clr r17
                                  	load_level_loop:
-000052 9105                      		lpm r16, Z+
-000053 930d                      		st X+, r16
-000054 9105                      		lpm r16, Z+
-000055 930d                      		st X+, r16
-000056 9513                      		inc r17
-000057 3c1a                      		cpi r17, TILEDATA_WIDTH * TILEDATA_HEIGHT / 2
-000058 f7c9                      		brne load_level_loop
+000057 9105                      		lpm r16, Z+
+000058 930d                      		st X+, r16
+000059 9105                      		lpm r16, Z+
+00005a 930d                      		st X+, r16
+00005b 9513                      		inc r17
+00005c 3c1a                      		cpi r17, TILEDATA_WIDTH * TILEDATA_HEIGHT / 2
+00005d f7c9                      		brne load_level_loop
                                  
                                  
                                  	; Enable USART0 and TCA0
                                  	; Make sure the prescaler of TCA is synchronized with the baud-rate
                                  	; generator of USART0. Note that the baudrate generator is running even if
                                  	; no transmission is in progress.
-000059 e400                      	ldi r16, USART_TXEN_bm
-00005a 9300 0806                 	sts USART0_CTRLB, r16
-00005c e005                      	ldi r16, TCA_SPLIT_CLKSEL_DIV4_gc | TCA_SPLIT_ENABLE_bm
-00005d 9300 0a00                 	sts TCA0_SPLIT_CTRLA, r16
+00005e e400                      	ldi r16, USART_TXEN_bm
+00005f 9300 0806                 	sts USART0_CTRLB, r16
+000061 e005                      	ldi r16, TCA_SPLIT_CLKSEL_DIV4_gc | TCA_SPLIT_ENABLE_bm
+000062 9300 0a00                 	sts TCA0_SPLIT_CTRLA, r16
                                  
                                  ; Loop across four scanlines
                                  visible_scanline4x:
@@ -4794,490 +4799,490 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
                                  	
                                  	; Make sure we only enable the output once we render row 1 (meaning row 0
                                  	; has been rendered, and should be streamed out).
-00005f 3091                      	cpi r_y, 1
-000060 f009                      	breq enable_output
-000061 c001                      		rjmp enable_output_done
+000064 3091                      	cpi r_y, 1
+000065 f009                      	breq enable_output
+000066 c001                      		rjmp enable_output_done
                                  	enable_output:
-000062 9a0b                      		sbi VPORTA_OUT, 3
+000067 9a0b                      		sbi VPORTA_OUT, 3
                                  	enable_output_done:
                                  
                                  	; Wait until HBLANK is done
-000063 0000
-000064 0000
-000065 0000
-000066 0000
-000067 0000
 000068 0000
 000069 0000
 00006a 0000
 00006b 0000
 00006c 0000
-00006d 0000                      	nop nop nop nop nop nop nop nop nop nop nop
+00006d 0000
+00006e 0000
+00006f 0000
+000070 0000
+000071 0000
+000072 0000                      	nop nop nop nop nop nop nop nop nop nop nop
                                  
                                  	; This block takes between 11 and 25 cycles, depending on the value in
                                  	; scroll_x.
-00006e 9100 3ffa                 	lds r16, scroll_x
-000070 0f00                      	lsl r16
-000071 700f                      	andi r16, 0xF ; Ensure no infinite loop occurs if scroll_x > 7
-000072 e8e5                      	ldi ZL, low(timingjmpA_0)
-000073 e0f0                      	ldi ZH, high(timingjmpA_0)
-000074 1be0                      	sub ZL, r16
-000075 09f3                      	sbc ZH, r_zero
-000076 9409                      	ijmp
-000077 0000
-000078 0000                      	timingjmpA_14: nop nop
-000079 0000
-00007a 0000                      	timingjmpA_12: nop nop
-00007b 0000
-00007c 0000                      	timingjmpA_10: nop nop
-00007d 0000
-00007e 0000                      	timingjmpA_8: nop nop
-00007f 0000
-000080 0000                      	timingjmpA_6: nop nop
-000081 0000
-000082 0000                      	timingjmpA_4: nop nop
-000083 0000
-000084 0000                      	timingjmpA_2: nop nop
+000073 9100 3ffa                 	lds r16, scroll_x
+000075 0f00                      	lsl r16
+000076 700f                      	andi r16, 0xF ; Ensure no infinite loop occurs if scroll_x > 7
+000077 e8ea                      	ldi ZL, low(timingjmpA_0)
+000078 e0f0                      	ldi ZH, high(timingjmpA_0)
+000079 1be0                      	sub ZL, r16
+00007a 09f3                      	sbc ZH, r_zero
+00007b 9409                      	ijmp
+00007c 0000
+00007d 0000                      	timingjmpA_14: nop nop
+00007e 0000
+00007f 0000                      	timingjmpA_12: nop nop
+000080 0000
+000081 0000                      	timingjmpA_10: nop nop
+000082 0000
+000083 0000                      	timingjmpA_8: nop nop
+000084 0000
+000085 0000                      	timingjmpA_6: nop nop
+000086 0000
+000087 0000                      	timingjmpA_4: nop nop
+000088 0000
+000089 0000                      	timingjmpA_2: nop nop
                                  	timingjmpA_0:
                                  
                                  
                                  
-000085 902d                      	ld r2, X+
-000086 9220 0802                 	sts USART0_TXDATAL, r2
-000088 0000
-000089 0000
-00008a 0000
-00008b 0000
-00008c 0000
+00008a 902d                      	ld r2, X+
+00008b 9220 0802                 	sts USART0_TXDATAL, r2
 00008d 0000
-00008e 0000                      	nop nop nop nop nop nop nop
+00008e 0000
 00008f 0000
 000090 0000
 000091 0000
 000092 0000
-000093 0000                      	nop nop nop nop nop
-000094 902d                      	ld r2, X+
-000095 9220 0802                 	sts USART0_TXDATAL, r2
+000093 0000                      	nop nop nop nop nop nop nop
+000094 0000
+000095 0000
+000096 0000
 000097 0000
-000098 0000
-000099 0000
-00009a 0000
-00009b 0000
+000098 0000                      	nop nop nop nop nop
+000099 902d                      	ld r2, X+
+00009a 9220 0802                 	sts USART0_TXDATAL, r2
 00009c 0000
-00009d 0000                      	nop nop nop nop nop nop nop
+00009d 0000
 00009e 0000
 00009f 0000
 0000a0 0000
 0000a1 0000
-0000a2 0000                      	nop nop nop nop nop
-0000a3 902d                      	ld r2, X+
-0000a4 9220 0802                 	sts USART0_TXDATAL, r2
+0000a2 0000                      	nop nop nop nop nop nop nop
+0000a3 0000
+0000a4 0000
+0000a5 0000
 0000a6 0000
-0000a7 0000
-0000a8 0000
-0000a9 0000
-0000aa 0000
+0000a7 0000                      	nop nop nop nop nop
+0000a8 902d                      	ld r2, X+
+0000a9 9220 0802                 	sts USART0_TXDATAL, r2
 0000ab 0000
-0000ac 0000                      	nop nop nop nop nop nop nop
+0000ac 0000
 0000ad 0000
 0000ae 0000
 0000af 0000
 0000b0 0000
-0000b1 0000                      	nop nop nop nop nop
-0000b2 902d                      	ld r2, X+
-0000b3 9220 0802                 	sts USART0_TXDATAL, r2
+0000b1 0000                      	nop nop nop nop nop nop nop
+0000b2 0000
+0000b3 0000
+0000b4 0000
 0000b5 0000
-0000b6 0000
-0000b7 0000
-0000b8 0000
-0000b9 0000
+0000b6 0000                      	nop nop nop nop nop
+0000b7 902d                      	ld r2, X+
+0000b8 9220 0802                 	sts USART0_TXDATAL, r2
 0000ba 0000
-0000bb 0000                      	nop nop nop nop nop nop nop
+0000bb 0000
 0000bc 0000
 0000bd 0000
 0000be 0000
 0000bf 0000
-0000c0 0000                      	nop nop nop nop nop
-0000c1 902d                      	ld r2, X+
-0000c2 9220 0802                 	sts USART0_TXDATAL, r2
+0000c0 0000                      	nop nop nop nop nop nop nop
+0000c1 0000
+0000c2 0000
+0000c3 0000
 0000c4 0000
-0000c5 0000
-0000c6 0000
-0000c7 0000
-0000c8 0000
+0000c5 0000                      	nop nop nop nop nop
+0000c6 902d                      	ld r2, X+
+0000c7 9220 0802                 	sts USART0_TXDATAL, r2
 0000c9 0000
-0000ca 0000                      	nop nop nop nop nop nop nop
+0000ca 0000
 0000cb 0000
 0000cc 0000
 0000cd 0000
 0000ce 0000
-0000cf 0000                      	nop nop nop nop nop
-0000d0 902d                      	ld r2, X+
-0000d1 9220 0802                 	sts USART0_TXDATAL, r2
+0000cf 0000                      	nop nop nop nop nop nop nop
+0000d0 0000
+0000d1 0000
+0000d2 0000
 0000d3 0000
-0000d4 0000
-0000d5 0000
-0000d6 0000
-0000d7 0000
+0000d4 0000                      	nop nop nop nop nop
+0000d5 902d                      	ld r2, X+
+0000d6 9220 0802                 	sts USART0_TXDATAL, r2
 0000d8 0000
-0000d9 0000                      	nop nop nop nop nop nop nop
+0000d9 0000
 0000da 0000
 0000db 0000
 0000dc 0000
 0000dd 0000
-0000de 0000                      	nop nop nop nop nop
-0000df 902d                      	ld r2, X+
-0000e0 9220 0802                 	sts USART0_TXDATAL, r2
+0000de 0000                      	nop nop nop nop nop nop nop
+0000df 0000
+0000e0 0000
+0000e1 0000
 0000e2 0000
-0000e3 0000
-0000e4 0000
-0000e5 0000
-0000e6 0000
+0000e3 0000                      	nop nop nop nop nop
+0000e4 902d                      	ld r2, X+
+0000e5 9220 0802                 	sts USART0_TXDATAL, r2
 0000e7 0000
-0000e8 0000                      	nop nop nop nop nop nop nop
+0000e8 0000
 0000e9 0000
 0000ea 0000
 0000eb 0000
 0000ec 0000
-0000ed 0000                      	nop nop nop nop nop
-0000ee 902d                      	ld r2, X+
-0000ef 9220 0802                 	sts USART0_TXDATAL, r2
+0000ed 0000                      	nop nop nop nop nop nop nop
+0000ee 0000
+0000ef 0000
+0000f0 0000
 0000f1 0000
-0000f2 0000
-0000f3 0000
-0000f4 0000
-0000f5 0000
+0000f2 0000                      	nop nop nop nop nop
+0000f3 902d                      	ld r2, X+
+0000f4 9220 0802                 	sts USART0_TXDATAL, r2
 0000f6 0000
-0000f7 0000                      	nop nop nop nop nop nop nop
+0000f7 0000
 0000f8 0000
 0000f9 0000
 0000fa 0000
 0000fb 0000
-0000fc 0000                      	nop nop nop nop nop
-0000fd 902d                      	ld r2, X+
-0000fe 9220 0802                 	sts USART0_TXDATAL, r2
+0000fc 0000                      	nop nop nop nop nop nop nop
+0000fd 0000
+0000fe 0000
+0000ff 0000
 000100 0000
-000101 0000
-000102 0000
-000103 0000
-000104 0000
+000101 0000                      	nop nop nop nop nop
+000102 902d                      	ld r2, X+
+000103 9220 0802                 	sts USART0_TXDATAL, r2
 000105 0000
-000106 0000                      	nop nop nop nop nop nop nop
+000106 0000
 000107 0000
 000108 0000
 000109 0000
 00010a 0000
-00010b 0000                      	nop nop nop nop nop
-00010c 902d                      	ld r2, X+
-00010d 9220 0802                 	sts USART0_TXDATAL, r2
+00010b 0000                      	nop nop nop nop nop nop nop
+00010c 0000
+00010d 0000
+00010e 0000
 00010f 0000
-000110 0000
-000111 0000
-000112 0000
-000113 0000
+000110 0000                      	nop nop nop nop nop
+000111 902d                      	ld r2, X+
+000112 9220 0802                 	sts USART0_TXDATAL, r2
 000114 0000
-000115 0000                      	nop nop nop nop nop nop nop
+000115 0000
 000116 0000
 000117 0000
 000118 0000
 000119 0000
-00011a 0000                      	nop nop nop nop nop
-00011b 902d                      	ld r2, X+
-00011c 9220 0802                 	sts USART0_TXDATAL, r2
+00011a 0000                      	nop nop nop nop nop nop nop
+00011b 0000
+00011c 0000
+00011d 0000
 00011e 0000
-00011f 0000
-000120 0000
-000121 0000
-000122 0000
+00011f 0000                      	nop nop nop nop nop
+000120 902d                      	ld r2, X+
+000121 9220 0802                 	sts USART0_TXDATAL, r2
 000123 0000
-000124 0000                      	nop nop nop nop nop nop nop
+000124 0000
 000125 0000
 000126 0000
 000127 0000
 000128 0000
-000129 0000                      	nop nop nop nop nop
-00012a 902d                      	ld r2, X+
-00012b 9220 0802                 	sts USART0_TXDATAL, r2
+000129 0000                      	nop nop nop nop nop nop nop
+00012a 0000
+00012b 0000
+00012c 0000
 00012d 0000
-00012e 0000
-00012f 0000
-000130 0000
-000131 0000
+00012e 0000                      	nop nop nop nop nop
+00012f 902d                      	ld r2, X+
+000130 9220 0802                 	sts USART0_TXDATAL, r2
 000132 0000
-000133 0000                      	nop nop nop nop nop nop nop
+000133 0000
 000134 0000
 000135 0000
 000136 0000
 000137 0000
-000138 0000                      	nop nop nop nop nop
-000139 902d                      	ld r2, X+
-00013a 9220 0802                 	sts USART0_TXDATAL, r2
+000138 0000                      	nop nop nop nop nop nop nop
+000139 0000
+00013a 0000
+00013b 0000
 00013c 0000
-00013d 0000
-00013e 0000
-00013f 0000
-000140 0000
+00013d 0000                      	nop nop nop nop nop
+00013e 902d                      	ld r2, X+
+00013f 9220 0802                 	sts USART0_TXDATAL, r2
 000141 0000
-000142 0000                      	nop nop nop nop nop nop nop
+000142 0000
 000143 0000
 000144 0000
 000145 0000
 000146 0000
-000147 0000                      	nop nop nop nop nop
-000148 902d                      	ld r2, X+
-000149 9220 0802                 	sts USART0_TXDATAL, r2
+000147 0000                      	nop nop nop nop nop nop nop
+000148 0000
+000149 0000
+00014a 0000
 00014b 0000
-00014c 0000
-00014d 0000
-00014e 0000
-00014f 0000
+00014c 0000                      	nop nop nop nop nop
+00014d 902d                      	ld r2, X+
+00014e 9220 0802                 	sts USART0_TXDATAL, r2
 000150 0000
-000151 0000                      	nop nop nop nop nop nop nop
+000151 0000
 000152 0000
 000153 0000
 000154 0000
 000155 0000
-000156 0000                      	nop nop nop nop nop
-000157 902d                      	ld r2, X+
-000158 9220 0802                 	sts USART0_TXDATAL, r2
+000156 0000                      	nop nop nop nop nop nop nop
+000157 0000
+000158 0000
+000159 0000
 00015a 0000
-00015b 0000
-00015c 0000
-00015d 0000
-00015e 0000
+00015b 0000                      	nop nop nop nop nop
+00015c 902d                      	ld r2, X+
+00015d 9220 0802                 	sts USART0_TXDATAL, r2
 00015f 0000
-000160 0000                      	nop nop nop nop nop nop nop
+000160 0000
 000161 0000
 000162 0000
 000163 0000
 000164 0000
-000165 0000                      	nop nop nop nop nop
-000166 902d                      	ld r2, X+
-000167 9220 0802                 	sts USART0_TXDATAL, r2
+000165 0000                      	nop nop nop nop nop nop nop
+000166 0000
+000167 0000
+000168 0000
 000169 0000
-00016a 0000
-00016b 0000
-00016c 0000
-00016d 0000
+00016a 0000                      	nop nop nop nop nop
+00016b 902d                      	ld r2, X+
+00016c 9220 0802                 	sts USART0_TXDATAL, r2
 00016e 0000
-00016f 0000                      	nop nop nop nop nop nop nop
+00016f 0000
 000170 0000
 000171 0000
 000172 0000
 000173 0000
-000174 0000                      	nop nop nop nop nop
-000175 902d                      	ld r2, X+
-000176 9220 0802                 	sts USART0_TXDATAL, r2
+000174 0000                      	nop nop nop nop nop nop nop
+000175 0000
+000176 0000
+000177 0000
 000178 0000
-000179 0000
-00017a 0000
-00017b 0000
-00017c 0000
+000179 0000                      	nop nop nop nop nop
+00017a 902d                      	ld r2, X+
+00017b 9220 0802                 	sts USART0_TXDATAL, r2
 00017d 0000
-00017e 0000                      	nop nop nop nop nop nop nop
+00017e 0000
 00017f 0000
 000180 0000
 000181 0000
 000182 0000
-000183 0000                      	nop nop nop nop nop
-000184 902d                      	ld r2, X+
-000185 9220 0802                 	sts USART0_TXDATAL, r2
+000183 0000                      	nop nop nop nop nop nop nop
+000184 0000
+000185 0000
+000186 0000
 000187 0000
-000188 0000
-000189 0000
-00018a 0000
-00018b 0000
+000188 0000                      	nop nop nop nop nop
+000189 902d                      	ld r2, X+
+00018a 9220 0802                 	sts USART0_TXDATAL, r2
 00018c 0000
-00018d 0000                      	nop nop nop nop nop nop nop
+00018d 0000
 00018e 0000
 00018f 0000
 000190 0000
 000191 0000
-000192 0000                      	nop nop nop nop nop
-000193 902d                      	ld r2, X+
-000194 9220 0802                 	sts USART0_TXDATAL, r2
+000192 0000                      	nop nop nop nop nop nop nop
+000193 0000
+000194 0000
+000195 0000
 000196 0000
-000197 0000
-000198 0000
-000199 0000
-00019a 0000
+000197 0000                      	nop nop nop nop nop
+000198 902d                      	ld r2, X+
+000199 9220 0802                 	sts USART0_TXDATAL, r2
 00019b 0000
-00019c 0000                      	nop nop nop nop nop nop nop
+00019c 0000
 00019d 0000
 00019e 0000
 00019f 0000
 0001a0 0000
-0001a1 0000                      	nop nop nop nop nop
-0001a2 902d                      	ld r2, X+
-0001a3 9220 0802                 	sts USART0_TXDATAL, r2
+0001a1 0000                      	nop nop nop nop nop nop nop
+0001a2 0000
+0001a3 0000
+0001a4 0000
 0001a5 0000
-0001a6 0000
-0001a7 0000
-0001a8 0000
-0001a9 0000
+0001a6 0000                      	nop nop nop nop nop
+0001a7 902d                      	ld r2, X+
+0001a8 9220 0802                 	sts USART0_TXDATAL, r2
 0001aa 0000
-0001ab 0000                      	nop nop nop nop nop nop nop
+0001ab 0000
 0001ac 0000
 0001ad 0000
 0001ae 0000
 0001af 0000
-0001b0 0000                      	nop nop nop nop nop
-0001b1 902d                      	ld r2, X+
-0001b2 9220 0802                 	sts USART0_TXDATAL, r2
+0001b0 0000                      	nop nop nop nop nop nop nop
+0001b1 0000
+0001b2 0000
+0001b3 0000
 0001b4 0000
-0001b5 0000
-0001b6 0000
-0001b7 0000
-0001b8 0000
+0001b5 0000                      	nop nop nop nop nop
+0001b6 902d                      	ld r2, X+
+0001b7 9220 0802                 	sts USART0_TXDATAL, r2
 0001b9 0000
-0001ba 0000                      	nop nop nop nop nop nop nop
+0001ba 0000
 0001bb 0000
 0001bc 0000
 0001bd 0000
 0001be 0000
-0001bf 0000                      	nop nop nop nop nop
-0001c0 902d                      	ld r2, X+
-0001c1 9220 0802                 	sts USART0_TXDATAL, r2
+0001bf 0000                      	nop nop nop nop nop nop nop
+0001c0 0000
+0001c1 0000
+0001c2 0000
 0001c3 0000
-0001c4 0000
-0001c5 0000
-0001c6 0000
-0001c7 0000
+0001c4 0000                      	nop nop nop nop nop
+0001c5 902d                      	ld r2, X+
+0001c6 9220 0802                 	sts USART0_TXDATAL, r2
 0001c8 0000
-0001c9 0000                      	nop nop nop nop nop nop nop
+0001c9 0000
 0001ca 0000
 0001cb 0000
 0001cc 0000
 0001cd 0000
-0001ce 0000                      	nop nop nop nop nop
-0001cf 902d                      	ld r2, X+
-0001d0 9220 0802                 	sts USART0_TXDATAL, r2
+0001ce 0000                      	nop nop nop nop nop nop nop
+0001cf 0000
+0001d0 0000
+0001d1 0000
 0001d2 0000
-0001d3 0000
-0001d4 0000
-0001d5 0000
-0001d6 0000
+0001d3 0000                      	nop nop nop nop nop
+0001d4 902d                      	ld r2, X+
+0001d5 9220 0802                 	sts USART0_TXDATAL, r2
 0001d7 0000
-0001d8 0000                      	nop nop nop nop nop nop nop
+0001d8 0000
 0001d9 0000
 0001da 0000
 0001db 0000
 0001dc 0000
-0001dd 0000                      	nop nop nop nop nop
-0001de 902d                      	ld r2, X+
-0001df 9220 0802                 	sts USART0_TXDATAL, r2
+0001dd 0000                      	nop nop nop nop nop nop nop
+0001de 0000
+0001df 0000
+0001e0 0000
 0001e1 0000
-0001e2 0000
-0001e3 0000
-0001e4 0000
-0001e5 0000
+0001e2 0000                      	nop nop nop nop nop
+0001e3 902d                      	ld r2, X+
+0001e4 9220 0802                 	sts USART0_TXDATAL, r2
 0001e6 0000
-0001e7 0000                      	nop nop nop nop nop nop nop
+0001e7 0000
 0001e8 0000
 0001e9 0000
 0001ea 0000
 0001eb 0000
-0001ec 0000                      	nop nop nop nop nop
-0001ed 902d                      	ld r2, X+
-0001ee 9220 0802                 	sts USART0_TXDATAL, r2
+0001ec 0000                      	nop nop nop nop nop nop nop
+0001ed 0000
+0001ee 0000
+0001ef 0000
 0001f0 0000
-0001f1 0000
-0001f2 0000
-0001f3 0000
-0001f4 0000
+0001f1 0000                      	nop nop nop nop nop
+0001f2 902d                      	ld r2, X+
+0001f3 9220 0802                 	sts USART0_TXDATAL, r2
 0001f5 0000
-0001f6 0000                      	nop nop nop nop nop nop nop
+0001f6 0000
 0001f7 0000
 0001f8 0000
 0001f9 0000
 0001fa 0000
-0001fb 0000                      	nop nop nop nop nop
-0001fc 902d                      	ld r2, X+
-0001fd 9220 0802                 	sts USART0_TXDATAL, r2
-                                 
+0001fb 0000                      	nop nop nop nop nop nop nop
+0001fc 0000
+0001fd 0000
+0001fe 0000
 0001ff 0000
-000200 0000                      	nop nop
+000200 0000                      	nop nop nop nop nop
+000201 902d                      	ld r2, X+
+000202 9220 0802                 	sts USART0_TXDATAL, r2
                                  
-000201 0000
-000202 0000
-000203 0000
 000204 0000
-000205 0000
+000205 0000                      	nop nop
+                                 
 000206 0000
 000207 0000
 000208 0000
 000209 0000
-00020a 0000                      	nop nop nop nop nop nop nop nop nop nop
+00020a 0000
 00020b 0000
 00020c 0000
 00020d 0000
 00020e 0000
-00020f 0000
+00020f 0000                      	nop nop nop nop nop nop nop nop nop nop
 000210 0000
 000211 0000
 000212 0000
 000213 0000
-000214 0000                      	nop nop nop nop nop nop nop nop nop nop
+000214 0000
 000215 0000
 000216 0000
 000217 0000
 000218 0000
-000219 0000
+000219 0000                      	nop nop nop nop nop nop nop nop nop nop
 00021a 0000
 00021b 0000
 00021c 0000
 00021d 0000
-00021e 0000                      	nop nop nop nop nop nop nop nop nop nop
+00021e 0000
 00021f 0000
 000220 0000
 000221 0000
 000222 0000
-000223 0000
+000223 0000                      	nop nop nop nop nop nop nop nop nop nop
 000224 0000
 000225 0000
 000226 0000
 000227 0000
-000228 0000                      	nop nop nop nop nop nop nop nop nop nop
+000228 0000
 000229 0000
 00022a 0000
 00022b 0000
 00022c 0000
-00022d 0000
+00022d 0000                      	nop nop nop nop nop nop nop nop nop nop
 00022e 0000
 00022f 0000
 000230 0000
 000231 0000
-000232 0000                      	nop nop nop nop nop nop nop nop nop nop
+000232 0000
 000233 0000
 000234 0000
 000235 0000
 000236 0000
-000237 0000
+000237 0000                      	nop nop nop nop nop nop nop nop nop nop
 000238 0000
 000239 0000
 00023a 0000
 00023b 0000
-00023c 0000                      	nop nop nop nop nop nop nop nop nop nop
+00023c 0000
 00023d 0000
 00023e 0000
 00023f 0000
 000240 0000
-000241 0000
+000241 0000                      	nop nop nop nop nop nop nop nop nop nop
 000242 0000
 000243 0000
 000244 0000
 000245 0000
-000246 0000                      	nop nop nop nop nop nop nop nop nop nop
+000246 0000
 000247 0000
 000248 0000
 000249 0000
 00024a 0000
-00024b 0000
+00024b 0000                      	nop nop nop nop nop nop nop nop nop nop
 00024c 0000
 00024d 0000
 00024e 0000
 00024f 0000
-000250 0000                      	nop nop nop nop nop nop nop nop nop nop
+000250 0000
+000251 0000
+000252 0000
+000253 0000
+000254 0000
+000255 0000                      	nop nop nop nop nop nop nop nop nop nop
                                  	
                                  	
                                  	; ===================
@@ -5285,53 +5290,53 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
                                  	; ===================
                                  
                                  	; Wait until HBLANK is done
-000251 0000
-000252 0000
-000253 0000
-000254 0000
-000255 0000
 000256 0000
 000257 0000
 000258 0000
 000259 0000
-00025a 0000                      	nop nop nop nop nop nop nop nop nop nop
+00025a 0000
 00025b 0000
 00025c 0000
 00025d 0000
 00025e 0000
-00025f 0000
+00025f 0000                      	nop nop nop nop nop nop nop nop nop nop
 000260 0000
 000261 0000
 000262 0000
 000263 0000
-000264 0000                      	nop nop nop nop nop nop nop nop nop nop
+000264 0000
 000265 0000
 000266 0000
 000267 0000
 000268 0000
-000269 0000
+000269 0000                      	nop nop nop nop nop nop nop nop nop nop
 00026a 0000
 00026b 0000
 00026c 0000
 00026d 0000
-00026e 0000                      	nop nop nop nop nop nop nop nop nop nop
+00026e 0000
 00026f 0000
 000270 0000
 000271 0000
 000272 0000
-000273 0000
+000273 0000                      	nop nop nop nop nop nop nop nop nop nop
 000274 0000
 000275 0000
 000276 0000
 000277 0000
-000278 0000                      	nop nop nop nop nop nop nop nop nop nop
+000278 0000
+000279 0000
+00027a 0000
+00027b 0000
+00027c 0000
+00027d 0000                      	nop nop nop nop nop nop nop nop nop nop
                                  	
-000279 0000                      	nop
+00027e 0000                      	nop
                                  	; Rewind to start of output buffer
-00027a 51aa                      	subi XL, 26
+00027f 51aa                      	subi XL, 26
                                  		; Start rendering and streaming data
-00027b 902d                      ld r2, X+
-00027c 9220 0802                 sts USART0_TXDATAL, r2
+000280 902d                      ld r2, X+
+000281 9220 0802                 sts USART0_TXDATAL, r2
                                  
                                  	; Render tiles of current line to the renderbuffer. Y holds a pointer to
                                  	; the current render-buffer.
@@ -5340,125 +5345,125 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
                                  	; tiledata, and the tileset.
                                  	; We dont need to load scroll_y, since r_tile_y contains all the
                                  	; information we need
-00027e 2f08                      	mov r16, r_tile_y
-00027f 9502                      	swap r16
-000280 700f                      	andi r16, 0x0F
-000281 e11b                      	ldi r17, TILEDATA_WIDTH
+000283 2f08                      	mov r16, r_tile_y
+000284 9502                      	swap r16
+000285 700f                      	andi r16, 0x0F
+000286 e11b                      	ldi r17, TILEDATA_WIDTH
                                  	; Multiply tile y-index with width to get index of first tile in row
-000282 9f01                      	mul r16, r17
+000287 9f01                      	mul r16, r17
                                  	; Load scroll_x, and add the top 5 bits to the tile index. Keep result in
                                  	; r18 in order to wrap the rendering if it goes beyond the right side of
                                  	; the array.
-000283 9120 3ffa                 	lds r18, scroll_x
-000285 9526                      	lsr r18
-000286 9526                      	lsr r18
-000287 9526                      	lsr r18
+000288 9120 3ffa                 	lds r18, scroll_x
+00028a 9526                      	lsr r18
+00028b 9526                      	lsr r18
+00028c 9526                      	lsr r18
                                  	
-000288 902d                      ld r2, X+
-000289 9220 0802                 sts USART0_TXDATAL, r2
+00028d 902d                      ld r2, X+
+00028e 9220 0802                 sts USART0_TXDATAL, r2
                                  
-00028b 0e02                      	add r0, r18
-00028c 1c13                      	adc r1, r_zero
+000290 0e02                      	add r0, r18
+000291 1c13                      	adc r1, r_zero
                                  	; Load tiledata pointer into Z, and offset to the correct starting tile
-00028d e3e4                      	ldi ZL, low(tiledata)
-00028e e3fe                      	ldi ZH, high(tiledata)
-00028f 0de0                      	add ZL, r0
-000290 1df1                      	adc ZH, r1
+000292 e3e4                      	ldi ZL, low(tiledata)
+000293 e3fe                      	ldi ZH, high(tiledata)
+000294 0de0                      	add ZL, r0
+000295 1df1                      	adc ZH, r1
                                  	; Set r19 to the y-index within the tile
-000291 2f38                      	mov r19, r_tile_y
-000292 703f                      	andi r19, 0x0F
+000296 2f38                      	mov r19, r_tile_y
+000297 703f                      	andi r19, 0x0F
                                  
                                  		
-000293 d7f4                      	rcall render_byte
+000298 d7f4                      	rcall render_byte
                                  	
-000294 d7f3                      	rcall render_byte
+000299 d7f3                      	rcall render_byte
                                  	
-000295 d7f2                      	rcall render_byte
+00029a d7f2                      	rcall render_byte
                                  
-000296 d7f1                      	rcall render_byte
+00029b d7f1                      	rcall render_byte
                                  	
-000297 d7f0                      	rcall render_byte
+00029c d7f0                      	rcall render_byte
                                  	
-000298 d7ef                      	rcall render_byte
+00029d d7ef                      	rcall render_byte
                                  	
-000299 d7ee                      	rcall render_byte
+00029e d7ee                      	rcall render_byte
                                  	
-00029a d7ed                      	rcall render_byte
+00029f d7ed                      	rcall render_byte
                                  	
-00029b 0000
-00029c 0000                      	nop nop
-00029d 0000
-00029e 0000
-00029f 0000
 0002a0 0000
-0002a1 0000
+0002a1 0000                      	nop nop
 0002a2 0000
 0002a3 0000
 0002a4 0000
 0002a5 0000
-0002a6 0000                      	nop nop nop nop nop nop nop nop nop nop
+0002a6 0000
 0002a7 0000
 0002a8 0000
 0002a9 0000
 0002aa 0000
-0002ab 0000
+0002ab 0000                      	nop nop nop nop nop nop nop nop nop nop
 0002ac 0000
 0002ad 0000
 0002ae 0000
 0002af 0000
-0002b0 0000                      	nop nop nop nop nop nop nop nop nop nop
+0002b0 0000
 0002b1 0000
 0002b2 0000
 0002b3 0000
 0002b4 0000
-0002b5 0000
+0002b5 0000                      	nop nop nop nop nop nop nop nop nop nop
 0002b6 0000
 0002b7 0000
 0002b8 0000
 0002b9 0000
-0002ba 0000                      	nop nop nop nop nop nop nop nop nop nop
+0002ba 0000
 0002bb 0000
 0002bc 0000
 0002bd 0000
 0002be 0000
-0002bf 0000
+0002bf 0000                      	nop nop nop nop nop nop nop nop nop nop
 0002c0 0000
 0002c1 0000
 0002c2 0000
 0002c3 0000
-0002c4 0000                      	nop nop nop nop nop nop nop nop nop nop
+0002c4 0000
 0002c5 0000
 0002c6 0000
 0002c7 0000
 0002c8 0000
-0002c9 0000
+0002c9 0000                      	nop nop nop nop nop nop nop nop nop nop
 0002ca 0000
 0002cb 0000
 0002cc 0000
 0002cd 0000
-0002ce 0000                      	nop nop nop nop nop nop nop nop nop nop
+0002ce 0000
 0002cf 0000
 0002d0 0000
 0002d1 0000
 0002d2 0000
-0002d3 0000
+0002d3 0000                      	nop nop nop nop nop nop nop nop nop nop
 0002d4 0000
 0002d5 0000
 0002d6 0000
 0002d7 0000
-0002d8 0000                      	nop nop nop nop nop nop nop nop nop nop
+0002d8 0000
 0002d9 0000
 0002da 0000
 0002db 0000
 0002dc 0000
-0002dd 0000
+0002dd 0000                      	nop nop nop nop nop nop nop nop nop nop
 0002de 0000
 0002df 0000
 0002e0 0000
 0002e1 0000
-0002e2 0000                      	nop nop nop nop nop nop nop nop nop nop
+0002e2 0000
 0002e3 0000
-0002e4 0000                      	nop nop
+0002e4 0000
+0002e5 0000
+0002e6 0000
+0002e7 0000                      	nop nop nop nop nop nop nop nop nop nop
+0002e8 0000
+0002e9 0000                      	nop nop
                                  	
                                  	
                                  	; ===================
@@ -5466,486 +5471,486 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
                                  	; ===================
                                  
                                  	; Wait until HBLANK is done
-0002e5 0000
-0002e6 0000
-0002e7 0000
-0002e8 0000
-0002e9 0000
 0002ea 0000
 0002eb 0000
 0002ec 0000
 0002ed 0000
-0002ee 0000                      	nop nop nop nop nop nop nop nop nop nop
+0002ee 0000
 0002ef 0000
 0002f0 0000
 0002f1 0000
 0002f2 0000
-0002f3 0000
+0002f3 0000                      	nop nop nop nop nop nop nop nop nop nop
 0002f4 0000
 0002f5 0000
 0002f6 0000
 0002f7 0000
-0002f8 0000                      	nop nop nop nop nop nop nop nop nop nop
+0002f8 0000
 0002f9 0000
 0002fa 0000
 0002fb 0000
 0002fc 0000
-0002fd 0000
+0002fd 0000                      	nop nop nop nop nop nop nop nop nop nop
 0002fe 0000
 0002ff 0000
 000300 0000
 000301 0000
-000302 0000                      	nop nop nop nop nop nop nop nop nop nop
+000302 0000
 000303 0000
 000304 0000
 000305 0000
 000306 0000
-000307 0000
+000307 0000                      	nop nop nop nop nop nop nop nop nop nop
 000308 0000
 000309 0000
 00030a 0000
 00030b 0000
-00030c 0000                      	nop nop nop nop nop nop nop nop nop nop
+00030c 0000
+00030d 0000
+00030e 0000
+00030f 0000
+000310 0000
+000311 0000                      	nop nop nop nop nop nop nop nop nop nop
                                  	
-00030d 0000                      	nop
+000312 0000                      	nop
                                  	; Rewind to start of output buffer
-00030e 51aa                      	subi XL, 26
-00030f 902d                      	ld r2, X+
-000310 9220 0802                 	sts USART0_TXDATAL, r2
-000312 0000
-000313 0000
-000314 0000
-000315 0000
-000316 0000
+000313 51aa                      	subi XL, 26
+000314 902d                      	ld r2, X+
+000315 9220 0802                 	sts USART0_TXDATAL, r2
 000317 0000
-000318 0000                      	nop nop nop nop nop nop nop
+000318 0000
 000319 0000
 00031a 0000
 00031b 0000
 00031c 0000
-00031d 0000                      	nop nop nop nop nop
-00031e 902d                      	ld r2, X+
-00031f 9220 0802                 	sts USART0_TXDATAL, r2
+00031d 0000                      	nop nop nop nop nop nop nop
+00031e 0000
+00031f 0000
+000320 0000
 000321 0000
-000322 0000
-000323 0000
-000324 0000
-000325 0000
+000322 0000                      	nop nop nop nop nop
+000323 902d                      	ld r2, X+
+000324 9220 0802                 	sts USART0_TXDATAL, r2
 000326 0000
-000327 0000                      	nop nop nop nop nop nop nop
+000327 0000
 000328 0000
 000329 0000
 00032a 0000
 00032b 0000
-00032c 0000                      	nop nop nop nop nop
-00032d 902d                      	ld r2, X+
-00032e 9220 0802                 	sts USART0_TXDATAL, r2
+00032c 0000                      	nop nop nop nop nop nop nop
+00032d 0000
+00032e 0000
+00032f 0000
 000330 0000
-000331 0000
-000332 0000
-000333 0000
-000334 0000
+000331 0000                      	nop nop nop nop nop
+000332 902d                      	ld r2, X+
+000333 9220 0802                 	sts USART0_TXDATAL, r2
 000335 0000
-000336 0000                      	nop nop nop nop nop nop nop
+000336 0000
 000337 0000
 000338 0000
 000339 0000
 00033a 0000
-00033b 0000                      	nop nop nop nop nop
-00033c 902d                      	ld r2, X+
-00033d 9220 0802                 	sts USART0_TXDATAL, r2
+00033b 0000                      	nop nop nop nop nop nop nop
+00033c 0000
+00033d 0000
+00033e 0000
 00033f 0000
-000340 0000
-000341 0000
-000342 0000
-000343 0000
+000340 0000                      	nop nop nop nop nop
+000341 902d                      	ld r2, X+
+000342 9220 0802                 	sts USART0_TXDATAL, r2
 000344 0000
-000345 0000                      	nop nop nop nop nop nop nop
+000345 0000
 000346 0000
 000347 0000
 000348 0000
 000349 0000
-00034a 0000                      	nop nop nop nop nop
-00034b 902d                      	ld r2, X+
-00034c 9220 0802                 	sts USART0_TXDATAL, r2
+00034a 0000                      	nop nop nop nop nop nop nop
+00034b 0000
+00034c 0000
+00034d 0000
 00034e 0000
-00034f 0000
-000350 0000
-000351 0000
-000352 0000
+00034f 0000                      	nop nop nop nop nop
+000350 902d                      	ld r2, X+
+000351 9220 0802                 	sts USART0_TXDATAL, r2
 000353 0000
-000354 0000                      	nop nop nop nop nop nop nop
+000354 0000
 000355 0000
 000356 0000
 000357 0000
 000358 0000
-000359 0000                      	nop nop nop nop nop
-00035a 902d                      	ld r2, X+
-00035b 9220 0802                 	sts USART0_TXDATAL, r2
+000359 0000                      	nop nop nop nop nop nop nop
+00035a 0000
+00035b 0000
+00035c 0000
 00035d 0000
-00035e 0000
-00035f 0000
-000360 0000
-000361 0000
+00035e 0000                      	nop nop nop nop nop
+00035f 902d                      	ld r2, X+
+000360 9220 0802                 	sts USART0_TXDATAL, r2
 000362 0000
-000363 0000                      	nop nop nop nop nop nop nop
+000363 0000
 000364 0000
 000365 0000
 000366 0000
 000367 0000
-000368 0000                      	nop nop nop nop nop
-000369 902d                      	ld r2, X+
-00036a 9220 0802                 	sts USART0_TXDATAL, r2
+000368 0000                      	nop nop nop nop nop nop nop
+000369 0000
+00036a 0000
+00036b 0000
 00036c 0000
-00036d 0000
-00036e 0000
-00036f 0000
-000370 0000
+00036d 0000                      	nop nop nop nop nop
+00036e 902d                      	ld r2, X+
+00036f 9220 0802                 	sts USART0_TXDATAL, r2
 000371 0000
-000372 0000                      	nop nop nop nop nop nop nop
+000372 0000
 000373 0000
 000374 0000
 000375 0000
 000376 0000
-000377 0000                      	nop nop nop nop nop
-000378 902d                      	ld r2, X+
-000379 9220 0802                 	sts USART0_TXDATAL, r2
+000377 0000                      	nop nop nop nop nop nop nop
+000378 0000
+000379 0000
+00037a 0000
 00037b 0000
-00037c 0000
-00037d 0000
-00037e 0000
-00037f 0000
+00037c 0000                      	nop nop nop nop nop
+00037d 902d                      	ld r2, X+
+00037e 9220 0802                 	sts USART0_TXDATAL, r2
 000380 0000
-000381 0000                      	nop nop nop nop nop nop nop
+000381 0000
 000382 0000
 000383 0000
 000384 0000
 000385 0000
-000386 0000                      	nop nop nop nop nop
-000387 902d                      	ld r2, X+
-000388 9220 0802                 	sts USART0_TXDATAL, r2
+000386 0000                      	nop nop nop nop nop nop nop
+000387 0000
+000388 0000
+000389 0000
 00038a 0000
-00038b 0000
-00038c 0000
-00038d 0000
-00038e 0000
+00038b 0000                      	nop nop nop nop nop
+00038c 902d                      	ld r2, X+
+00038d 9220 0802                 	sts USART0_TXDATAL, r2
 00038f 0000
-000390 0000                      	nop nop nop nop nop nop nop
+000390 0000
 000391 0000
 000392 0000
 000393 0000
 000394 0000
-000395 0000                      	nop nop nop nop nop
-000396 902d                      	ld r2, X+
-000397 9220 0802                 	sts USART0_TXDATAL, r2
+000395 0000                      	nop nop nop nop nop nop nop
+000396 0000
+000397 0000
+000398 0000
 000399 0000
-00039a 0000
-00039b 0000
-00039c 0000
-00039d 0000
+00039a 0000                      	nop nop nop nop nop
+00039b 902d                      	ld r2, X+
+00039c 9220 0802                 	sts USART0_TXDATAL, r2
 00039e 0000
-00039f 0000                      	nop nop nop nop nop nop nop
+00039f 0000
 0003a0 0000
 0003a1 0000
 0003a2 0000
 0003a3 0000
-0003a4 0000                      	nop nop nop nop nop
-0003a5 902d                      	ld r2, X+
-0003a6 9220 0802                 	sts USART0_TXDATAL, r2
+0003a4 0000                      	nop nop nop nop nop nop nop
+0003a5 0000
+0003a6 0000
+0003a7 0000
 0003a8 0000
-0003a9 0000
-0003aa 0000
-0003ab 0000
-0003ac 0000
+0003a9 0000                      	nop nop nop nop nop
+0003aa 902d                      	ld r2, X+
+0003ab 9220 0802                 	sts USART0_TXDATAL, r2
 0003ad 0000
-0003ae 0000                      	nop nop nop nop nop nop nop
+0003ae 0000
 0003af 0000
 0003b0 0000
 0003b1 0000
 0003b2 0000
-0003b3 0000                      	nop nop nop nop nop
-0003b4 902d                      	ld r2, X+
-0003b5 9220 0802                 	sts USART0_TXDATAL, r2
+0003b3 0000                      	nop nop nop nop nop nop nop
+0003b4 0000
+0003b5 0000
+0003b6 0000
 0003b7 0000
-0003b8 0000
-0003b9 0000
-0003ba 0000
-0003bb 0000
+0003b8 0000                      	nop nop nop nop nop
+0003b9 902d                      	ld r2, X+
+0003ba 9220 0802                 	sts USART0_TXDATAL, r2
 0003bc 0000
-0003bd 0000                      	nop nop nop nop nop nop nop
+0003bd 0000
 0003be 0000
 0003bf 0000
 0003c0 0000
 0003c1 0000
-0003c2 0000                      	nop nop nop nop nop
-0003c3 902d                      	ld r2, X+
-0003c4 9220 0802                 	sts USART0_TXDATAL, r2
+0003c2 0000                      	nop nop nop nop nop nop nop
+0003c3 0000
+0003c4 0000
+0003c5 0000
 0003c6 0000
-0003c7 0000
-0003c8 0000
-0003c9 0000
-0003ca 0000
+0003c7 0000                      	nop nop nop nop nop
+0003c8 902d                      	ld r2, X+
+0003c9 9220 0802                 	sts USART0_TXDATAL, r2
 0003cb 0000
-0003cc 0000                      	nop nop nop nop nop nop nop
+0003cc 0000
 0003cd 0000
 0003ce 0000
 0003cf 0000
 0003d0 0000
-0003d1 0000                      	nop nop nop nop nop
-0003d2 902d                      	ld r2, X+
-0003d3 9220 0802                 	sts USART0_TXDATAL, r2
+0003d1 0000                      	nop nop nop nop nop nop nop
+0003d2 0000
+0003d3 0000
+0003d4 0000
 0003d5 0000
-0003d6 0000
-0003d7 0000
-0003d8 0000
-0003d9 0000
+0003d6 0000                      	nop nop nop nop nop
+0003d7 902d                      	ld r2, X+
+0003d8 9220 0802                 	sts USART0_TXDATAL, r2
 0003da 0000
-0003db 0000                      	nop nop nop nop nop nop nop
+0003db 0000
 0003dc 0000
 0003dd 0000
 0003de 0000
 0003df 0000
-0003e0 0000                      	nop nop nop nop nop
-0003e1 902d                      	ld r2, X+
-0003e2 9220 0802                 	sts USART0_TXDATAL, r2
+0003e0 0000                      	nop nop nop nop nop nop nop
+0003e1 0000
+0003e2 0000
+0003e3 0000
 0003e4 0000
-0003e5 0000
-0003e6 0000
-0003e7 0000
-0003e8 0000
+0003e5 0000                      	nop nop nop nop nop
+0003e6 902d                      	ld r2, X+
+0003e7 9220 0802                 	sts USART0_TXDATAL, r2
 0003e9 0000
-0003ea 0000                      	nop nop nop nop nop nop nop
+0003ea 0000
 0003eb 0000
 0003ec 0000
 0003ed 0000
 0003ee 0000
-0003ef 0000                      	nop nop nop nop nop
-0003f0 902d                      	ld r2, X+
-0003f1 9220 0802                 	sts USART0_TXDATAL, r2
+0003ef 0000                      	nop nop nop nop nop nop nop
+0003f0 0000
+0003f1 0000
+0003f2 0000
 0003f3 0000
-0003f4 0000
-0003f5 0000
-0003f6 0000
-0003f7 0000
+0003f4 0000                      	nop nop nop nop nop
+0003f5 902d                      	ld r2, X+
+0003f6 9220 0802                 	sts USART0_TXDATAL, r2
 0003f8 0000
-0003f9 0000                      	nop nop nop nop nop nop nop
+0003f9 0000
 0003fa 0000
 0003fb 0000
 0003fc 0000
 0003fd 0000
-0003fe 0000                      	nop nop nop nop nop
-0003ff 902d                      	ld r2, X+
-000400 9220 0802                 	sts USART0_TXDATAL, r2
+0003fe 0000                      	nop nop nop nop nop nop nop
+0003ff 0000
+000400 0000
+000401 0000
 000402 0000
-000403 0000
-000404 0000
-000405 0000
-000406 0000
+000403 0000                      	nop nop nop nop nop
+000404 902d                      	ld r2, X+
+000405 9220 0802                 	sts USART0_TXDATAL, r2
 000407 0000
-000408 0000                      	nop nop nop nop nop nop nop
+000408 0000
 000409 0000
 00040a 0000
 00040b 0000
 00040c 0000
-00040d 0000                      	nop nop nop nop nop
-00040e 902d                      	ld r2, X+
-00040f 9220 0802                 	sts USART0_TXDATAL, r2
+00040d 0000                      	nop nop nop nop nop nop nop
+00040e 0000
+00040f 0000
+000410 0000
 000411 0000
-000412 0000
-000413 0000
-000414 0000
-000415 0000
+000412 0000                      	nop nop nop nop nop
+000413 902d                      	ld r2, X+
+000414 9220 0802                 	sts USART0_TXDATAL, r2
 000416 0000
-000417 0000                      	nop nop nop nop nop nop nop
+000417 0000
 000418 0000
 000419 0000
 00041a 0000
 00041b 0000
-00041c 0000                      	nop nop nop nop nop
-00041d 902d                      	ld r2, X+
-00041e 9220 0802                 	sts USART0_TXDATAL, r2
+00041c 0000                      	nop nop nop nop nop nop nop
+00041d 0000
+00041e 0000
+00041f 0000
 000420 0000
-000421 0000
-000422 0000
-000423 0000
-000424 0000
+000421 0000                      	nop nop nop nop nop
+000422 902d                      	ld r2, X+
+000423 9220 0802                 	sts USART0_TXDATAL, r2
 000425 0000
-000426 0000                      	nop nop nop nop nop nop nop
+000426 0000
 000427 0000
 000428 0000
 000429 0000
 00042a 0000
-00042b 0000                      	nop nop nop nop nop
-00042c 902d                      	ld r2, X+
-00042d 9220 0802                 	sts USART0_TXDATAL, r2
+00042b 0000                      	nop nop nop nop nop nop nop
+00042c 0000
+00042d 0000
+00042e 0000
 00042f 0000
-000430 0000
-000431 0000
-000432 0000
-000433 0000
+000430 0000                      	nop nop nop nop nop
+000431 902d                      	ld r2, X+
+000432 9220 0802                 	sts USART0_TXDATAL, r2
 000434 0000
-000435 0000                      	nop nop nop nop nop nop nop
+000435 0000
 000436 0000
 000437 0000
 000438 0000
 000439 0000
-00043a 0000                      	nop nop nop nop nop
-00043b 902d                      	ld r2, X+
-00043c 9220 0802                 	sts USART0_TXDATAL, r2
+00043a 0000                      	nop nop nop nop nop nop nop
+00043b 0000
+00043c 0000
+00043d 0000
 00043e 0000
-00043f 0000
-000440 0000
-000441 0000
-000442 0000
+00043f 0000                      	nop nop nop nop nop
+000440 902d                      	ld r2, X+
+000441 9220 0802                 	sts USART0_TXDATAL, r2
 000443 0000
-000444 0000                      	nop nop nop nop nop nop nop
+000444 0000
 000445 0000
 000446 0000
 000447 0000
 000448 0000
-000449 0000                      	nop nop nop nop nop
-00044a 902d                      	ld r2, X+
-00044b 9220 0802                 	sts USART0_TXDATAL, r2
+000449 0000                      	nop nop nop nop nop nop nop
+00044a 0000
+00044b 0000
+00044c 0000
 00044d 0000
-00044e 0000
-00044f 0000
-000450 0000
-000451 0000
+00044e 0000                      	nop nop nop nop nop
+00044f 902d                      	ld r2, X+
+000450 9220 0802                 	sts USART0_TXDATAL, r2
 000452 0000
-000453 0000                      	nop nop nop nop nop nop nop
+000453 0000
 000454 0000
 000455 0000
 000456 0000
 000457 0000
-000458 0000                      	nop nop nop nop nop
-000459 902d                      	ld r2, X+
-00045a 9220 0802                 	sts USART0_TXDATAL, r2
+000458 0000                      	nop nop nop nop nop nop nop
+000459 0000
+00045a 0000
+00045b 0000
 00045c 0000
-00045d 0000
-00045e 0000
-00045f 0000
-000460 0000
+00045d 0000                      	nop nop nop nop nop
+00045e 902d                      	ld r2, X+
+00045f 9220 0802                 	sts USART0_TXDATAL, r2
 000461 0000
-000462 0000                      	nop nop nop nop nop nop nop
+000462 0000
 000463 0000
 000464 0000
 000465 0000
 000466 0000
-000467 0000                      	nop nop nop nop nop
-000468 902d                      	ld r2, X+
-000469 9220 0802                 	sts USART0_TXDATAL, r2
+000467 0000                      	nop nop nop nop nop nop nop
+000468 0000
+000469 0000
+00046a 0000
 00046b 0000
-00046c 0000
-00046d 0000
-00046e 0000
-00046f 0000
+00046c 0000                      	nop nop nop nop nop
+00046d 902d                      	ld r2, X+
+00046e 9220 0802                 	sts USART0_TXDATAL, r2
 000470 0000
-000471 0000                      	nop nop nop nop nop nop nop
+000471 0000
 000472 0000
 000473 0000
 000474 0000
 000475 0000
-000476 0000                      	nop nop nop nop nop
-000477 902d                      	ld r2, X+
-000478 9220 0802                 	sts USART0_TXDATAL, r2
+000476 0000                      	nop nop nop nop nop nop nop
+000477 0000
+000478 0000
+000479 0000
 00047a 0000
-00047b 0000
-00047c 0000
-00047d 0000
-00047e 0000
+00047b 0000                      	nop nop nop nop nop
+00047c 902d                      	ld r2, X+
+00047d 9220 0802                 	sts USART0_TXDATAL, r2
 00047f 0000
-000480 0000                      	nop nop nop nop nop nop nop
+000480 0000
 000481 0000
 000482 0000
 000483 0000
 000484 0000
-000485 0000                      	nop nop nop nop nop
-000486 902d                      	ld r2, X+
-000487 9220 0802                 	sts USART0_TXDATAL, r2
-                                 
+000485 0000                      	nop nop nop nop nop nop nop
+000486 0000
+000487 0000
+000488 0000
 000489 0000
-00048a 0000                      	nop nop
+00048a 0000                      	nop nop nop nop nop
+00048b 902d                      	ld r2, X+
+00048c 9220 0802                 	sts USART0_TXDATAL, r2
                                  
-00048b 0000
-00048c 0000
-00048d 0000
 00048e 0000
-00048f 0000
+00048f 0000                      	nop nop
+                                 
 000490 0000
 000491 0000
 000492 0000
 000493 0000
-000494 0000                      	nop nop nop nop nop nop nop nop nop nop
+000494 0000
 000495 0000
 000496 0000
 000497 0000
 000498 0000
-000499 0000
+000499 0000                      	nop nop nop nop nop nop nop nop nop nop
 00049a 0000
 00049b 0000
 00049c 0000
 00049d 0000
-00049e 0000                      	nop nop nop nop nop nop nop nop nop nop
+00049e 0000
 00049f 0000
 0004a0 0000
 0004a1 0000
 0004a2 0000
-0004a3 0000
+0004a3 0000                      	nop nop nop nop nop nop nop nop nop nop
 0004a4 0000
 0004a5 0000
 0004a6 0000
 0004a7 0000
-0004a8 0000                      	nop nop nop nop nop nop nop nop nop nop
+0004a8 0000
 0004a9 0000
 0004aa 0000
 0004ab 0000
 0004ac 0000
-0004ad 0000
+0004ad 0000                      	nop nop nop nop nop nop nop nop nop nop
 0004ae 0000
 0004af 0000
 0004b0 0000
 0004b1 0000
-0004b2 0000                      	nop nop nop nop nop nop nop nop nop nop
+0004b2 0000
 0004b3 0000
 0004b4 0000
 0004b5 0000
 0004b6 0000
-0004b7 0000
+0004b7 0000                      	nop nop nop nop nop nop nop nop nop nop
 0004b8 0000
 0004b9 0000
 0004ba 0000
 0004bb 0000
-0004bc 0000                      	nop nop nop nop nop nop nop nop nop nop
+0004bc 0000
 0004bd 0000
 0004be 0000
 0004bf 0000
 0004c0 0000
-0004c1 0000
+0004c1 0000                      	nop nop nop nop nop nop nop nop nop nop
 0004c2 0000
 0004c3 0000
 0004c4 0000
 0004c5 0000
-0004c6 0000                      	nop nop nop nop nop nop nop nop nop nop
+0004c6 0000
 0004c7 0000
 0004c8 0000
 0004c9 0000
 0004ca 0000
-0004cb 0000
+0004cb 0000                      	nop nop nop nop nop nop nop nop nop nop
 0004cc 0000
 0004cd 0000
 0004ce 0000
 0004cf 0000
-0004d0 0000                      	nop nop nop nop nop nop nop nop nop nop
+0004d0 0000
 0004d1 0000
 0004d2 0000
 0004d3 0000
 0004d4 0000
-0004d5 0000
+0004d5 0000                      	nop nop nop nop nop nop nop nop nop nop
 0004d6 0000
 0004d7 0000
 0004d8 0000
 0004d9 0000
-0004da 0000                      	nop nop nop nop nop nop nop nop nop nop
+0004da 0000
+0004db 0000
+0004dc 0000
+0004dd 0000
+0004de 0000
+0004df 0000                      	nop nop nop nop nop nop nop nop nop nop
                                  	
                                  	
                                  	; ===================
@@ -5953,527 +5958,527 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
                                  	; ===================
                                  
                                  	; Wait until HBLANK is done
-0004db 0000
-0004dc 0000
-0004dd 0000
-0004de 0000
-0004df 0000
 0004e0 0000
 0004e1 0000
 0004e2 0000
 0004e3 0000
-0004e4 0000                      	nop nop nop nop nop nop nop nop nop nop
+0004e4 0000
 0004e5 0000
 0004e6 0000
 0004e7 0000
 0004e8 0000
-0004e9 0000
+0004e9 0000                      	nop nop nop nop nop nop nop nop nop nop
 0004ea 0000
 0004eb 0000
 0004ec 0000
 0004ed 0000
-0004ee 0000                      	nop nop nop nop nop nop nop nop nop nop
+0004ee 0000
 0004ef 0000
 0004f0 0000
 0004f1 0000
 0004f2 0000
-0004f3 0000
+0004f3 0000                      	nop nop nop nop nop nop nop nop nop nop
 0004f4 0000
 0004f5 0000
 0004f6 0000
 0004f7 0000
-0004f8 0000                      	nop nop nop nop nop nop nop nop nop nop
+0004f8 0000
 0004f9 0000
 0004fa 0000
 0004fb 0000
 0004fc 0000
-0004fd 0000
+0004fd 0000                      	nop nop nop nop nop nop nop nop nop nop
 0004fe 0000
 0004ff 0000
 000500 0000
 000501 0000
-000502 0000                      	nop nop nop nop nop nop nop nop nop nop
+000502 0000
+000503 0000
+000504 0000
+000505 0000
+000506 0000
+000507 0000                      	nop nop nop nop nop nop nop nop nop nop
                                  	
-000503 0000                      	nop
+000508 0000                      	nop
                                  	; Rewind to start of output buffer
-000504 51aa                      	subi XL, 26
+000509 51aa                      	subi XL, 26
                                  
-000505 902d                      	ld r2, X+
-000506 9220 0802                 	sts USART0_TXDATAL, r2
-000508 0000
-000509 0000
-00050a 0000
-00050b 0000
-00050c 0000
+00050a 902d                      	ld r2, X+
+00050b 9220 0802                 	sts USART0_TXDATAL, r2
 00050d 0000
-00050e 0000                      	nop nop nop nop nop nop nop
+00050e 0000
 00050f 0000
 000510 0000
 000511 0000
 000512 0000
-000513 0000                      	nop nop nop nop nop
-000514 902d                      	ld r2, X+
-000515 9220 0802                 	sts USART0_TXDATAL, r2
+000513 0000                      	nop nop nop nop nop nop nop
+000514 0000
+000515 0000
+000516 0000
 000517 0000
-000518 0000
-000519 0000
-00051a 0000
-00051b 0000
+000518 0000                      	nop nop nop nop nop
+000519 902d                      	ld r2, X+
+00051a 9220 0802                 	sts USART0_TXDATAL, r2
 00051c 0000
-00051d 0000                      	nop nop nop nop nop nop nop
+00051d 0000
 00051e 0000
 00051f 0000
 000520 0000
 000521 0000
-000522 0000                      	nop nop nop nop nop
-000523 902d                      	ld r2, X+
-000524 9220 0802                 	sts USART0_TXDATAL, r2
+000522 0000                      	nop nop nop nop nop nop nop
+000523 0000
+000524 0000
+000525 0000
 000526 0000
-000527 0000
-000528 0000
-000529 0000
-00052a 0000
+000527 0000                      	nop nop nop nop nop
+000528 902d                      	ld r2, X+
+000529 9220 0802                 	sts USART0_TXDATAL, r2
 00052b 0000
-00052c 0000                      	nop nop nop nop nop nop nop
+00052c 0000
 00052d 0000
 00052e 0000
 00052f 0000
 000530 0000
-000531 0000                      	nop nop nop nop nop
-000532 902d                      	ld r2, X+
-000533 9220 0802                 	sts USART0_TXDATAL, r2
+000531 0000                      	nop nop nop nop nop nop nop
+000532 0000
+000533 0000
+000534 0000
 000535 0000
-000536 0000
-000537 0000
-000538 0000
-000539 0000
+000536 0000                      	nop nop nop nop nop
+000537 902d                      	ld r2, X+
+000538 9220 0802                 	sts USART0_TXDATAL, r2
 00053a 0000
-00053b 0000                      	nop nop nop nop nop nop nop
+00053b 0000
 00053c 0000
 00053d 0000
 00053e 0000
 00053f 0000
-000540 0000                      	nop nop nop nop nop
-000541 902d                      	ld r2, X+
-000542 9220 0802                 	sts USART0_TXDATAL, r2
+000540 0000                      	nop nop nop nop nop nop nop
+000541 0000
+000542 0000
+000543 0000
 000544 0000
-000545 0000
-000546 0000
-000547 0000
-000548 0000
+000545 0000                      	nop nop nop nop nop
+000546 902d                      	ld r2, X+
+000547 9220 0802                 	sts USART0_TXDATAL, r2
 000549 0000
-00054a 0000                      	nop nop nop nop nop nop nop
+00054a 0000
 00054b 0000
 00054c 0000
 00054d 0000
 00054e 0000
-00054f 0000                      	nop nop nop nop nop
-000550 902d                      	ld r2, X+
-000551 9220 0802                 	sts USART0_TXDATAL, r2
+00054f 0000                      	nop nop nop nop nop nop nop
+000550 0000
+000551 0000
+000552 0000
 000553 0000
-000554 0000
-000555 0000
-000556 0000
-000557 0000
+000554 0000                      	nop nop nop nop nop
+000555 902d                      	ld r2, X+
+000556 9220 0802                 	sts USART0_TXDATAL, r2
 000558 0000
-000559 0000                      	nop nop nop nop nop nop nop
+000559 0000
 00055a 0000
 00055b 0000
 00055c 0000
 00055d 0000
-00055e 0000                      	nop nop nop nop nop
-00055f 902d                      	ld r2, X+
-000560 9220 0802                 	sts USART0_TXDATAL, r2
+00055e 0000                      	nop nop nop nop nop nop nop
+00055f 0000
+000560 0000
+000561 0000
 000562 0000
-000563 0000
-000564 0000
-000565 0000
-000566 0000
+000563 0000                      	nop nop nop nop nop
+000564 902d                      	ld r2, X+
+000565 9220 0802                 	sts USART0_TXDATAL, r2
 000567 0000
-000568 0000                      	nop nop nop nop nop nop nop
+000568 0000
 000569 0000
 00056a 0000
 00056b 0000
 00056c 0000
-00056d 0000                      	nop nop nop nop nop
-00056e 902d                      	ld r2, X+
-00056f 9220 0802                 	sts USART0_TXDATAL, r2
+00056d 0000                      	nop nop nop nop nop nop nop
+00056e 0000
+00056f 0000
+000570 0000
 000571 0000
-000572 0000
-000573 0000
-000574 0000
-000575 0000
+000572 0000                      	nop nop nop nop nop
+000573 902d                      	ld r2, X+
+000574 9220 0802                 	sts USART0_TXDATAL, r2
 000576 0000
-000577 0000                      	nop nop nop nop nop nop nop
+000577 0000
 000578 0000
 000579 0000
 00057a 0000
 00057b 0000
-00057c 0000                      	nop nop nop nop nop
-00057d 902d                      	ld r2, X+
-00057e 9220 0802                 	sts USART0_TXDATAL, r2
+00057c 0000                      	nop nop nop nop nop nop nop
+00057d 0000
+00057e 0000
+00057f 0000
 000580 0000
-000581 0000
-000582 0000
-000583 0000
-000584 0000
+000581 0000                      	nop nop nop nop nop
+000582 902d                      	ld r2, X+
+000583 9220 0802                 	sts USART0_TXDATAL, r2
 000585 0000
-000586 0000                      	nop nop nop nop nop nop nop
+000586 0000
 000587 0000
 000588 0000
 000589 0000
 00058a 0000
-00058b 0000                      	nop nop nop nop nop
-00058c 902d                      	ld r2, X+
-00058d 9220 0802                 	sts USART0_TXDATAL, r2
+00058b 0000                      	nop nop nop nop nop nop nop
+00058c 0000
+00058d 0000
+00058e 0000
 00058f 0000
-000590 0000
-000591 0000
-000592 0000
-000593 0000
+000590 0000                      	nop nop nop nop nop
+000591 902d                      	ld r2, X+
+000592 9220 0802                 	sts USART0_TXDATAL, r2
 000594 0000
-000595 0000                      	nop nop nop nop nop nop nop
+000595 0000
 000596 0000
 000597 0000
 000598 0000
 000599 0000
-00059a 0000                      	nop nop nop nop nop
-00059b 902d                      	ld r2, X+
-00059c 9220 0802                 	sts USART0_TXDATAL, r2
+00059a 0000                      	nop nop nop nop nop nop nop
+00059b 0000
+00059c 0000
+00059d 0000
 00059e 0000
-00059f 0000
-0005a0 0000
-0005a1 0000
-0005a2 0000
+00059f 0000                      	nop nop nop nop nop
+0005a0 902d                      	ld r2, X+
+0005a1 9220 0802                 	sts USART0_TXDATAL, r2
 0005a3 0000
-0005a4 0000                      	nop nop nop nop nop nop nop
+0005a4 0000
 0005a5 0000
 0005a6 0000
 0005a7 0000
 0005a8 0000
-0005a9 0000                      	nop nop nop nop nop
-0005aa 902d                      	ld r2, X+
-0005ab 9220 0802                 	sts USART0_TXDATAL, r2
+0005a9 0000                      	nop nop nop nop nop nop nop
+0005aa 0000
+0005ab 0000
+0005ac 0000
 0005ad 0000
-0005ae 0000
-0005af 0000
-0005b0 0000
-0005b1 0000
+0005ae 0000                      	nop nop nop nop nop
+0005af 902d                      	ld r2, X+
+0005b0 9220 0802                 	sts USART0_TXDATAL, r2
 0005b2 0000
-0005b3 0000                      	nop nop nop nop nop nop nop
+0005b3 0000
 0005b4 0000
 0005b5 0000
 0005b6 0000
 0005b7 0000
-0005b8 0000                      	nop nop nop nop nop
-0005b9 902d                      	ld r2, X+
-0005ba 9220 0802                 	sts USART0_TXDATAL, r2
+0005b8 0000                      	nop nop nop nop nop nop nop
+0005b9 0000
+0005ba 0000
+0005bb 0000
 0005bc 0000
-0005bd 0000
-0005be 0000
-0005bf 0000
-0005c0 0000
+0005bd 0000                      	nop nop nop nop nop
+0005be 902d                      	ld r2, X+
+0005bf 9220 0802                 	sts USART0_TXDATAL, r2
 0005c1 0000
-0005c2 0000                      	nop nop nop nop nop nop nop
+0005c2 0000
 0005c3 0000
 0005c4 0000
 0005c5 0000
 0005c6 0000
-0005c7 0000                      	nop nop nop nop nop
-0005c8 902d                      	ld r2, X+
-0005c9 9220 0802                 	sts USART0_TXDATAL, r2
+0005c7 0000                      	nop nop nop nop nop nop nop
+0005c8 0000
+0005c9 0000
+0005ca 0000
 0005cb 0000
-0005cc 0000
-0005cd 0000
-0005ce 0000
-0005cf 0000
+0005cc 0000                      	nop nop nop nop nop
+0005cd 902d                      	ld r2, X+
+0005ce 9220 0802                 	sts USART0_TXDATAL, r2
 0005d0 0000
-0005d1 0000                      	nop nop nop nop nop nop nop
+0005d1 0000
 0005d2 0000
 0005d3 0000
 0005d4 0000
 0005d5 0000
-0005d6 0000                      	nop nop nop nop nop
-0005d7 902d                      	ld r2, X+
-0005d8 9220 0802                 	sts USART0_TXDATAL, r2
+0005d6 0000                      	nop nop nop nop nop nop nop
+0005d7 0000
+0005d8 0000
+0005d9 0000
 0005da 0000
-0005db 0000
-0005dc 0000
-0005dd 0000
-0005de 0000
+0005db 0000                      	nop nop nop nop nop
+0005dc 902d                      	ld r2, X+
+0005dd 9220 0802                 	sts USART0_TXDATAL, r2
 0005df 0000
-0005e0 0000                      	nop nop nop nop nop nop nop
+0005e0 0000
 0005e1 0000
 0005e2 0000
 0005e3 0000
 0005e4 0000
-0005e5 0000                      	nop nop nop nop nop
-0005e6 902d                      	ld r2, X+
-0005e7 9220 0802                 	sts USART0_TXDATAL, r2
+0005e5 0000                      	nop nop nop nop nop nop nop
+0005e6 0000
+0005e7 0000
+0005e8 0000
 0005e9 0000
-0005ea 0000
-0005eb 0000
-0005ec 0000
-0005ed 0000
+0005ea 0000                      	nop nop nop nop nop
+0005eb 902d                      	ld r2, X+
+0005ec 9220 0802                 	sts USART0_TXDATAL, r2
 0005ee 0000
-0005ef 0000                      	nop nop nop nop nop nop nop
+0005ef 0000
 0005f0 0000
 0005f1 0000
 0005f2 0000
 0005f3 0000
-0005f4 0000                      	nop nop nop nop nop
-0005f5 902d                      	ld r2, X+
-0005f6 9220 0802                 	sts USART0_TXDATAL, r2
+0005f4 0000                      	nop nop nop nop nop nop nop
+0005f5 0000
+0005f6 0000
+0005f7 0000
 0005f8 0000
-0005f9 0000
-0005fa 0000
-0005fb 0000
-0005fc 0000
+0005f9 0000                      	nop nop nop nop nop
+0005fa 902d                      	ld r2, X+
+0005fb 9220 0802                 	sts USART0_TXDATAL, r2
 0005fd 0000
-0005fe 0000                      	nop nop nop nop nop nop nop
+0005fe 0000
 0005ff 0000
 000600 0000
 000601 0000
 000602 0000
-000603 0000                      	nop nop nop nop nop
-000604 902d                      	ld r2, X+
-000605 9220 0802                 	sts USART0_TXDATAL, r2
+000603 0000                      	nop nop nop nop nop nop nop
+000604 0000
+000605 0000
+000606 0000
 000607 0000
-000608 0000
-000609 0000
-00060a 0000
-00060b 0000
+000608 0000                      	nop nop nop nop nop
+000609 902d                      	ld r2, X+
+00060a 9220 0802                 	sts USART0_TXDATAL, r2
 00060c 0000
-00060d 0000                      	nop nop nop nop nop nop nop
+00060d 0000
 00060e 0000
 00060f 0000
 000610 0000
 000611 0000
-000612 0000                      	nop nop nop nop nop
-000613 902d                      	ld r2, X+
-000614 9220 0802                 	sts USART0_TXDATAL, r2
+000612 0000                      	nop nop nop nop nop nop nop
+000613 0000
+000614 0000
+000615 0000
 000616 0000
-000617 0000
-000618 0000
-000619 0000
-00061a 0000
+000617 0000                      	nop nop nop nop nop
+000618 902d                      	ld r2, X+
+000619 9220 0802                 	sts USART0_TXDATAL, r2
 00061b 0000
-00061c 0000                      	nop nop nop nop nop nop nop
+00061c 0000
 00061d 0000
 00061e 0000
 00061f 0000
 000620 0000
-000621 0000                      	nop nop nop nop nop
-000622 902d                      	ld r2, X+
-000623 9220 0802                 	sts USART0_TXDATAL, r2
+000621 0000                      	nop nop nop nop nop nop nop
+000622 0000
+000623 0000
+000624 0000
 000625 0000
-000626 0000
-000627 0000
-000628 0000
-000629 0000
+000626 0000                      	nop nop nop nop nop
+000627 902d                      	ld r2, X+
+000628 9220 0802                 	sts USART0_TXDATAL, r2
 00062a 0000
-00062b 0000                      	nop nop nop nop nop nop nop
+00062b 0000
 00062c 0000
 00062d 0000
 00062e 0000
 00062f 0000
-000630 0000                      	nop nop nop nop nop
-000631 902d                      	ld r2, X+
-000632 9220 0802                 	sts USART0_TXDATAL, r2
+000630 0000                      	nop nop nop nop nop nop nop
+000631 0000
+000632 0000
+000633 0000
 000634 0000
-000635 0000
-000636 0000
-000637 0000
-000638 0000
+000635 0000                      	nop nop nop nop nop
+000636 902d                      	ld r2, X+
+000637 9220 0802                 	sts USART0_TXDATAL, r2
 000639 0000
-00063a 0000                      	nop nop nop nop nop nop nop
+00063a 0000
 00063b 0000
 00063c 0000
 00063d 0000
 00063e 0000
-00063f 0000                      	nop nop nop nop nop
-000640 902d                      	ld r2, X+
-000641 9220 0802                 	sts USART0_TXDATAL, r2
+00063f 0000                      	nop nop nop nop nop nop nop
+000640 0000
+000641 0000
+000642 0000
 000643 0000
-000644 0000
-000645 0000
-000646 0000
-000647 0000
+000644 0000                      	nop nop nop nop nop
+000645 902d                      	ld r2, X+
+000646 9220 0802                 	sts USART0_TXDATAL, r2
 000648 0000
-000649 0000                      	nop nop nop nop nop nop nop
+000649 0000
 00064a 0000
 00064b 0000
 00064c 0000
 00064d 0000
-00064e 0000                      	nop nop nop nop nop
-00064f 902d                      	ld r2, X+
-000650 9220 0802                 	sts USART0_TXDATAL, r2
+00064e 0000                      	nop nop nop nop nop nop nop
+00064f 0000
+000650 0000
+000651 0000
 000652 0000
-000653 0000
-000654 0000
-000655 0000
-000656 0000
+000653 0000                      	nop nop nop nop nop
+000654 902d                      	ld r2, X+
+000655 9220 0802                 	sts USART0_TXDATAL, r2
 000657 0000
-000658 0000                      	nop nop nop nop nop nop nop
+000658 0000
 000659 0000
 00065a 0000
 00065b 0000
 00065c 0000
-00065d 0000                      	nop nop nop nop nop
-00065e 902d                      	ld r2, X+
-00065f 9220 0802                 	sts USART0_TXDATAL, r2
+00065d 0000                      	nop nop nop nop nop nop nop
+00065e 0000
+00065f 0000
+000660 0000
 000661 0000
-000662 0000
-000663 0000
-000664 0000
-000665 0000
+000662 0000                      	nop nop nop nop nop
+000663 902d                      	ld r2, X+
+000664 9220 0802                 	sts USART0_TXDATAL, r2
 000666 0000
-000667 0000                      	nop nop nop nop nop nop nop
+000667 0000
 000668 0000
 000669 0000
 00066a 0000
 00066b 0000
-00066c 0000                      	nop nop nop nop nop
-00066d 902d                      	ld r2, X+
-00066e 9220 0802                 	sts USART0_TXDATAL, r2
+00066c 0000                      	nop nop nop nop nop nop nop
+00066d 0000
+00066e 0000
+00066f 0000
 000670 0000
-000671 0000
-000672 0000
-000673 0000
-000674 0000
+000671 0000                      	nop nop nop nop nop
+000672 902d                      	ld r2, X+
+000673 9220 0802                 	sts USART0_TXDATAL, r2
 000675 0000
-000676 0000                      	nop nop nop nop nop nop nop
+000676 0000
 000677 0000
 000678 0000
 000679 0000
 00067a 0000
-00067b 0000                      	nop nop nop nop nop
-00067c 902d                      	ld r2, X+
-00067d 9220 0802                 	sts USART0_TXDATAL, r2
+00067b 0000                      	nop nop nop nop nop nop nop
+00067c 0000
+00067d 0000
+00067e 0000
+00067f 0000
+000680 0000                      	nop nop nop nop nop
+000681 902d                      	ld r2, X+
+000682 9220 0802                 	sts USART0_TXDATAL, r2
                                  
-00067f 0000                      	nop
+000684 0000                      	nop
                                  	
                                  	; Rewind to start of output buffer
-000680 51aa                      	subi XL, 26
+000685 51aa                      	subi XL, 26
                                  
                                  	; Rewind to start of renderbuffer
-000681 9728                      	sbiw Y, 8
+000686 9728                      	sbiw Y, 8
                                  	
                                  
                                  
-000682 0000
-000683 0000
-000684 0000
-000685 0000
-000686 0000
 000687 0000
 000688 0000
-000689 0000                      	nop nop nop nop nop nop nop nop
+000689 0000
 00068a 0000
 00068b 0000
 00068c 0000
 00068d 0000
-00068e 0000
+00068e 0000                      	nop nop nop nop nop nop nop nop
 00068f 0000
 000690 0000
 000691 0000
 000692 0000
-000693 0000                      	nop nop nop nop nop nop nop nop nop nop
+000693 0000
 000694 0000
 000695 0000
 000696 0000
 000697 0000
-000698 0000
+000698 0000                      	nop nop nop nop nop nop nop nop nop nop
 000699 0000
 00069a 0000
 00069b 0000
 00069c 0000
-00069d 0000                      	nop nop nop nop nop nop nop nop nop nop
+00069d 0000
 00069e 0000
 00069f 0000
 0006a0 0000
 0006a1 0000
-0006a2 0000
+0006a2 0000                      	nop nop nop nop nop nop nop nop nop nop
 0006a3 0000
 0006a4 0000
-0006a5 0000                      	nop nop nop nop nop nop nop nop
+0006a5 0000
+0006a6 0000
+0006a7 0000
+0006a8 0000
+0006a9 0000
+0006aa 0000                      	nop nop nop nop nop nop nop nop
                                  
                                  	
                                  
                                  	; Compensation for the scroll-delay at the top
                                  	; This block takes between 11 and 25 cycles, depending on the value in
                                  	; scroll_x.
-0006a6 9100 3ffa                 	lds r16, scroll_x
-0006a8 0f00                      	lsl r16
-0006a9 700f                      	andi r16, 0xF ; Ensure no infinite loop occurs if scroll_x > 7
-0006aa eaef                      	ldi ZL, low(timingjmpB_14)
-0006ab e0f6                      	ldi ZH, high(timingjmpB_14)
-0006ac 0fe0                      	add ZL, r16
-0006ad 1df3                      	adc ZH, r_zero
-0006ae 9409                      	ijmp
-0006af 0000
-0006b0 0000                      	timingjmpB_14: nop nop
-0006b1 0000
-0006b2 0000                      	timingjmpB_12: nop nop
-0006b3 0000
-0006b4 0000                      	timingjmpB_10: nop nop
-0006b5 0000
-0006b6 0000                      	timingjmpB_8: nop nop
-0006b7 0000
-0006b8 0000                      	timingjmpB_6: nop nop
-0006b9 0000
-0006ba 0000                      	timingjmpB_4: nop nop
-0006bb 0000
-0006bc 0000                      	timingjmpB_2: nop nop
+0006ab 9100 3ffa                 	lds r16, scroll_x
+0006ad 0f00                      	lsl r16
+0006ae 700f                      	andi r16, 0xF ; Ensure no infinite loop occurs if scroll_x > 7
+0006af ebe4                      	ldi ZL, low(timingjmpB_14)
+0006b0 e0f6                      	ldi ZH, high(timingjmpB_14)
+0006b1 0fe0                      	add ZL, r16
+0006b2 1df3                      	adc ZH, r_zero
+0006b3 9409                      	ijmp
+0006b4 0000
+0006b5 0000                      	timingjmpB_14: nop nop
+0006b6 0000
+0006b7 0000                      	timingjmpB_12: nop nop
+0006b8 0000
+0006b9 0000                      	timingjmpB_10: nop nop
+0006ba 0000
+0006bb 0000                      	timingjmpB_8: nop nop
+0006bc 0000
+0006bd 0000                      	timingjmpB_6: nop nop
+0006be 0000
+0006bf 0000                      	timingjmpB_4: nop nop
+0006c0 0000
+0006c1 0000                      	timingjmpB_2: nop nop
                                  	timingjmpB_0:
                                  
                                  
                                  	; Swap buffers
-0006bd 27ca                      	eor YL, XL
-0006be 27ac                      	eor XL, YL
-0006bf 27ca                      	eor YL, XL
-0006c0 27db                      	eor YH, XH
-0006c1 27bd                      	eor XH, YH
-0006c2 27db                      	eor YH, XH
+0006c2 27ca                      	eor YL, XL
+0006c3 27ac                      	eor XL, YL
+0006c4 27ca                      	eor YL, XL
+0006c5 27db                      	eor YH, XH
+0006c6 27bd                      	eor XH, YH
+0006c7 27db                      	eor YH, XH
                                  
-0006c3 0000
-0006c4 0000
-0006c5 0000                      	nop nop nop
-0006c6 0000
-0006c7 0000
 0006c8 0000
 0006c9 0000
-0006ca 0000
+0006ca 0000                      	nop nop nop
 0006cb 0000
 0006cc 0000
 0006cd 0000
 0006ce 0000
-0006cf 0000                      	nop nop nop nop nop nop nop nop nop nop
+0006cf 0000
 0006d0 0000
-0006d1 0000                      	nop nop
+0006d1 0000
+0006d2 0000
+0006d3 0000
+0006d4 0000                      	nop nop nop nop nop nop nop nop nop nop
+0006d5 0000
+0006d6 0000                      	nop nop
                                  	
                                  	; Advance r_tile_y. Add one to the low nibble, if the incremented value
                                  	; equals TILE_HEIGHT, clear it, and increment the high nibble. There is no
                                  	; need to handle the high nibble wrapping, as this is reset during VBLANK.
-0006d2 9583                      	inc r_tile_y
-0006d3 e004                      	ldi r16, 0x10-TILE_HEIGHT
-0006d4 0f80                      	add r_tile_y, r16
-0006d5 f015                      	brhs r_tile_y_wrap			 ; Branch on carry from low to high nibble
-0006d6 1b80                      		sub r_tile_y, r16
-0006d7 c002                      		rjmp r_tile_y_wrap_done
+0006d7 9583                      	inc r_tile_y
+0006d8 e004                      	ldi r16, 0x10-TILE_HEIGHT
+0006d9 0f80                      	add r_tile_y, r16
+0006da f015                      	brhs r_tile_y_wrap			 ; Branch on carry from low to high nibble
+0006db 1b80                      		sub r_tile_y, r16
+0006dc c002                      		rjmp r_tile_y_wrap_done
                                  	r_tile_y_wrap:
-0006d8 0000
-0006d9 0000                      		nop nop
+0006dd 0000
+0006de 0000                      		nop nop
                                  	r_tile_y_wrap_done:
                                  
                                  
                                  	; Advance line counter, and jump to either the next visible line, or into
                                  	; vblank.
-0006da 9593                      	inc r_y
-0006db 3997                      	cpi r_y, (V_VISIBLE / PIXEL_DIV + 1)
-0006dc f009                      	breq vblank
+0006df 9593                      	inc r_y
+0006e0 3997                      	cpi r_y, (V_VISIBLE / PIXEL_DIV + 1)
+0006e1 f009                      	breq vblank
                                  
-0006dd c981                      	rjmp visible_scanline4x
+0006e2 c981                      	rjmp visible_scanline4x
                                  
                                  
                                  ; This section lasts for exactly 24 lines, plus the initial NOP at the
@@ -6482,68 +6487,63 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
                                  ; so that row 0 can be rendered to the buffer.
                                  ;   24 lines = 24*1056/2 = 12672 cycles
                                  vblank:
-0006de 0000                      	nop ; 1-cycle delay to synchronize with where the visible_scanline4x starts
+0006e3 0000                      	nop ; 1-cycle delay to synchronize with where the visible_scanline4x starts
                                  
                                  	; Disable pixel output
-0006df 980b                      	cbi VPORTA_OUT, 3 ; Ignore for now
+0006e4 980b                      	cbi VPORTA_OUT, 3 ; Ignore for now
                                  
                                  	; Wait until start of line
-0006e0 0000
-0006e1 0000
-0006e2 0000
-0006e3 0000
-0006e4 0000
 0006e5 0000
 0006e6 0000
 0006e7 0000
 0006e8 0000
-0006e9 0000                      	nop nop nop nop nop nop nop nop nop nop
+0006e9 0000
 0006ea 0000
 0006eb 0000
 0006ec 0000
 0006ed 0000
-0006ee 0000
+0006ee 0000                      	nop nop nop nop nop nop nop nop nop nop
 0006ef 0000
 0006f0 0000
 0006f1 0000
 0006f2 0000
-0006f3 0000                      	nop nop nop nop nop nop nop nop nop nop
+0006f3 0000
 0006f4 0000
 0006f5 0000
 0006f6 0000
 0006f7 0000
-0006f8 0000
+0006f8 0000                      	nop nop nop nop nop nop nop nop nop nop
 0006f9 0000
 0006fa 0000
 0006fb 0000
 0006fc 0000
-0006fd 0000                      	nop nop nop nop nop nop nop nop nop nop
+0006fd 0000
 0006fe 0000
 0006ff 0000
 000700 0000
 000701 0000
-000702 0000
+000702 0000                      	nop nop nop nop nop nop nop nop nop nop
 000703 0000
 000704 0000
 000705 0000
 000706 0000
-000707 0000                      	nop nop nop nop nop nop nop nop nop nop
+000707 0000
 000708 0000
 000709 0000
 00070a 0000
 00070b 0000
-00070c 0000
+00070c 0000                      	nop nop nop nop nop nop nop nop nop nop
 00070d 0000
 00070e 0000
 00070f 0000
-000710 0000                      	nop nop nop nop nop nop nop nop nop
-                                 
-                                 	; Delay for 1 line minus 1 cycle (527 cycles)
+000710 0000
 000711 0000
 000712 0000
 000713 0000
 000714 0000
-000715 0000
+000715 0000                      	nop nop nop nop nop nop nop nop nop
+                                 
+                                 	; Delay for 1 line minus 1 cycle (527 cycles)
 000716 0000
 000717 0000
 000718 0000
@@ -6558,12 +6558,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000721 0000
 000722 0000
 000723 0000
-000724 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+000724 0000
 000725 0000
 000726 0000
 000727 0000
 000728 0000
-000729 0000
+000729 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
 00072a 0000
 00072b 0000
 00072c 0000
@@ -6578,12 +6578,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000735 0000
 000736 0000
 000737 0000
-000738 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+000738 0000
 000739 0000
 00073a 0000
 00073b 0000
 00073c 0000
-00073d 0000
+00073d 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
 00073e 0000
 00073f 0000
 000740 0000
@@ -6598,12 +6598,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000749 0000
 00074a 0000
 00074b 0000
-00074c 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+00074c 0000
 00074d 0000
 00074e 0000
 00074f 0000
 000750 0000
-000751 0000
+000751 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
 000752 0000
 000753 0000
 000754 0000
@@ -6618,12 +6618,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 00075d 0000
 00075e 0000
 00075f 0000
-000760 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+000760 0000
 000761 0000
 000762 0000
 000763 0000
 000764 0000
-000765 0000
+000765 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
 000766 0000
 000767 0000
 000768 0000
@@ -6638,13 +6638,13 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000771 0000
 000772 0000
 000773 0000
-000774 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
-                                 
+000774 0000
 000775 0000
 000776 0000
 000777 0000
 000778 0000
-000779 0000
+000779 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+                                 
 00077a 0000
 00077b 0000
 00077c 0000
@@ -6659,12 +6659,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000785 0000
 000786 0000
 000787 0000
-000788 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000788 0000
 000789 0000
 00078a 0000
 00078b 0000
 00078c 0000
-00078d 0000
+00078d 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 00078e 0000
 00078f 0000
 000790 0000
@@ -6679,12 +6679,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000799 0000
 00079a 0000
 00079b 0000
-00079c 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+00079c 0000
 00079d 0000
 00079e 0000
 00079f 0000
 0007a0 0000
-0007a1 0000
+0007a1 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 0007a2 0000
 0007a3 0000
 0007a4 0000
@@ -6699,12 +6699,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 0007ad 0000
 0007ae 0000
 0007af 0000
-0007b0 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+0007b0 0000
 0007b1 0000
 0007b2 0000
 0007b3 0000
 0007b4 0000
-0007b5 0000
+0007b5 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 0007b6 0000
 0007b7 0000
 0007b8 0000
@@ -6719,12 +6719,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 0007c1 0000
 0007c2 0000
 0007c3 0000
-0007c4 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+0007c4 0000
 0007c5 0000
 0007c6 0000
 0007c7 0000
 0007c8 0000
-0007c9 0000
+0007c9 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 0007ca 0000
 0007cb 0000
 0007cc 0000
@@ -6739,13 +6739,13 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 0007d5 0000
 0007d6 0000
 0007d7 0000
-0007d8 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-                                 
+0007d8 0000
 0007d9 0000
 0007da 0000
 0007db 0000
 0007dc 0000
-0007dd 0000
+0007dd 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+                                 
 0007de 0000
 0007df 0000
 0007e0 0000
@@ -6760,12 +6760,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 0007e9 0000
 0007ea 0000
 0007eb 0000
-0007ec 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+0007ec 0000
 0007ed 0000
 0007ee 0000
 0007ef 0000
 0007f0 0000
-0007f1 0000
+0007f1 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 0007f2 0000
 0007f3 0000
 0007f4 0000
@@ -6780,12 +6780,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 0007fd 0000
 0007fe 0000
 0007ff 0000
-000800 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000800 0000
 000801 0000
 000802 0000
 000803 0000
 000804 0000
-000805 0000
+000805 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 000806 0000
 000807 0000
 000808 0000
@@ -6800,12 +6800,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000811 0000
 000812 0000
 000813 0000
-000814 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000814 0000
 000815 0000
 000816 0000
 000817 0000
 000818 0000
-000819 0000
+000819 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 00081a 0000
 00081b 0000
 00081c 0000
@@ -6820,12 +6820,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000825 0000
 000826 0000
 000827 0000
-000828 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000828 0000
 000829 0000
 00082a 0000
 00082b 0000
 00082c 0000
-00082d 0000
+00082d 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 00082e 0000
 00082f 0000
 000830 0000
@@ -6840,13 +6840,13 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000839 0000
 00083a 0000
 00083b 0000
-00083c 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop
-                                 
+00083c 0000
 00083d 0000
 00083e 0000
 00083f 0000
 000840 0000
-000841 0000
+000841 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop
+                                 
 000842 0000
 000843 0000
 000844 0000
@@ -6861,12 +6861,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 00084d 0000
 00084e 0000
 00084f 0000
-000850 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000850 0000
 000851 0000
 000852 0000
 000853 0000
 000854 0000
-000855 0000
+000855 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 000856 0000
 000857 0000
 000858 0000
@@ -6881,12 +6881,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000861 0000
 000862 0000
 000863 0000
-000864 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000864 0000
 000865 0000
 000866 0000
 000867 0000
 000868 0000
-000869 0000
+000869 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 00086a 0000
 00086b 0000
 00086c 0000
@@ -6901,12 +6901,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000875 0000
 000876 0000
 000877 0000
-000878 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop	nop nop nop
+000878 0000
 000879 0000
 00087a 0000
 00087b 0000
 00087c 0000
-00087d 0000
+00087d 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop	nop nop nop
 00087e 0000
 00087f 0000
 000880 0000
@@ -6921,12 +6921,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000889 0000
 00088a 0000
 00088b 0000
-00088c 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+00088c 0000
 00088d 0000
 00088e 0000
 00088f 0000
 000890 0000
-000891 0000
+000891 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 000892 0000
 000893 0000
 000894 0000
@@ -6941,13 +6941,13 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 00089d 0000
 00089e 0000
 00089f 0000
-0008a0 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
-                                 	
+0008a0 0000
 0008a1 0000
 0008a2 0000
 0008a3 0000
 0008a4 0000
-0008a5 0000
+0008a5 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
+                                 	
 0008a6 0000
 0008a7 0000
 0008a8 0000
@@ -6962,12 +6962,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 0008b1 0000
 0008b2 0000
 0008b3 0000
-0008b4 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop	nop nop nop nop nop nop nop
+0008b4 0000
 0008b5 0000
 0008b6 0000
 0008b7 0000
 0008b8 0000
-0008b9 0000
+0008b9 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop	nop nop nop nop nop nop nop
 0008ba 0000
 0008bb 0000
 0008bc 0000
@@ -6982,12 +6982,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 0008c5 0000
 0008c6 0000
 0008c7 0000
-0008c8 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+0008c8 0000
 0008c9 0000
 0008ca 0000
 0008cb 0000
 0008cc 0000
-0008cd 0000
+0008cd 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 0008ce 0000
 0008cf 0000
 0008d0 0000
@@ -7002,12 +7002,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 0008d9 0000
 0008da 0000
 0008db 0000
-0008dc 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+0008dc 0000
 0008dd 0000
 0008de 0000
 0008df 0000
 0008e0 0000
-0008e1 0000
+0008e1 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 0008e2 0000
 0008e3 0000
 0008e4 0000
@@ -7022,12 +7022,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 0008ed 0000
 0008ee 0000
 0008ef 0000
-0008f0 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+0008f0 0000
 0008f1 0000
 0008f2 0000
 0008f3 0000
 0008f4 0000
-0008f5 0000
+0008f5 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 0008f6 0000
 0008f7 0000
 0008f8 0000
@@ -7042,13 +7042,13 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000901 0000
 000902 0000
 000903 0000
-000904 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop
-                                 
+000904 0000
 000905 0000
 000906 0000
 000907 0000
 000908 0000
-000909 0000
+000909 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop
+                                 
 00090a 0000
 00090b 0000
 00090c 0000
@@ -7063,29 +7063,29 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000915 0000
 000916 0000
 000917 0000
-000918 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
+000918 0000
 000919 0000
 00091a 0000
 00091b 0000
 00091c 0000
-00091d 0000
+00091d 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
 00091e 0000
-00091f 0000                      	nop nop nop nop nop nop nop
+00091f 0000
+000920 0000
+000921 0000
+000922 0000
+000923 0000
+000924 0000                      	nop nop nop nop nop nop nop
                                  	
                                  
                                  	; Lower vsync-pulse
-000920 980c                      	cbi VPORTA_OUT, 4
+000925 980c                      	cbi VPORTA_OUT, 4
                                  	
                                  	; Delay for 4 lines minus 1 cycles (4 * 528 - 1 cycles)
-000921 2700                      	clr r16
-000922 9503
-000923 9503
-000924 f7e9                      	loop1: inc r16 inc r16 brne loop1 ; 512 cycles
-000925 0000
-000926 0000
-000927 0000
-000928 0000
-000929 0000
+000926 2700                      	clr r16
+000927 9503
+000928 9503
+000929 f7e9                      	loop1: inc r16 inc r16 brne loop1 ; 512 cycles
 00092a 0000
 00092b 0000
 00092c 0000
@@ -7095,17 +7095,17 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000930 0000
 000931 0000
 000932 0000
-000933 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+000933 0000
+000934 0000
+000935 0000
+000936 0000
+000937 0000
+000938 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
                                  
-000934 2700                      	clr r16
-000935 9503
-000936 9503
-000937 f7e9                      	loop2: inc r16 inc r16 brne loop2 ; 512 cycles
-000938 0000
-000939 0000
-00093a 0000
-00093b 0000
-00093c 0000
+000939 2700                      	clr r16
+00093a 9503
+00093b 9503
+00093c f7e9                      	loop2: inc r16 inc r16 brne loop2 ; 512 cycles
 00093d 0000
 00093e 0000
 00093f 0000
@@ -7115,17 +7115,17 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000943 0000
 000944 0000
 000945 0000
-000946 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+000946 0000
+000947 0000
+000948 0000
+000949 0000
+00094a 0000
+00094b 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
                                  
-000947 2700                      	clr r16
-000948 9503
-000949 9503
-00094a f7e9                      	loop3: inc r16 inc r16 brne loop3 ; 512 cycles
-00094b 0000
-00094c 0000
-00094d 0000
-00094e 0000
-00094f 0000
+00094c 2700                      	clr r16
+00094d 9503
+00094e 9503
+00094f f7e9                      	loop3: inc r16 inc r16 brne loop3 ; 512 cycles
 000950 0000
 000951 0000
 000952 0000
@@ -7135,17 +7135,17 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000956 0000
 000957 0000
 000958 0000
-000959 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+000959 0000
+00095a 0000
+00095b 0000
+00095c 0000
+00095d 0000
+00095e 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
                                  
-00095a 2700                      	clr r16
-00095b 9503
-00095c 9503
-00095d f7e9                      	loop4: inc r16 inc r16 brne loop4 ; 512 cycles
-00095e 0000
-00095f 0000
-000960 0000
-000961 0000
-000962 0000
+00095f 2700                      	clr r16
+000960 9503
+000961 9503
+000962 f7e9                      	loop4: inc r16 inc r16 brne loop4 ; 512 cycles
 000963 0000
 000964 0000
 000965 0000
@@ -7154,47 +7154,47 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000968 0000
 000969 0000
 00096a 0000
-00096b 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+00096b 0000
+00096c 0000
+00096d 0000
+00096e 0000
+00096f 0000
+000970 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop
                                  
                                  	
                                  	; Raise vsync-pulse
-00096c 9a0c                      	sbi VPORTA_OUT, 4
+000971 9a0c                      	sbi VPORTA_OUT, 4
                                  
                                  
                                  	; Delay for 19 lines minus the back porch of the last line (approx)
                                  	
                                  	; 18 lines
-00096d e112                      	ldi r17, 18
+000972 e112                      	ldi r17, 18
                                  	loop6:
-00096e 2700                      		clr r16
-00096f 9503
-000970 9503
-000971 f7e9                      		loop5: inc r16 inc r16 brne loop5 ; 512 cycles
-000972 0000
-000973 0000
-000974 0000
-000975 0000
-000976 0000
+000973 2700                      		clr r16
+000974 9503
+000975 9503
+000976 f7e9                      		loop5: inc r16 inc r16 brne loop5 ; 512 cycles
 000977 0000
 000978 0000
 000979 0000
 00097a 0000
 00097b 0000
-00097c 0000                      		nop nop nop nop nop nop nop nop nop nop nop
-00097d 951a                      		dec r17
-00097e f779                      		brne loop6
+00097c 0000
+00097d 0000
+00097e 0000
+00097f 0000
+000980 0000
+000981 0000                      		nop nop nop nop nop nop nop nop nop nop nop
+000982 951a                      		dec r17
+000983 f779                      		brne loop6
                                  
                                  	; Incomplete 21st line (528-44=484 cycles)
-00097f e800                      	ldi r16, 0x80
-000980 9503
-000981 9503
-000982 f7e9                      	loop7: inc r16 inc r16 brne loop7 ; 256 cycles
+000984 e800                      	ldi r16, 0x80
+000985 9503
+000986 9503
+000987 f7e9                      	loop7: inc r16 inc r16 brne loop7 ; 256 cycles
                                  
-000983 0000
-000984 0000
-000985 0000
-000986 0000
-000987 0000
 000988 0000
 000989 0000
 00098a 0000
@@ -7209,12 +7209,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000993 0000
 000994 0000
 000995 0000
-000996 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000996 0000
 000997 0000
 000998 0000
 000999 0000
 00099a 0000
-00099b 0000
+00099b 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 00099c 0000
 00099d 0000
 00099e 0000
@@ -7229,12 +7229,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 0009a7 0000
 0009a8 0000
 0009a9 0000
-0009aa 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+0009aa 0000
 0009ab 0000
 0009ac 0000
 0009ad 0000
 0009ae 0000
-0009af 0000
+0009af 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 0009b0 0000
 0009b1 0000
 0009b2 0000
@@ -7249,12 +7249,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 0009bb 0000
 0009bc 0000
 0009bd 0000
-0009be 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+0009be 0000
 0009bf 0000
 0009c0 0000
 0009c1 0000
 0009c2 0000
-0009c3 0000
+0009c3 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 0009c4 0000
 0009c5 0000
 0009c6 0000
@@ -7269,12 +7269,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 0009cf 0000
 0009d0 0000
 0009d1 0000
-0009d2 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+0009d2 0000
 0009d3 0000
 0009d4 0000
 0009d5 0000
 0009d6 0000
-0009d7 0000
+0009d7 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 0009d8 0000
 0009d9 0000
 0009da 0000
@@ -7289,13 +7289,13 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 0009e3 0000
 0009e4 0000
 0009e5 0000
-0009e6 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop
-                                 
+0009e6 0000
 0009e7 0000
 0009e8 0000
 0009e9 0000
 0009ea 0000
-0009eb 0000
+0009eb 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop
+                                 
 0009ec 0000
 0009ed 0000
 0009ee 0000
@@ -7310,12 +7310,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 0009f7 0000
 0009f8 0000
 0009f9 0000
-0009fa 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+0009fa 0000
 0009fb 0000
 0009fc 0000
 0009fd 0000
 0009fe 0000
-0009ff 0000
+0009ff 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 000a00 0000
 000a01 0000
 000a02 0000
@@ -7330,12 +7330,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000a0b 0000
 000a0c 0000
 000a0d 0000
-000a0e 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000a0e 0000
 000a0f 0000
 000a10 0000
 000a11 0000
 000a12 0000
-000a13 0000
+000a13 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 000a14 0000
 000a15 0000
 000a16 0000
@@ -7350,12 +7350,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000a1f 0000
 000a20 0000
 000a21 0000
-000a22 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop	nop nop nop
+000a22 0000
 000a23 0000
 000a24 0000
 000a25 0000
 000a26 0000
-000a27 0000
+000a27 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop	nop nop nop
 000a28 0000
 000a29 0000
 000a2a 0000
@@ -7370,12 +7370,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000a33 0000
 000a34 0000
 000a35 0000
-000a36 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
+000a36 0000
 000a37 0000
 000a38 0000
 000a39 0000
 000a3a 0000
-000a3b 0000
+000a3b 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
 000a3c 0000
 000a3d 0000
 000a3e 0000
@@ -7390,13 +7390,13 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000a47 0000
 000a48 0000
 000a49 0000
-000a4a 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
-                                 
+000a4a 0000
 000a4b 0000
 000a4c 0000
 000a4d 0000
 000a4e 0000
-000a4f 0000
+000a4f 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
+                                 
 000a50 0000
 000a51 0000
 000a52 0000
@@ -7411,12 +7411,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000a5b 0000
 000a5c 0000
 000a5d 0000
-000a5e 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
+000a5e 0000
 000a5f 0000
 000a60 0000
 000a61 0000
 000a62 0000
-000a63 0000
+000a63 0000                      	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
 000a64 0000
 000a65 0000
 000a66 0000
@@ -7431,7 +7431,12 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000a6f 0000
 000a70 0000
 000a71 0000
-000a72 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+000a72 0000
+000a73 0000
+000a74 0000
+000a75 0000
+000a76 0000
+000a77 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
                                  
                                  
                                  	; Test x- and y-scrolling functionality
@@ -7445,11 +7450,6 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
                                  	;lsr r16
                                  	;add r17, r16
                                  	;sts scroll_y, r17
-000a73 0000
-000a74 0000
-000a75 0000
-000a76 0000
-000a77 0000
 000a78 0000
 000a79 0000
 000a7a 0000
@@ -7458,72 +7458,77 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
 000a7d 0000
 000a7e 0000
 000a7f 0000
-000a80 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+000a80 0000
+000a81 0000
+000a82 0000
+000a83 0000
+000a84 0000
+000a85 0000                      	nop nop nop nop nop nop nop nop nop nop nop nop nop nop
                                  
                                  	; Reset to line 0, set the A to be output, and the B buffer as the
                                  	; rendertarget, then jump back to the rendering-loop
-000a81 2799                      	clr r_y
-000a82 2788                      	clr r_tile_y ;TODO here is to load in scroll_y, instead of clearing
+000a86 2799                      	clr r_y
+000a87 2788                      	clr r_tile_y ;TODO here is to load in scroll_y, instead of clearing
                                  	
-000a83 e3be                      	ldi XH, high(scanline_bufferA)
-000a84 e0a0                      	ldi XL, low(scanline_bufferA)
-000a85 e3de                      	ldi YH, high(scanline_bufferB)
-000a86 e1ca                      	ldi YL, low(scanline_bufferB)
+000a88 e3be                      	ldi XH, high(scanline_bufferA)
+000a89 e0a0                      	ldi XL, low(scanline_bufferA)
+000a8a e3de                      	ldi YH, high(scanline_bufferB)
+000a8b e1ca                      	ldi YL, low(scanline_bufferB)
                                  
-000a87 c5d7                      	rjmp visible_scanline4x
+000a8c c5d7                      	rjmp visible_scanline4x
                                  
                                  
                                  ; Subroutine which renders 1 byte, while outputting three to the USART
                                  render_byte:
                                  	; Subroutine call takes 2 cycles
                                  	
-000a88 9101                      	ld r16, Z+ ; Load tile
+000a8d 9101                      	ld r16, Z+ ; Load tile
                                  	
-000a89 902d                      	ld r2, X+
-000a8a 9220 0802                 	sts USART0_TXDATAL, r2
+000a8e 902d                      	ld r2, X+
+000a8f 9220 0802                 	sts USART0_TXDATAL, r2
                                  
-000a8c 012f                      	movw r5:r4, Z
+000a91 012f                      	movw r5:r4, Z
                                  	; Compute address in tileset
-000a8d e01c                      	ldi r17, TILE_HEIGHT
-000a8e 9f01                      	mul r16, r17
-000a8f 0e03                      	add r0, r19
-000a90 1c13                      	adc r1, r_zero
-000a91 efe2                      	ldi ZL, low(tileset_data << 1)
-000a92 e1f6                      	ldi ZH, high(tileset_data << 1)
-000a93 0de0                      	add ZL, r0
-000a94 1df1                      	adc ZH, r1
-000a95 0000
-000a96 0000                      	nop nop
+000a92 e01c                      	ldi r17, TILE_HEIGHT
+000a93 9f01                      	mul r16, r17
+000a94 0e03                      	add r0, r19
+000a95 1c13                      	adc r1, r_zero
+000a96 efec                      	ldi ZL, low(tileset_data << 1)
+000a97 e1f6                      	ldi ZH, high(tileset_data << 1)
+000a98 0de0                      	add ZL, r0
+000a99 1df1                      	adc ZH, r1
+000a9a 0000
+000a9b 0000                      	nop nop
                                  	
-000a97 902d                      	ld r2, X+
-000a98 9220 0802                 	sts USART0_TXDATAL, r2
+000a9c 902d                      	ld r2, X+
+000a9d 9220 0802                 	sts USART0_TXDATAL, r2
                                  
-000a9a 9104                      	lpm r16, Z ; Load row from tileset
-000a9b 9309                      	st Y+, r16 ; Write row to render-buffer
-000a9c 01f2                      	movw Z, r5:r4
+000a9f 9104                      	lpm r16, Z ; Load row from tileset
+000aa0 9309                      	st Y+, r16 ; Write row to render-buffer
+000aa1 01f2                      	movw Z, r5:r4
                                  	
                                  	; Increment x-index and wrap if we've reached the right side of tiledata
-000a9d 9523                      	inc r18
-000a9e 312b                      	cpi r18, TILEDATA_WIDTH
-000a9f f019                      	breq wrap_index_x
-000aa0 0000
-000aa1 0000                      		nop nop
-000aa2 c003                      		rjmp wrap_index_x_done
+000aa2 9523                      	inc r18
+000aa3 312b                      	cpi r18, TILEDATA_WIDTH
+000aa4 f019                      	breq wrap_index_x
+000aa5 0000
+000aa6 0000                      		nop nop
+000aa7 c003                      		rjmp wrap_index_x_done
                                  	wrap_index_x:
-000aa3 2722                      		clr r18
-000aa4 e3e4                      		ldi ZL, low(tiledata)
-000aa5 e3fe                      		ldi ZH, high(tiledata)
+000aa8 2722                      		clr r18
+000aa9 e3e4                      		ldi ZL, low(tiledata)
+000aaa e3fe                      		ldi ZH, high(tiledata)
                                  	wrap_index_x_done:
                                  	
-000aa6 902d                      	ld r2, X+
-000aa7 9220 0802                 	sts USART0_TXDATAL, r2
+000aab 902d                      	ld r2, X+
+000aac 9220 0802                 	sts USART0_TXDATAL, r2
                                  
-000aa9 0000
-000aaa 0000
-000aab 0000
-000aac 0000                      	nop nop nop nop
+000aae 0000
+000aaf 0000
+000ab0 0000
+000ab1 0000                      	nop nop nop nop
                                  	; Return jump takes 4 cycles
-000aad 9508                      	ret
+000ab2 9508                      	ret
                                  
                                  
                                  .include "default_leveldata.asm"
@@ -7536,210 +7541,210 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
                                   
                                  .cseg
                                  default_leveldata:
-000aae 1a00
-000aaf 0100
-000ab0 0101
-000ab1 0101
-000ab2 0101
-000ab3 0101
-000ab4 0101
+000ab3 1a00
+000ab4 0100
 000ab5 0101
 000ab6 0101
 000ab7 0101
 000ab8 0101
 000ab9 0101
-000aba 0001                      .db 0x00, 0x1A, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x01, \
-000abb 0001
-000abc 001a
-000abd 0000
-000abe 0000
-000abf 0000
-000ac0 0000
-000ac1 0000
+000aba 0101
+000abb 0101
+000abc 0101
+000abd 0101
+000abe 0101
+000abf 0001                      .db 0x00, 0x1A, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x01, \
+000ac0 0001
+000ac1 001a
 000ac2 0000
 000ac3 0000
 000ac4 0000
 000ac5 0000
 000ac6 0000
-000ac7 0100                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
+000ac7 0000
 000ac8 0000
-000ac9 1a00
-000aca 0500
-000acb 0706
-000acc 0908
-000acd 000a
-000ace 0000
-000acf 0002
-000ad0 0003
-000ad1 0002
-000ad2 0000
+000ac9 0000
+000aca 0000
+000acb 0000
+000acc 0100                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
+000acd 0000
+000ace 1a00
+000acf 0500
+000ad0 0706
+000ad1 0908
+000ad2 000a
 000ad3 0000
-000ad4 0000
-000ad5 0001                          0x00, 0x1A, 0x00, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x00, 0x00, 0x00, 0x02, 0x00, 0x03, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
-000ad6 0000
-000ad7 001a
+000ad4 0002
+000ad5 0003
+000ad6 0002
+000ad7 0000
 000ad8 0000
 000ad9 0000
-000ada 0000
+000ada 0001                          0x00, 0x1A, 0x00, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x00, 0x00, 0x00, 0x02, 0x00, 0x03, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
 000adb 0000
-000adc 0000
+000adc 001a
 000add 0000
 000ade 0000
 000adf 0000
 000ae0 0000
 000ae1 0000
-000ae2 0100                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
+000ae2 0000
 000ae3 0000
-000ae4 1a00
-000ae5 1100
-000ae6 1715
-000ae7 1915
-000ae8 0011
-000ae9 0000
-000aea 0003
-000aeb 0002
-000aec 0003
-000aed 0000
+000ae4 0000
+000ae5 0000
+000ae6 0000
+000ae7 0100                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
+000ae8 0000
+000ae9 1a00
+000aea 1100
+000aeb 1715
+000aec 1915
+000aed 0011
 000aee 0000
-000aef 0000
-000af0 0001                          0x00, 0x1A, 0x00, 0x11, 0x15, 0x17, 0x15, 0x19, 0x11, 0x00, 0x00, 0x00, 0x03, 0x00, 0x02, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
-000af1 0000
-000af2 001a
-000af3 1110
-000af4 1111
-000af5 1011
+000aef 0003
+000af0 0002
+000af1 0003
+000af2 0000
+000af3 0000
+000af4 0000
+000af5 0001                          0x00, 0x1A, 0x00, 0x11, 0x15, 0x17, 0x15, 0x19, 0x11, 0x00, 0x00, 0x00, 0x03, 0x00, 0x02, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
 000af6 0000
-000af7 0000
-000af8 0000
-000af9 0000
-000afa 0000
+000af7 001a
+000af8 1110
+000af9 1111
+000afa 1011
 000afb 0000
 000afc 0000
-000afd 0100                          0x00, 0x1A, 0x00, 0x10, 0x11, 0x11, 0x11, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
+000afd 0000
 000afe 0000
-000aff 1a00
+000aff 0000
 000b00 0000
 000b01 0000
-000b02 0000
+000b02 0100                          0x00, 0x1A, 0x00, 0x10, 0x11, 0x11, 0x11, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
 000b03 0000
-000b04 0000
-000b05 0002
-000b06 0003
-000b07 0002
+000b04 1a00
+000b05 0000
+000b06 0000
+000b07 0000
 000b08 0000
 000b09 0000
-000b0a 0000
-000b0b 0001                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x03, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
-000b0c 0000
-000b0d 001a
+000b0a 0002
+000b0b 0003
+000b0c 0002
+000b0d 0000
 000b0e 0000
 000b0f 0000
-000b10 0000
+000b10 0001                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x03, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
 000b11 0000
-000b12 0000
+000b12 001a
 000b13 0000
 000b14 0000
 000b15 0000
 000b16 0000
 000b17 0000
-000b18 0100                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
+000b18 0000
 000b19 0000
-000b1a 1a00
-000b1b 3200
-000b1c 0031
-000b1d 3233
-000b1e 3232
-000b1f 0031
-000b20 0000
-000b21 0000
-000b22 0000
-000b23 0000
-000b24 0000
+000b1a 0000
+000b1b 0000
+000b1c 0000
+000b1d 0100                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
+000b1e 0000
+000b1f 1a00
+000b20 3200
+000b21 0031
+000b22 3233
+000b23 3232
+000b24 0031
 000b25 0000
-000b26 0001                          0x00, 0x1A, 0x00, 0x32, 0x31, 0x00, 0x33, 0x32, 0x32, 0x32, 0x31, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
+000b26 0000
 000b27 0000
-000b28 001a
+000b28 0000
 000b29 0000
 000b2a 0000
-000b2b 0000
+000b2b 0001                          0x00, 0x1A, 0x00, 0x32, 0x31, 0x00, 0x33, 0x32, 0x32, 0x32, 0x31, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
 000b2c 0000
-000b2d 0000
+000b2d 001a
 000b2e 0000
 000b2f 0000
 000b30 0000
 000b31 0000
 000b32 0000
-000b33 0100                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
+000b33 0000
 000b34 0000
-000b35 1a00
+000b35 0000
 000b36 0000
 000b37 0000
-000b38 0000
+000b38 0100                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
 000b39 0000
-000b3a 0000
+000b3a 1a00
 000b3b 0000
 000b3c 0000
 000b3d 0000
 000b3e 0000
 000b3f 0000
 000b40 0000
-000b41 0001                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
+000b41 0000
 000b42 0000
-000b43 001a
-000b44 0101
-000b45 0101
-000b46 0101
-000b47 0101
-000b48 0101
+000b43 0000
+000b44 0000
+000b45 0000
+000b46 0001                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, \
+000b47 0000
+000b48 001a
 000b49 0101
 000b4a 0101
 000b4b 0101
 000b4c 0101
 000b4d 0101
-000b4e 0101                          0x00, 0x1A, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, \
-000b4f 0000
-000b50 1a00
-000b51 0200
-000b52 0000
-000b53 0000
+000b4e 0101
+000b4f 0101
+000b50 0101
+000b51 0101
+000b52 0101
+000b53 0101                          0x00, 0x1A, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, \
 000b54 0000
-000b55 0000
-000b56 0000
+000b55 1a00
+000b56 0200
 000b57 0000
 000b58 0000
 000b59 0000
-000b5a 0200
-000b5b 0203
-000b5c 0000                          0x00, 0x1A, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x03, 0x02, 0x00, 0x00, 0x00, \
+000b5a 0000
+000b5b 0000
+000b5c 0000
 000b5d 0000
-000b5e 001a
-000b5f 0000
-000b60 0000
-000b61 0000
+000b5e 0000
+000b5f 0200
+000b60 0203
+000b61 0000                          0x00, 0x1A, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x03, 0x02, 0x00, 0x00, 0x00, \
 000b62 0000
-000b63 0000
+000b63 001a
 000b64 0000
 000b65 0000
 000b66 0000
 000b67 0000
 000b68 0000
-000b69 0000                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
+000b69 0000
 000b6a 0000
-000b6b 1a00
+000b6b 0000
 000b6c 0000
 000b6d 0000
-000b6e 0000
+000b6e 0000                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
 000b6f 0000
-000b70 0000
+000b70 1a00
 000b71 0000
 000b72 0000
 000b73 0000
 000b74 0000
 000b75 0000
 000b76 0000
-000b77 0000                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
+000b77 0000
+000b78 0000
+000b79 0000
+000b7a 0000
+000b7b 0000
+000b7c 0000                          0x00, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
                                  .include "tileset.asm"
-000b78 0000                      
+000b7d 0000                      
                                   * tileset.asm
                                   *
                                   *  Created: 10-05-2020 23:05:59
@@ -7748,390 +7753,390 @@ C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.as
                                  
                                  .cseg
                                  tileset_data:
-000b79 0000
-000b7a 0000
-000b7b 0000
-000b7c 0000
-000b7d 0000                      .db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x00, Full Black*/ \
 000b7e 0000
-000b7f ffff
-000b80 ffff
-000b81 ffff
-000b82 ffff
-000b83 ffff                          0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* 0x01, Full White */ \
+000b7f 0000
+000b80 0000
+000b81 0000
+000b82 0000                      .db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x00, Full Black*/ \
+000b83 0000
 000b84 ffff
-000b85 81ff
-000b86 8181
-000b87 8181
-000b88 8181
-000b89 8181                      	0xFF, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xFF, /* 0x02, Rectangle, 1px white */ \
-000b8a ff81
-000b8b ffff
-000b8c c3c3
-000b8d c3c3
-000b8e c3c3
-000b8f c3c3                      	0xFF, 0xFF, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0xFF, 0xFF, /* 0x03, Rectangle, 2px white */ \
+000b85 ffff
+000b86 ffff
+000b87 ffff
+000b88 ffff                          0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* 0x01, Full White */ \
+000b89 ffff
+000b8a 81ff
+000b8b 8181
+000b8c 8181
+000b8d 8181
+000b8e 8181                      	0xFF, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xFF, /* 0x02, Rectangle, 1px white */ \
+000b8f ff81
 000b90 ffff
-000b91 b4fc
-000b92 3030
-000b93 3030
-000b94 3030
-000b95 7830                      	0xFC, 0xB4, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x78, 0x00, 0x00, /* 0x04, Letter, T */ \
-000b96 0000
-000b97 3000
-000b98 0030
-000b99 30f0
-000b9a 3030
-000b9b fc30                          0x00, 0x30, 0x30, 0x00, 0xF0, 0x30, 0x30, 0x30, 0x30, 0xFC, 0x00, 0x00, /* 0x05, Letter, i */ \
-000b9c 0000
-000b9d 0000
-000b9e 0000
-000b9f ccf8
-000ba0 cccc
-000ba1 cccc                      	0x00, 0x00, 0x00, 0x00, 0xF8, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0x00, 0x00, /* 0x06, Letter, n */ \
+000b91 c3c3
+000b92 c3c3
+000b93 c3c3
+000b94 c3c3                      	0xFF, 0xFF, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0xFF, 0xFF, /* 0x03, Rectangle, 2px white */ \
+000b95 ffff
+000b96 b4fc
+000b97 3030
+000b98 3030
+000b99 3030
+000b9a 7830                      	0xFC, 0xB4, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x78, 0x00, 0x00, /* 0x04, Letter, T */ \
+000b9b 0000
+000b9c 3000
+000b9d 0030
+000b9e 30f0
+000b9f 3030
+000ba0 fc30                          0x00, 0x30, 0x30, 0x00, 0xF0, 0x30, 0x30, 0x30, 0x30, 0xFC, 0x00, 0x00, /* 0x05, Letter, i */ \
+000ba1 0000
 000ba2 0000
 000ba3 0000
-000ba4 0000
-000ba5 6666
-000ba6 6666
-000ba7 0c3c                      	0x00, 0x00, 0x00, 0x00, 0x66, 0x66, 0x66, 0x66, 0x3C, 0x0C, 0x18, 0xF0, /* 0x07, Letter, y */ \
-000ba8 f018
-000ba9 663c
-000baa c0c6
-000bab cec0
-000bac c6c6
-000bad 3e66                      	0x3C, 0x66, 0xC6, 0xC0, 0xC0, 0xCE, 0xC6, 0xC6, 0x66, 0x3E, 0x00, 0x00, /* 0x08, Letter, G */ \
-000bae 0000
-000baf 66fc
-000bb0 6666
-000bb1 607c
-000bb2 6060
-000bb3 f060                          0xFC, 0x66, 0x66, 0x66, 0x7C, 0x60, 0x60, 0x60, 0x60, 0xF0, 0x00, 0x00, /* 0x09, Letter, P */ \
-000bb4 0000
-000bb5 cccc
-000bb6 cccc
-000bb7 cccc
-000bb8 cccc
-000bb9 78cc                      	0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0x78, 0x00, 0x00, /* 0x0A, Letter, U */ \
-000bba 0000
-000bbb 0000
-000bbc 0000
-000bbd 0000
-000bbe 0000
-000bbf 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x0B, <unused> */ \
+000ba4 ccf8
+000ba5 cccc
+000ba6 cccc                      	0x00, 0x00, 0x00, 0x00, 0xF8, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0x00, 0x00, /* 0x06, Letter, n */ \
+000ba7 0000
+000ba8 0000
+000ba9 0000
+000baa 6666
+000bab 6666
+000bac 0c3c                      	0x00, 0x00, 0x00, 0x00, 0x66, 0x66, 0x66, 0x66, 0x3C, 0x0C, 0x18, 0xF0, /* 0x07, Letter, y */ \
+000bad f018
+000bae 663c
+000baf c0c6
+000bb0 cec0
+000bb1 c6c6
+000bb2 3e66                      	0x3C, 0x66, 0xC6, 0xC0, 0xC0, 0xCE, 0xC6, 0xC6, 0x66, 0x3E, 0x00, 0x00, /* 0x08, Letter, G */ \
+000bb3 0000
+000bb4 66fc
+000bb5 6666
+000bb6 607c
+000bb7 6060
+000bb8 f060                          0xFC, 0x66, 0x66, 0x66, 0x7C, 0x60, 0x60, 0x60, 0x60, 0xF0, 0x00, 0x00, /* 0x09, Letter, P */ \
+000bb9 0000
+000bba cccc
+000bbb cccc
+000bbc cccc
+000bbd cccc
+000bbe 78cc                      	0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0x78, 0x00, 0x00, /* 0x0A, Letter, U */ \
+000bbf 0000
 000bc0 0000
 000bc1 0000
 000bc2 0000
 000bc3 0000
-000bc4 0000
-000bc5 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x0C, <unused> */ \
+000bc4 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x0B, <unused> */ \
+000bc5 0000
 000bc6 0000
 000bc7 0000
 000bc8 0000
 000bc9 0000
-000bca 0000
-000bcb 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x0D, <unused> */ \
+000bca 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x0C, <unused> */ \
+000bcb 0000
 000bcc 0000
 000bcd 0000
 000bce 0000
 000bcf 0000
-000bd0 0000
-000bd1 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x0E, <unused> */ \
+000bd0 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x0D, <unused> */ \
+000bd1 0000
 000bd2 0000
 000bd3 0000
 000bd4 0000
 000bd5 0000
-000bd6 0000
-000bd7 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x0F, <unused> */ \
+000bd6 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x0E, <unused> */ \
+000bd7 0000
 000bd8 0000
 000bd9 0000
 000bda 0000
 000bdb 0000
-000bdc 0000
-000bdd 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x10, 2x2 sub-blocks, empty */ \
+000bdc 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x0F, <unused> */ \
+000bdd 0000
 000bde 0000
-000bdf f0f0
-000be0 f0f0
-000be1 f0f0
-000be2 0000
-000be3 0000                          0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x11, 2x2 sub-blocks, top-left */ \
-000be4 0000
-000be5 0f0f
-000be6 0f0f
-000be7 0f0f
-000be8 0000
-000be9 0000                      	0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x12, 2x2 sub-blocks, top-right */ \
-000bea 0000
-000beb ffff
-000bec ffff
-000bed ffff
-000bee 0000
-000bef 0000                      	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x13, 2x2 sub-blocks, top */ \
-000bf0 0000
-000bf1 0000
-000bf2 0000
+000bdf 0000
+000be0 0000
+000be1 0000
+000be2 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x10, 2x2 sub-blocks, empty */ \
+000be3 0000
+000be4 f0f0
+000be5 f0f0
+000be6 f0f0
+000be7 0000
+000be8 0000                          0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x11, 2x2 sub-blocks, top-left */ \
+000be9 0000
+000bea 0f0f
+000beb 0f0f
+000bec 0f0f
+000bed 0000
+000bee 0000                      	0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x12, 2x2 sub-blocks, top-right */ \
+000bef 0000
+000bf0 ffff
+000bf1 ffff
+000bf2 ffff
 000bf3 0000
-000bf4 f0f0
-000bf5 f0f0                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, /* 0x14, 2x2 sub-blocks, bottom-left */ \
-000bf6 f0f0
-000bf7 f0f0
-000bf8 f0f0
+000bf4 0000                      	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x13, 2x2 sub-blocks, top */ \
+000bf5 0000
+000bf6 0000
+000bf7 0000
+000bf8 0000
 000bf9 f0f0
-000bfa f0f0
-000bfb f0f0                          0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, /* 0x15, 2x2 sub-blocks, left */ \
+000bfa f0f0                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, /* 0x14, 2x2 sub-blocks, bottom-left */ \
+000bfb f0f0
 000bfc f0f0
-000bfd 0f0f
-000bfe 0f0f
-000bff 0f0f
-000c00 f0f0
-000c01 f0f0                      	0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, /* 0x16, 2x2 sub-blocks, antidiagonal */ \
-000c02 f0f0
-000c03 ffff
-000c04 ffff
-000c05 ffff
-000c06 f0f0
-000c07 f0f0                      	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, /* 0x17, 2x2 sub-blocks, not bottom-right */ \
-000c08 f0f0
-000c09 0000
-000c0a 0000
-000c0b 0000
-000c0c 0f0f
-000c0d 0f0f                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, /* 0x18, 2x2 sub-blocks, bottom-right */ \
-000c0e 0f0f
-000c0f f0f0
-000c10 f0f0
-000c11 f0f0
-000c12 0f0f
-000c13 0f0f                          0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, /* 0x19, 2x2 sub-blocks, diagonal */ \
-000c14 0f0f
-000c15 0f0f
-000c16 0f0f
+000bfd f0f0
+000bfe f0f0
+000bff f0f0
+000c00 f0f0                          0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, /* 0x15, 2x2 sub-blocks, left */ \
+000c01 f0f0
+000c02 0f0f
+000c03 0f0f
+000c04 0f0f
+000c05 f0f0
+000c06 f0f0                      	0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, /* 0x16, 2x2 sub-blocks, antidiagonal */ \
+000c07 f0f0
+000c08 ffff
+000c09 ffff
+000c0a ffff
+000c0b f0f0
+000c0c f0f0                      	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, /* 0x17, 2x2 sub-blocks, not bottom-right */ \
+000c0d f0f0
+000c0e 0000
+000c0f 0000
+000c10 0000
+000c11 0f0f
+000c12 0f0f                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, /* 0x18, 2x2 sub-blocks, bottom-right */ \
+000c13 0f0f
+000c14 f0f0
+000c15 f0f0
+000c16 f0f0
 000c17 0f0f
-000c18 0f0f
-000c19 0f0f                      	0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, /* 0x1A, 2x2 sub-blocks, right */ \
+000c18 0f0f                          0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, /* 0x19, 2x2 sub-blocks, diagonal */ \
+000c19 0f0f
 000c1a 0f0f
-000c1b ffff
-000c1c ffff
-000c1d ffff
-000c1e 0f0f
-000c1f 0f0f                      	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, /* 0x1B, 2x2 sub-blocks, not bottom-left */ \
-000c20 0f0f
-000c21 0000
-000c22 0000
-000c23 0000
-000c24 ffff
-000c25 ffff                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* 0x1C, 2x2 sub-blocks, bottom */ \
-000c26 ffff
-000c27 f0f0
-000c28 f0f0
-000c29 f0f0
-000c2a ffff
-000c2b ffff                          0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* 0x1D, 2x2 sub-blocks, not top-right */ \
-000c2c ffff
-000c2d 0f0f
-000c2e 0f0f
-000c2f 0f0f
-000c30 ffff
-000c31 ffff                      	0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* 0x1E, 2x2 sub-blocks, not top-left */ \
-000c32 ffff
-000c33 ffff
-000c34 ffff
+000c1b 0f0f
+000c1c 0f0f
+000c1d 0f0f
+000c1e 0f0f                      	0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, /* 0x1A, 2x2 sub-blocks, right */ \
+000c1f 0f0f
+000c20 ffff
+000c21 ffff
+000c22 ffff
+000c23 0f0f
+000c24 0f0f                      	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, /* 0x1B, 2x2 sub-blocks, not bottom-left */ \
+000c25 0f0f
+000c26 0000
+000c27 0000
+000c28 0000
+000c29 ffff
+000c2a ffff                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* 0x1C, 2x2 sub-blocks, bottom */ \
+000c2b ffff
+000c2c f0f0
+000c2d f0f0
+000c2e f0f0
+000c2f ffff
+000c30 ffff                          0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* 0x1D, 2x2 sub-blocks, not top-right */ \
+000c31 ffff
+000c32 0f0f
+000c33 0f0f
+000c34 0f0f
 000c35 ffff
-000c36 ffff
-000c37 ffff                      	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* 0x1F, 2x2 sub-blocks, full */ \
+000c36 ffff                      	0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* 0x1E, 2x2 sub-blocks, not top-left */ \
+000c37 ffff
 000c38 ffff
-000c39 0000
-000c3a 0000
-000c3b 0000
-000c3c 0000
-000c3d 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x20, <unused> */ \
+000c39 ffff
+000c3a ffff
+000c3b ffff
+000c3c ffff                      	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* 0x1F, 2x2 sub-blocks, full */ \
+000c3d ffff
 000c3e 0000
 000c3f 0000
 000c40 0000
 000c41 0000
-000c42 0000
-000c43 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x21, <unused> */ \
+000c42 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x20, <unused> */ \
+000c43 0000
 000c44 0000
 000c45 0000
 000c46 0000
 000c47 0000
-000c48 0000
-000c49 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x22, <unused> */ \
+000c48 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x21, <unused> */ \
+000c49 0000
 000c4a 0000
 000c4b 0000
 000c4c 0000
 000c4d 0000
-000c4e 0000
-000c4f 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x23, <unused> */ \
+000c4e 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x22, <unused> */ \
+000c4f 0000
 000c50 0000
 000c51 0000
 000c52 0000
 000c53 0000
-000c54 0000
-000c55 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x24, <unused> */ \
+000c54 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x23, <unused> */ \
+000c55 0000
 000c56 0000
 000c57 0000
 000c58 0000
 000c59 0000
-000c5a 0000
-000c5b 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x25, <unused> */ \
+000c5a 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x24, <unused> */ \
+000c5b 0000
 000c5c 0000
 000c5d 0000
 000c5e 0000
 000c5f 0000
-000c60 0000
-000c61 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x26, <unused> */ \
+000c60 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x25, <unused> */ \
+000c61 0000
 000c62 0000
 000c63 0000
 000c64 0000
 000c65 0000
-000c66 0000
-000c67 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x27, <unused> */ \
+000c66 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x26, <unused> */ \
+000c67 0000
 000c68 0000
 000c69 0000
 000c6a 0000
 000c6b 0000
-000c6c 0000
-000c6d 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x28, <unused> */ \
+000c6c 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x27, <unused> */ \
+000c6d 0000
 000c6e 0000
 000c6f 0000
 000c70 0000
 000c71 0000
-000c72 0000
-000c73 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x29, <unused> */ \
+000c72 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x28, <unused> */ \
+000c73 0000
 000c74 0000
 000c75 0000
 000c76 0000
 000c77 0000
-000c78 0000
-000c79 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2A, <unused> */ \
+000c78 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x29, <unused> */ \
+000c79 0000
 000c7a 0000
 000c7b 0000
 000c7c 0000
 000c7d 0000
-000c7e 0000
-000c7f 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2B, <unused> */ \
+000c7e 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2A, <unused> */ \
+000c7f 0000
 000c80 0000
 000c81 0000
 000c82 0000
 000c83 0000
-000c84 0000
-000c85 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2C, <unused> */ \
+000c84 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2B, <unused> */ \
+000c85 0000
 000c86 0000
 000c87 0000
 000c88 0000
 000c89 0000
-000c8a 0000
-000c8b 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2D, <unused> */ \
+000c8a 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2C, <unused> */ \
+000c8b 0000
 000c8c 0000
 000c8d 0000
 000c8e 0000
 000c8f 0000
-000c90 0000
-000c91 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2E, <unused> */ \
+000c90 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2D, <unused> */ \
+000c91 0000
 000c92 0000
 000c93 0000
 000c94 0000
 000c95 0000
-000c96 0000
-000c97 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2F, <unused> */ \
+000c96 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2E, <unused> */ \
+000c97 0000
 000c98 0000
 000c99 0000
 000c9a 0000
 000c9b 0000
-000c9c 0000
-000c9d 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x30, <unused> */ \
+000c9c 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x2F, <unused> */ \
+000c9d 0000
 000c9e 0000
 000c9f 0000
-000ca0 8000
-000ca1 2040
-000ca2 fefe
-000ca3 6e9e                          0x00, 0x00, 0x00, 0x80, 0x40, 0x20, 0xFE, 0xFE, 0x9E, 0x6E, 0x90, 0x60, /* 0x31, Car, front */ \
-000ca4 6090
-000ca5 0000
-000ca6 10ff
-000ca7 1010
-000ca8 f3ff
-000ca9 ffff                      	0x00, 0x00, 0xFF, 0x10, 0x10, 0x10, 0xFF, 0xF3, 0xFF, 0xFF, 0x00, 0x00, /* 0x32, Car, middle */ \
+000ca0 0000
+000ca1 0000
+000ca2 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x30, <unused> */ \
+000ca3 0000
+000ca4 0000
+000ca5 8000
+000ca6 2040
+000ca7 fefe
+000ca8 6e9e                          0x00, 0x00, 0x00, 0x80, 0x40, 0x20, 0xFE, 0xFE, 0x9E, 0x6E, 0x90, 0x60, /* 0x31, Car, front */ \
+000ca9 6090
 000caa 0000
-000cab 0000
-000cac 4301
-000cad 3c66
-000cae 7f7f
-000caf 7679                      	0x00, 0x00, 0x01, 0x43, 0x66, 0x3C, 0x7F, 0x7F, 0x79, 0x76, 0x09, 0x06, /* 0x33, Car, rear */ \
-000cb0 0609
-000cb1 0000
-000cb2 0000
-000cb3 0000
-000cb4 0000
-000cb5 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x34, <unused> */ \
+000cab 10ff
+000cac 1010
+000cad f3ff
+000cae ffff                      	0x00, 0x00, 0xFF, 0x10, 0x10, 0x10, 0xFF, 0xF3, 0xFF, 0xFF, 0x00, 0x00, /* 0x32, Car, middle */ \
+000caf 0000
+000cb0 0000
+000cb1 4301
+000cb2 3c66
+000cb3 7f7f
+000cb4 7679                      	0x00, 0x00, 0x01, 0x43, 0x66, 0x3C, 0x7F, 0x7F, 0x79, 0x76, 0x09, 0x06, /* 0x33, Car, rear */ \
+000cb5 0609
 000cb6 0000
 000cb7 0000
 000cb8 0000
 000cb9 0000
-000cba 0000
-000cbb 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x35, <unused> */ \
+000cba 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x34, <unused> */ \
+000cbb 0000
 000cbc 0000
 000cbd 0000
 000cbe 0000
 000cbf 0000
-000cc0 0000
-000cc1 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x36, <unused> */ \
+000cc0 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x35, <unused> */ \
+000cc1 0000
 000cc2 0000
 000cc3 0000
 000cc4 0000
 000cc5 0000
-000cc6 0000
-000cc7 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x37, <unused> */ \
+000cc6 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x36, <unused> */ \
+000cc7 0000
 000cc8 0000
 000cc9 0000
 000cca 0000
 000ccb 0000
-000ccc 0000
-000ccd 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x38, <unused> */ \
+000ccc 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x37, <unused> */ \
+000ccd 0000
 000cce 0000
 000ccf 0000
 000cd0 0000
 000cd1 0000
-000cd2 0000
-000cd3 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x39, <unused> */ \
+000cd2 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x38, <unused> */ \
+000cd3 0000
 000cd4 0000
 000cd5 0000
 000cd6 0000
 000cd7 0000
-000cd8 0000
-000cd9 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3A, <unused> */ \
+000cd8 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x39, <unused> */ \
+000cd9 0000
 000cda 0000
 000cdb 0000
 000cdc 0000
 000cdd 0000
-000cde 0000
-000cdf 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3B, <unused> */ \
+000cde 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3A, <unused> */ \
+000cdf 0000
 000ce0 0000
 000ce1 0000
 000ce2 0000
 000ce3 0000
-000ce4 0000
-000ce5 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3C, <unused> */ \
+000ce4 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3B, <unused> */ \
+000ce5 0000
 000ce6 0000
 000ce7 0000
 000ce8 0000
 000ce9 0000
-000cea 0000
-000ceb 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3D, <unused> */ \
+000cea 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3C, <unused> */ \
+000ceb 0000
 000cec 0000
 000ced 0000
 000cee 0000
 000cef 0000
-000cf0 0000
-000cf1 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3E, <unused> */ \
+000cf0 0000                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3D, <unused> */ \
+000cf1 0000
 000cf2 0000
 000cf3 0000
 000cf4 0000
 000cf5 0000
-000cf6 0000
+000cf6 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x3E, <unused> */ \
 000cf7 0000
-000cf8 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  /* 0x3F, <unused> */
+000cf8 0000
+000cf9 0000
+000cfa 0000
+000cfb 0000
+000cfc 0000
+000cfd 0000                      	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  /* 0x3F, <unused> */
                                  
                                  ; Tiledata array in RAM
                                  .dseg
@@ -8164,7 +8169,7 @@ counted separately from r26..r31 here.
 "ATtiny817" register use summary:
 x  :  85 y  :   2 z  :   6 r0 :   4 r1 :   4 r2 : 166 r3 :   5 r4 :   2 
 r5 :   2 r6 :   0 r7 :   0 r8 :   0 r9 :   0 r10:   0 r11:   0 r12:   0 
-r13:   0 r14:   0 r15:   0 r16:  87 r17:   9 r18:   8 r19:   3 r20:   0 
+r13:   0 r14:   0 r15:   0 r16:  91 r17:   9 r18:   8 r19:   3 r20:   0 
 r21:   0 r22:   0 r23:   0 r24:   7 r25:   5 r26:  10 r27:   6 r28:   5 
 r29:   5 r30:  10 r31:  10 
 Registers used: 21 out of 35 (60.0%)
@@ -8180,21 +8185,21 @@ clh   :   0 cli   :   0 cln   :   0 clr   :  12 cls   :   0 clt   :   0
 clv   :   0 clz   :   0 com   :   0 cp    :   0 cpc   :   0 cpi   :   4 
 cpse  :   0 dec   :   1 des   :   0 eor   :   6 fmul  :   0 fmuls :   0 
 fmulsu:   0 icall :   0 ijmp  :   2 in    :   0 inc   :  16 ld    :  84 
-ldd   :   0 ldi   :  50 lds   :   3 lpm   :   4 lsl   :   2 lsr   :   3 
+ldd   :   0 ldi   :  52 lds   :   3 lpm   :   4 lsl   :   2 lsr   :   3 
 mov   :   2 movw  :   2 mul   :   2 muls  :   0 mulsu :   0 neg   :   0 
-nop   :2263 or    :   0 ori   :   0 out   :   1 pop   :   0 push  :   0 
+nop   :2263 or    :   0 ori   :   0 out   :   2 pop   :   0 push  :   0 
 rcall :   8 ret   :   1 reti  :   0 rjmp  :   6 rol   :   0 ror   :   0 
 sbc   :   1 sbci  :   0 sbi   :   7 sbic  :   0 sbis  :   0 sbiw  :   1 
 sbr   :   0 sbrc  :   0 sbrs  :   0 sec   :   0 seh   :   0 sei   :   0 
 sen   :   0 ser   :   0 ses   :   0 set   :   0 sev   :   0 sez   :   0 
-sleep :   0 spm   :   0 st    :   3 std   :   0 sts   : 105 sub   :   2 
+sleep :   0 spm   :   0 st    :   3 std   :   0 sts   : 106 sub   :   2 
 subi  :   4 swap  :   1 tst   :   0 wdr   :   0 
 Instructions used: 35 out of 112 (31.3%)
 
 "ATtiny817" memory use summary [bytes]:
 Segment   Begin    End      Code   Data   Used    Size   Use%
 ---------------------------------------------------------------
-[.cseg] 0x000000 0x0019f2   5468   1174   6642    8192  81.1%
+[.cseg] 0x000000 0x0019fc   5478   1174   6652    8192  81.2%
 [.dseg] 0x003e00 0x003ffd      0    509    509     512  99.4%
 [.eseg] 0x000000 0x000000      0      0      0     128   0.0%
 

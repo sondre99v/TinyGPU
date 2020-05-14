@@ -46,6 +46,11 @@ start:
 	out CPU_CCP, r16
 	ldi r16, 0
 	sts CLKCTRL_MCLKCTRLB, r16
+
+	ldi r16, CPU_CCP_IOREG_gc
+	out CPU_CCP, r16
+	ldi r16, CLKCTRL_CLKOUT_bm
+	sts CLKCTRL_MCLKCTRLA, r16
 	
 	; Setup TCA in split mode, to generate:
 	;  - HBLANK mask on WO0, passed into CCL
@@ -196,86 +201,7 @@ visible_scanline4x:
 	timingjmpA_2: nop nop
 	timingjmpA_0:
 
-	; Start rendering and streaming data
-ld r2, X+
-sts USART0_TXDATAL, r2
 
-	; Render tiles of current line to the renderbuffer. Y holds a pointer to
-	; the current render-buffer.
-	; Since both the X and Y registers are occupied as pointers to the display-
-	; and renderbuffers respectivly, we must use the Z register for both the
-	; tiledata, and the tileset.
-	; We dont need to load scroll_y, since r_tile_y contains all the
-	; information we need
-	mov r16, r_tile_y
-	swap r16
-	andi r16, 0x0F
-	ldi r17, TILEDATA_WIDTH
-	; Multiply tile y-index with width to get index of first tile in row
-	mul r16, r17
-	; Load scroll_x, and add the top 5 bits to the tile index. Keep result in
-	; r18 in order to wrap the rendering if it goes beyond the right side of
-	; the array.
-	lds r18, scroll_x
-	lsr r18
-	lsr r18
-	lsr r18
-	
-ld r2, X+
-sts USART0_TXDATAL, r2
-
-	add r0, r18
-	adc r1, r_zero
-	; Load tiledata pointer into Z, and offset to the correct starting tile
-	ldi ZL, low(tiledata)
-	ldi ZH, high(tiledata)
-	add ZL, r0
-	adc ZH, r1
-	; Set r19 to the y-index within the tile
-	mov r19, r_tile_y
-	andi r19, 0x0F
-
-		
-	rcall render_byte
-	
-	rcall render_byte
-	
-	rcall render_byte
-
-	rcall render_byte
-	
-	rcall render_byte
-	
-	rcall render_byte
-	
-	rcall render_byte
-	
-	rcall render_byte
-	
-	nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop
-	
-	
-	; ===================
-	; Begin scanline 4k+1
-	; ===================
-
-	; Wait until HBLANK is done
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	
-	nop
-	; Rewind to start of output buffer
-	subi XL, 26
 
 	ld r2, X+
 	sts USART0_TXDATAL, r2
@@ -405,7 +331,86 @@ sts USART0_TXDATAL, r2
 	nop
 	; Rewind to start of output buffer
 	subi XL, 26
+		; Start rendering and streaming data
+ld r2, X+
+sts USART0_TXDATAL, r2
 
+	; Render tiles of current line to the renderbuffer. Y holds a pointer to
+	; the current render-buffer.
+	; Since both the X and Y registers are occupied as pointers to the display-
+	; and renderbuffers respectivly, we must use the Z register for both the
+	; tiledata, and the tileset.
+	; We dont need to load scroll_y, since r_tile_y contains all the
+	; information we need
+	mov r16, r_tile_y
+	swap r16
+	andi r16, 0x0F
+	ldi r17, TILEDATA_WIDTH
+	; Multiply tile y-index with width to get index of first tile in row
+	mul r16, r17
+	; Load scroll_x, and add the top 5 bits to the tile index. Keep result in
+	; r18 in order to wrap the rendering if it goes beyond the right side of
+	; the array.
+	lds r18, scroll_x
+	lsr r18
+	lsr r18
+	lsr r18
+	
+ld r2, X+
+sts USART0_TXDATAL, r2
+
+	add r0, r18
+	adc r1, r_zero
+	; Load tiledata pointer into Z, and offset to the correct starting tile
+	ldi ZL, low(tiledata)
+	ldi ZH, high(tiledata)
+	add ZL, r0
+	adc ZH, r1
+	; Set r19 to the y-index within the tile
+	mov r19, r_tile_y
+	andi r19, 0x0F
+
+		
+	rcall render_byte
+	
+	rcall render_byte
+	
+	rcall render_byte
+
+	rcall render_byte
+	
+	rcall render_byte
+	
+	rcall render_byte
+	
+	rcall render_byte
+	
+	rcall render_byte
+	
+	nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	
+	
+	; ===================
+	; Begin scanline 4k+1
+	; ===================
+
+	; Wait until HBLANK is done
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	
+	nop
+	; Rewind to start of output buffer
+	subi XL, 26
 	ld r2, X+
 	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
