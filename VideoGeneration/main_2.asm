@@ -196,8 +196,9 @@ visible_scanline4x:
 	timingjmpA_2: nop nop
 	timingjmpA_0:
 
-
-	; vvv NOT TIMING ADJUSTED, to be interleaved
+	; Start rendering and streaming data
+ld r2, X+
+sts USART0_TXDATAL, r2
 
 	; Render tiles of current line to the renderbuffer. Y holds a pointer to
 	; the current render-buffer.
@@ -206,126 +207,44 @@ visible_scanline4x:
 	; tiledata, and the tileset.
 	; We dont need to load scroll_y, since r_tile_y contains all the
 	; information we need
-	;mov r16, r_tile_y
-	;swap r16
-	;andi r16, 0x0F
-	;ldi r17, TILEDATA_WIDTH
-	;; Multiply tile y-index with width to get index of first tile in row
-	;mul r16, r17
-	;; Load scroll_x, and add the top 5 bits to the tile index. Keep result in
-	;; r18 in order to wrap the rendering if it goes beyond the right side of
-	;; the array.
-	;lds r18, scroll_x
-	;lsr r18
-	;lsr r18
-	;lsr r18
-	;add r0, r18
-	;adc r1, r_zero
-	;; Load tiledata pointer into Z, and offset to the correct starting tile
-	;ldi ZL, low(tiledata)
-	;ldi ZH, high(tiledata)
-	;add ZL, r0
-	;adc ZH, r1
-	;; Set r19 to the y-index within the tile
-	;mov r19, r_tile_y
-	;andi r19, 0x0F
-	;	; 20 cycles so far
-	;
-	;; Start redering "loop" (loop is 24 cycles long)
-	;ld r16, Z+ ; Load tile
-	;movw r3:r2, Z
-	;; Compute address in tileset
-	;ldi r17, TILE_HEIGHT
-	;mul r16, r17
-	;add r0, r19
-	;adc r1, r_zero
-	;ldi ZL, low(tileset_data << 1)
-	;ldi ZH, high(tileset_data << 1)
-	;add ZL, r0
-	;adc ZH, r1
-	;lpm r16, Z ; Load row from tileset
-	;;st Y+, r16 ; Write row to render-buffer
-	;st Y, r16 ; Write row to render-buffer
-	;
-	;movw Z, r3:r2
-	;
-	;; Increment x-index and wrap if we've reached the right side of tiledata
-	;inc r18
-	;cpi r18, TILEDATA_WIDTH
-	;breq wrap_index_x
-	;	nop nop
-	;	rjmp wrap_index_x_done
-	;wrap_index_x:
-	;	clr r18
-	;	ldi ZL, low(tiledata)
-	;	ldi ZH, high(tiledata)
-	;wrap_index_x_done:
-
-
-
-	; ^^^
-
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	mov r16, r_tile_y
+	swap r16
+	andi r16, 0x0F
+	ldi r17, TILEDATA_WIDTH
+	; Multiply tile y-index with width to get index of first tile in row
+	mul r16, r17
+	; Load scroll_x, and add the top 5 bits to the tile index. Keep result in
+	; r18 in order to wrap the rendering if it goes beyond the right side of
+	; the array.
+	lds r18, scroll_x
+	lsr r18
+	lsr r18
+	lsr r18
 	
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+ld r2, X+
+sts USART0_TXDATAL, r2
 
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	add r0, r18
+	adc r1, r_zero
+	; Load tiledata pointer into Z, and offset to the correct starting tile
+	ldi ZL, low(tiledata)
+	ldi ZH, high(tiledata)
+	add ZL, r0
+	adc ZH, r1
+	; Set r19 to the y-index within the tile
+	mov r19, r_tile_y
+	andi r19, 0x0F
+		; 20 cycles so far
+		
+	rcall render_byte
+	
+	rcall render_byte
+	
+	rcall render_byte
+
+	rcall render_byte
+	
+	nop nop nop nop
 	ld r2, X+
 	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
@@ -394,9 +313,10 @@ visible_scanline4x:
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
-
-	nop;ldi XH, high(scanline_bufferA)
-	subi XL, 26; ldi XL, low(scanline_bufferA)
+	
+	nop
+	; Rewind to start of output buffer
+	subi XL, 26
 
 	ld r2, X+
 	sts USART0_TXDATAL, r2
@@ -523,8 +443,9 @@ visible_scanline4x:
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
 	
-	nop;ldi XH, high(scanline_bufferA)
-	subi XL, 26; ldi XL, low(scanline_bufferA)
+	nop
+	; Rewind to start of output buffer
+	subi XL, 26
 
 	ld r2, X+
 	sts USART0_TXDATAL, r2
@@ -651,153 +572,127 @@ visible_scanline4x:
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
 	
-	nop;ldi XH, high(scanline_bufferA)
-	subi XL, 26; ldi XL, low(scanline_bufferA)
-
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-
 	nop
+	; Rewind to start of output buffer
 	subi XL, 26
+
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+
+	nop
+	
+	; Rewind to start of output buffer
+	subi XL, 26
+
+	; Rewind to start of renderbuffer
+	sbiw Y, 4
 	
 
 
-	nop nop nop nop nop nop
-
-	; Faux rendering to test data streaming
-	lds r16, scroll_y
-	add r16, r_tile_y
-
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
+	nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop
 
 	
 
@@ -990,7 +885,55 @@ vblank:
 	ldi YL, low(scanline_bufferB)
 
 	rjmp visible_scanline4x
+
+
+; Subroutine which renders 1 byte, while outputting three to the USART
+render_byte:
+	; Subroutine call takes 2 cycles
 	
+	ld r16, Z+ ; Load tile
+	
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+
+	movw r5:r4, Z
+	; Compute address in tileset
+	ldi r17, TILE_HEIGHT
+	mul r16, r17
+	add r0, r19
+	adc r1, r_zero
+	ldi ZL, low(tileset_data << 1)
+	ldi ZH, high(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	nop nop
+	
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+
+	lpm r16, Z ; Load row from tileset
+	st Y+, r16 ; Write row to render-buffer
+	movw Z, r5:r4
+	
+	; Increment x-index and wrap if we've reached the right side of tiledata
+	inc r18
+	cpi r18, TILEDATA_WIDTH
+	breq wrap_index_x
+		nop nop
+		rjmp wrap_index_x_done
+	wrap_index_x:
+		clr r18
+		ldi ZL, low(tiledata)
+		ldi ZH, high(tiledata)
+	wrap_index_x_done:
+	
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+
+	nop nop nop nop
+	; Return jump takes 4 cycles
+	ret
+
 .include "default_leveldata.asm"
 .include "tileset.asm"
 

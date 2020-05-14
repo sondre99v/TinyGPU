@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm Thu May 14 17:35:20 2020
+AVRASM ver. 2.2.7  C:\Users\Sondre\Documents\Repositories\VideoGeneration\VideoGeneration\main_2.asm Thu May 14 23:42:14 2020
 
 
 EQU  SIGNATURE_000 0000001e
@@ -3234,7 +3234,7 @@ DSEG scanline_bufferB 00003e1a
 DSEG scroll_x     00003ffa
 DSEG scroll_y     00003ffb
 DSEG tiledata     00003e34
-CSEG default_leveldata 00000bea
+CSEG default_leveldata 00000b5e
 CSEG load_level_loop 00000052
 CSEG visible_scanline4x 0000005f
 CSEG enable_output 00000062
@@ -3247,25 +3247,28 @@ CSEG timingjmpA_8 0000007d
 CSEG timingjmpA_6 0000007f
 CSEG timingjmpA_4 00000081
 CSEG timingjmpA_2 00000083
-CSEG timingjmpB_14 00000811
-CSEG timingjmpB_12 00000813
-CSEG timingjmpB_10 00000815
-CSEG timingjmpB_8 00000817
-CSEG timingjmpB_6 00000819
-CSEG timingjmpB_4 0000081b
-CSEG timingjmpB_2 0000081d
-CSEG timingjmpB_0 0000081f
-CSEG r_tile_y_wrap 0000083a
-CSEG r_tile_y_wrap_done 0000083c
-CSEG vblank       00000840
-CSEG loop1        00000a84
-CSEG loop2        00000a97
-CSEG loop3        00000aaa
-CSEG loop4        00000abd
-CSEG loop6        00000ad0
-CSEG loop5        00000ad1
-CSEG loop7        00000ae2
-CSEG tileset_data 00000cb5
+CSEG render_byte  00000b38
+CSEG timingjmpB_14 0000075f
+CSEG timingjmpB_12 00000761
+CSEG timingjmpB_10 00000763
+CSEG timingjmpB_8 00000765
+CSEG timingjmpB_6 00000767
+CSEG timingjmpB_4 00000769
+CSEG timingjmpB_2 0000076b
+CSEG timingjmpB_0 0000076d
+CSEG r_tile_y_wrap 00000788
+CSEG r_tile_y_wrap_done 0000078a
+CSEG vblank       0000078e
+CSEG loop1        000009d2
+CSEG loop2        000009e5
+CSEG loop3        000009f8
+CSEG loop4        00000a0b
+CSEG loop6        00000a1e
+CSEG loop5        00000a1f
+CSEG loop7        00000a30
+CSEG tileset_data 00000c29
+CSEG wrap_index_x 00000b53
+CSEG wrap_index_x_done 00000b56
 DSEG window_tiles 00003fc9
 DSEG sprite_0     00003fe2
 DSEG sprite_1     00003fec
