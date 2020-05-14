@@ -27,10 +27,16 @@ rjmp start
 ; Tileset parameters
 .EQU TILE_WIDTH = 8
 .EQU TILE_HEIGHT = 12
-.EQU TILE_ARRAY_WIDTH = 27
-.EQU TILE_ARRAY_HEIGHT = 15
+.EQU TILEDATA_WIDTH = 27
+.EQU TILEDATA_HEIGHT = 15
 
 .EQU SCANLINE_BUFFER_TILES = 26
+
+
+; Fixed register allocations
+.DEF r_zero = r3
+.DEF r_tile_y = r24
+.DEF r_y = r25
 
 ; Main entry point
 .cseg
@@ -105,21 +111,42 @@ start:
 	sbi VPORTA_DIR, 4
 	sbi VPORTA_OUT, 4
 
-
+	
+	; ====================
+	; State Initialization
+	; ====================
+	; Always-zero register
+	clr r_zero
 	; Setup registers to control the generation
 	ldi XH, high(scanline_bufferA)
 	ldi XL, low(scanline_bufferA)
 	ldi YH, high(scanline_bufferB)
 	ldi YL, low(scanline_bufferB)
 	; Register keeping track of the currently drawing line, in pixels
-	.DEF r_y = r25
 	clr r_y
+	; Register keeping track of the current tile y-index, and position in that
+	; tile. High nibble is tile index, low nibble is index in that tile
+	clr r_tile_y
 	; Initialize scroll_x
 	ldi r16, 0
 	sts scroll_x, r16
 	; Initialize scroll_y
 	ldi r16, 0
 	sts scroll_y, r16
+	; Initialize tiledata
+	ldi XL, low(tiledata)
+	ldi XH, high(tiledata)
+	ldi ZL, low(default_leveldata << 1)
+	ldi ZH, high(default_leveldata << 1)
+	clr r17
+	load_level_loop:
+		lpm r16, Z+
+		st X+, r16
+		lpm r16, Z+
+		st X+, r16
+		inc r17
+		cpi r17, TILEDATA_WIDTH * TILEDATA_HEIGHT / 2
+		brne load_level_loop
 
 
 	; Enable USART0 and TCA0
@@ -138,7 +165,8 @@ visible_scanline4x:
 	; ===================
 	
 	
-	; Check if this is a really visible line, or if it is "line -1"
+	; Make sure we only enable the output once we render row 1 (meaning row 0
+	; has been rendered, and should be streamed out).
 	cpi r_y, 1
 	breq enable_output
 		rjmp enable_output_done
@@ -147,18 +175,17 @@ visible_scanline4x:
 	enable_output_done:
 
 	; Wait until HBLANK is done
-	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop nop
 
-
-	; This block takes between 12 and 26 cycles, depending on the value loaded into r16
+	; This block takes between 11 and 25 cycles, depending on the value in
+	; scroll_x.
 	lds r16, scroll_x
 	lsl r16
 	andi r16, 0xF ; Ensure no infinite loop occurs if scroll_x > 7
-	clr r17
 	ldi ZL, low(timingjmpA_0)
 	ldi ZH, high(timingjmpA_0)
 	sub ZL, r16
-	sbc ZH, r17
+	sbc ZH, r_zero
 	ijmp
 	timingjmpA_14: nop nop
 	timingjmpA_12: nop nop
@@ -170,109 +197,181 @@ visible_scanline4x:
 	timingjmpA_0:
 
 
+	; vvv NOT TIMING ADJUSTED, to be interleaved
+
+	; Render tiles of current line to the renderbuffer. Y holds a pointer to
+	; the current render-buffer.
+	; Since both the X and Y registers are occupied as pointers to the display-
+	; and renderbuffers respectivly, we must use the Z register for both the
+	; tiledata, and the tileset.
+	; We dont need to load scroll_y, since r_tile_y contains all the
+	; information we need
+	;mov r16, r_tile_y
+	;swap r16
+	;andi r16, 0x0F
+	;ldi r17, TILEDATA_WIDTH
+	;; Multiply tile y-index with width to get index of first tile in row
+	;mul r16, r17
+	;; Load scroll_x, and add the top 5 bits to the tile index. Keep result in
+	;; r18 in order to wrap the rendering if it goes beyond the right side of
+	;; the array.
+	;lds r18, scroll_x
+	;lsr r18
+	;lsr r18
+	;lsr r18
+	;add r0, r18
+	;adc r1, r_zero
+	;; Load tiledata pointer into Z, and offset to the correct starting tile
+	;ldi ZL, low(tiledata)
+	;ldi ZH, high(tiledata)
+	;add ZL, r0
+	;adc ZH, r1
+	;; Set r19 to the y-index within the tile
+	;mov r19, r_tile_y
+	;andi r19, 0x0F
+	;	; 20 cycles so far
+	;
+	;; Start redering "loop" (loop is 24 cycles long)
+	;ld r16, Z+ ; Load tile
+	;movw r3:r2, Z
+	;; Compute address in tileset
+	;ldi r17, TILE_HEIGHT
+	;mul r16, r17
+	;add r0, r19
+	;adc r1, r_zero
+	;ldi ZL, low(tileset_data << 1)
+	;ldi ZH, high(tileset_data << 1)
+	;add ZL, r0
+	;adc ZH, r1
+	;lpm r16, Z ; Load row from tileset
+	;;st Y+, r16 ; Write row to render-buffer
+	;st Y, r16 ; Write row to render-buffer
+	;
+	;movw Z, r3:r2
+	;
+	;; Increment x-index and wrap if we've reached the right side of tiledata
+	;inc r18
+	;cpi r18, TILEDATA_WIDTH
+	;breq wrap_index_x
+	;	nop nop
+	;	rjmp wrap_index_x_done
+	;wrap_index_x:
+	;	clr r18
+	;	ldi ZL, low(tiledata)
+	;	ldi ZH, high(tiledata)
+	;wrap_index_x_done:
+
+
+
+	; ^^^
+
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	
-	ld r16, X+
-	sts USART0_TXDATAL, r16
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+	
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 
 
 	nop nop nop nop nop nop nop nop nop nop
@@ -299,108 +398,108 @@ visible_scanline4x:
 	nop;ldi XH, high(scanline_bufferA)
 	subi XL, 26; ldi XL, low(scanline_bufferA)
 
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 
 	nop nop
 
@@ -427,108 +526,108 @@ visible_scanline4x:
 	nop;ldi XH, high(scanline_bufferA)
 	subi XL, 26; ldi XL, low(scanline_bufferA)
 
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 
 	nop nop
 
@@ -555,166 +654,163 @@ visible_scanline4x:
 	nop;ldi XH, high(scanline_bufferA)
 	subi XL, 26; ldi XL, low(scanline_bufferA)
 
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r16, X+
-	sts USART0_TXDATAL, r16
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 
-	nop;ldi XH, high(scanline_bufferA)
-	subi XL, 26; ldi XL, low(scanline_bufferA)
+	nop
+	subi XL, 26
 	
 
-	nop nop nop nop nop nop ;nop nop nop nop
+
+	nop nop nop nop nop nop
+
+	; Faux rendering to test data streaming
 	lds r16, scroll_y
-	add r16, r_y
+	add r16, r_tile_y
 
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 	
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 	
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	st Y+, r16
-	subi YL, 26
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 
-	;nop nop nop nop nop nop nop nop nop nop
-	;nop nop nop nop nop nop nop nop nop nop
-	nop nop nop ;nop ;nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop ;nop
-	;nop nop nop nop nop nop nop nop nop
 	
-
 
 	; Compensation for the scroll-delay at the top
-	; This block takes between 12 and 26 cycles, depending on the value loaded into r16
+	; This block takes between 11 and 25 cycles, depending on the value in
+	; scroll_x.
 	lds r16, scroll_x
 	lsl r16
 	andi r16, 0xF ; Ensure no infinite loop occurs if scroll_x > 7
-	clr r17
 	ldi ZL, low(timingjmpB_14)
 	ldi ZH, high(timingjmpB_14)
 	add ZL, r16
-	adc ZH, r17
+	adc ZH, r_zero
 	ijmp
 	timingjmpB_14: nop nop
 	timingjmpB_12: nop nop
@@ -733,6 +829,24 @@ visible_scanline4x:
 	eor YH, XH
 	eor XH, YH
 	eor YH, XH
+
+	nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	
+	; Advance r_tile_y. Add one to the low nibble, if the incremented value
+	; equals TILE_HEIGHT, clear it, and increment the high nibble. There is no
+	; need to handle the high nibble wrapping, as this is reset during VBLANK.
+	inc r_tile_y
+	ldi r16, 0x10-TILE_HEIGHT
+	add r_tile_y, r16
+	brhs r_tile_y_wrap			 ; Branch on carry from low to high nibble
+		sub r_tile_y, r16
+		rjmp r_tile_y_wrap_done
+	r_tile_y_wrap:
+		nop nop
+	r_tile_y_wrap_done:
+
 
 	; Advance line counter, and jump to either the next visible line, or into
 	; vblank.
@@ -853,22 +967,22 @@ vblank:
 
 
 	; Test x- and y-scrolling functionality
-	;nop ;nop nop ;nop nop nop nop nop nop ;nop nop nop nop nop nop
 	
-	lds r16, scroll_x
-	inc r16
-	andi r16, 0xF
-	sts scroll_x, r16
-	lds r17, scroll_y
-	lsr r16
-	lsr r16
-	add r17, r16
-	sts scroll_y, r17
-
+	;lds r16, scroll_x
+	;inc r16
+	;andi r16, 0xF
+	;sts scroll_x, r16
+	;lds r17, scroll_y
+	;lsr r16
+	;lsr r16
+	;add r17, r16
+	;sts scroll_y, r17
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop
 
 	; Reset to line 0, set the A to be output, and the B buffer as the
 	; rendertarget, then jump back to the rendering-loop
 	clr r_y
+	clr r_tile_y
 	
 	ldi XH, high(scanline_bufferA)
 	ldi XL, low(scanline_bufferA)
@@ -877,15 +991,15 @@ vblank:
 
 	rjmp visible_scanline4x
 	
-;.include "tileset.asm"
-;.include "default_leveldata.asm"
+.include "default_leveldata.asm"
+.include "tileset.asm"
 
 ; Tiledata array in RAM
 .dseg
 .org 0x3E00
 scanline_bufferA: .byte SCANLINE_BUFFER_TILES
 scanline_bufferB: .byte SCANLINE_BUFFER_TILES
-tiledata: .byte (TILE_ARRAY_WIDTH * TILE_ARRAY_HEIGHT)
+tiledata: .byte (TILEDATA_WIDTH * TILEDATA_HEIGHT)
 window_tiles: .byte (H_VISIBLE / PIXEL_DIV / TILE_WIDTH)
 sprite_0: .byte 10
 sprite_1: .byte 10
