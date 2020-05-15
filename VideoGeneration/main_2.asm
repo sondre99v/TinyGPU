@@ -37,20 +37,20 @@ rjmp start
 .DEF r_zero = r3
 .DEF r_tile_y = r24
 .DEF r_y = r25
+.DEF r_frame = r6
 
 ; Main entry point
 .cseg
 start:
-	; CLK_PER = 20 MHz (16/20 fuse set to 20)
+	; Setup to use external clock, with no prescaler
+	ldi r16, CPU_CCP_IOREG_gc
+	out CPU_CCP, r16
+	ldi r16, CLKCTRL_CLKSEL_EXTCLK_gc
+	sts CLKCTRL_MCLKCTRLA, r16
 	ldi r16, CPU_CCP_IOREG_gc
 	out CPU_CCP, r16
 	ldi r16, 0
 	sts CLKCTRL_MCLKCTRLB, r16
-
-	ldi r16, CPU_CCP_IOREG_gc
-	out CPU_CCP, r16
-	ldi r16, CLKCTRL_CLKOUT_bm
-	sts CLKCTRL_MCLKCTRLA, r16
 	
 	; Setup TCA in split mode, to generate:
 	;  - HBLANK mask on WO0, passed into CCL
@@ -101,10 +101,10 @@ start:
 	ldi r16, CCL_ENABLE_bm
 	sts CCL_CTRLA, r16
 	
-	; Mask pin on PA3 (fully software controlled) to disable pixel output
+	; Mask pin on PA1 (fully software controlled) to disable pixel output
 	; during VBLANK
-	sbi VPORTA_DIR, 3
-	cbi VPORTA_OUT, 3
+	sbi VPORTA_DIR, 1
+	cbi VPORTA_OUT, 1
 
 	; Pixel pin on LUT0.OUT* (PB4)
 	ldi r16, PORTMUX_LUT0_bm
@@ -133,7 +133,7 @@ start:
 	; tile. High nibble is tile index, low nibble is index in that tile
 	clr r_tile_y
 	; Initialize scroll_x
-	ldi r16, 0
+	ldi r16, 2
 	sts scroll_x, r16
 	; Initialize scroll_y
 	ldi r16, 0
@@ -152,6 +152,8 @@ start:
 		inc r17
 		cpi r17, TILEDATA_WIDTH * TILEDATA_HEIGHT / 2
 		brne load_level_loop
+	; Register for counting frames. Useful for test animations and such
+	clr r6
 
 
 	; Enable USART0 and TCA0
@@ -176,21 +178,22 @@ visible_scanline4x:
 	breq enable_output
 		rjmp enable_output_done
 	enable_output:
-		sbi VPORTA_OUT, 3
+		sbi VPORTA_OUT, 1
 	enable_output_done:
 
 	; Wait until HBLANK is done
-	nop nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop
 
 	; This block takes between 11 and 25 cycles, depending on the value in
 	; scroll_x.
 	lds r16, scroll_x
 	lsl r16
 	andi r16, 0xF ; Ensure no infinite loop occurs if scroll_x > 7
-	ldi ZL, low(timingjmpA_0)
-	ldi ZH, high(timingjmpA_0)
-	sub ZL, r16
-	sbc ZH, r_zero
+	ldi ZL, low(timingjmpA_14)
+	ldi ZH, high(timingjmpA_14)
+	add ZL, r16
+	adc ZH, r_zero
 	ijmp
 	timingjmpA_14: nop nop
 	timingjmpA_12: nop nop
@@ -201,139 +204,10 @@ visible_scanline4x:
 	timingjmpA_2: nop nop
 	timingjmpA_0:
 
-
-
+	; Start streaming out the output-buffer, while rendering to the
+	; renderbuffer
 	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-
-	nop nop
-
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	
-	
-	; ===================
-	; Begin scanline 4k+2
-	; ===================
-
-	; Wait until HBLANK is done
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	
-	nop
-	; Rewind to start of output buffer
-	subi XL, 26
-		; Start rendering and streaming data
-ld r2, X+
-sts USART0_TXDATAL, r2
+	sts USART0_TXDATAL, r2 ; Output byte 0
 
 	; Render tiles of current line to the renderbuffer. Y holds a pointer to
 	; the current render-buffer.
@@ -356,8 +230,8 @@ sts USART0_TXDATAL, r2
 	lsr r18
 	lsr r18
 	
-ld r2, X+
-sts USART0_TXDATAL, r2
+	ld r2, X+
+	sts USART0_TXDATAL, r2 ; Output byte 1
 
 	add r0, r18
 	adc r1, r_zero
@@ -370,95 +244,78 @@ sts USART0_TXDATAL, r2
 	mov r19, r_tile_y
 	andi r19, 0x0F
 
-		
-	rcall render_byte
-	
-	rcall render_byte
-	
-	rcall render_byte
 
-	rcall render_byte
-	
-	rcall render_byte
-	
-	rcall render_byte
-	
-	rcall render_byte
-	
-	rcall render_byte
-	
-	nop nop
+	rcall render_tile_while_streaming ; Render byte 0. Output bytes 2,3,4
+	rcall render_tile_while_streaming ; Render byte 1. Output bytes 5,6,7
+	rcall render_tile_while_streaming ; Render byte 2. Output bytes 8,9,10
+	rcall render_tile_while_streaming ; Render byte 3. Output bytes 11,12,13
+	rcall render_tile_while_streaming ; Render byte 4. Output bytes 14,15,16
+	rcall render_tile_while_streaming ; Render byte 5. Output bytes 17,18,19
+	rcall render_tile_while_streaming ; Render byte 6. Output bytes 20,21,22
+	rcall render_tile_while_streaming ; Render byte 7. Output bytes 23,24,25
+
+	; Rewind to start of output buffer
+	subi XL, SCANLINE_BUFFER_TILES
+
+	rcall render_tile ; Render byte 8
+	rcall render_tile ; Render byte 9
+
 	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop
-	
-	
+	nop nop nop 
+
+
 	; ===================
 	; Begin scanline 4k+1
 	; ===================
 
 	; Wait until HBLANK is done
+	rcall render_tile ; Render byte 10
+	nop nop nop nop nop nop nop nop
+
+	; Start rendering and streaming data
+	rcall render_tile_while_streaming ; Render byte 11. Output bytes 0,1,2
+	rcall render_tile_while_streaming ; Render byte 12. Output bytes 3,4,5
+	rcall render_tile_while_streaming ; Render byte 13. Output bytes 6,7,8
+	rcall render_tile_while_streaming ; Render byte 14. Output bytes 9,10,11
+	rcall render_tile_while_streaming ; Render byte 15. Output bytes 12,13,14
+	rcall render_tile_while_streaming ; Render byte 16. Output bytes 15,16,17
+	rcall render_tile_while_streaming ; Render byte 17. Output bytes 18,19,20
+	rcall render_tile_while_streaming ; Render byte 18. Output bytes 21,22,23
+
+	; Output bytes 24 and 25 without rendering
+	nop nop nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	
-	nop
+	nop nop
+	ld r2, X+
+	sts USART0_TXDATAL, r2
+
 	; Rewind to start of output buffer
-	subi XL, 26
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	subi XL, SCANLINE_BUFFER_TILES
+	
+	rcall render_tile ; Render byte 19
+	rcall render_tile ; Render byte 20
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop
+
+	; ===================
+	; Begin scanline 4k+2
+	; ===================
+
+	; Wait until HBLANK is done
+	rcall render_tile ; Render byte 21
+	nop nop nop nop nop nop nop nop 
+	
+	rcall render_tile_while_streaming ; Render byte 22. Output bytes 0,1,2
+	rcall render_tile_while_streaming ; Render byte 23. Output bytes 3,4,5
+	rcall render_tile_while_streaming ; Render byte 24. Output bytes 6,7,8
+	rcall render_tile_while_streaming ; Render byte 25. Output bytes 9,10,11
+	; Rendering finished, rewind to start of renderbuffer
+	sbiw Y, SCANLINE_BUFFER_TILES
+	
+	nop nop
 	ld r2, X+
 	sts USART0_TXDATAL, r2
 	nop nop nop nop nop nop nop
@@ -538,7 +395,7 @@ sts USART0_TXDATAL, r2
 	
 	nop
 	; Rewind to start of output buffer
-	subi XL, 26
+	subi XL, SCANLINE_BUFFER_TILES
 
 	ld r2, X+
 	sts USART0_TXDATAL, r2
@@ -646,14 +503,11 @@ sts USART0_TXDATAL, r2
 	nop
 	
 	; Rewind to start of output buffer
-	subi XL, 26
-
-	; Rewind to start of renderbuffer
-	sbiw Y, 8
+	subi XL, SCANLINE_BUFFER_TILES
 	
 
 
-	nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop
@@ -666,10 +520,10 @@ sts USART0_TXDATAL, r2
 	lds r16, scroll_x
 	lsl r16
 	andi r16, 0xF ; Ensure no infinite loop occurs if scroll_x > 7
-	ldi ZL, low(timingjmpB_14)
-	ldi ZH, high(timingjmpB_14)
-	add ZL, r16
-	adc ZH, r_zero
+	ldi ZL, low(timingjmpB_0)
+	ldi ZH, high(timingjmpB_0)
+	sub ZL, r16
+	sbc ZH, r_zero
 	ijmp
 	timingjmpB_14: nop nop
 	timingjmpB_12: nop nop
@@ -690,7 +544,7 @@ sts USART0_TXDATAL, r2
 	eor YH, XH
 
 	nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop
 	nop nop
 	
 	; Advance r_tile_y. Add one to the low nibble, if the incremented value
@@ -725,7 +579,7 @@ vblank:
 	nop ; 1-cycle delay to synchronize with where the visible_scanline4x starts
 
 	; Disable pixel output
-	cbi VPORTA_OUT, 3 ; Ignore for now
+	cbi VPORTA_OUT, 1
 
 	; Wait until start of line
 	nop nop nop nop nop nop nop nop nop nop
@@ -822,21 +676,32 @@ vblank:
 	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
 
 	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
 
 
-	; Test x- and y-scrolling functionality
-	
-	;lds r16, scroll_x
-	;inc r16
-	;andi r16, 0xF
-	;sts scroll_x, r16
-	;lds r17, scroll_y
-	;lsr r16
-	;lsr r16
-	;add r17, r16
-	;sts scroll_y, r17
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+	; Test scrolling functionality
+	inc r_frame
+	ldi r16, 5
+	cp r_frame, r16
+	breq scroll_12Hz
+		nop nop nop nop nop nop nop nop nop nop
+		rjmp scroll_12Hz_done
+	scroll_12Hz:
+		clr r_frame
+		lds r16, scroll_x
+		inc r16
+
+		cpi r16, (TILE_WIDTH * TILEDATA_WIDTH)
+		breq scroll_12Hz_wrap
+			rjmp scroll_12Hz_wrap_done	
+		scroll_12Hz_wrap:
+			clr r16
+		scroll_12Hz_wrap_done:
+
+		sts scroll_x, r16
+	scroll_12Hz_done:
+
+	nop nop
 
 	; Reset to line 0, set the A to be output, and the B buffer as the
 	; rendertarget, then jump back to the rendering-loop
@@ -852,7 +717,7 @@ vblank:
 
 
 ; Subroutine which renders 1 byte, while outputting three to the USART
-render_byte:
+render_tile_while_streaming:
 	; Subroutine call takes 2 cycles
 	
 	ld r16, Z+ ; Load tile
@@ -887,8 +752,7 @@ render_byte:
 		rjmp wrap_index_x_done
 	wrap_index_x:
 		clr r18
-		ldi ZL, low(tiledata)
-		ldi ZH, high(tiledata)
+		sbiw Z, TILEDATA_WIDTH
 	wrap_index_x_done:
 	
 	ld r2, X+
@@ -898,6 +762,41 @@ render_byte:
 	; Return jump takes 4 cycles
 	ret
 
+; Subroutine to render 1 byte while no streaming is needed
+; Takes 30 cycles, including call and return
+render_tile:
+	; Subroutine call takes 2 cycles
+	ld r16, Z+ ; Load tile
+
+	; Compute address in tileset
+	movw r5:r4, Z
+	ldi r17, TILE_HEIGHT
+	mul r16, r17
+	add r0, r19
+	adc r1, r_zero
+	ldi ZL, low(tileset_data << 1)
+	ldi ZH, high(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+
+	; Render byte
+	lpm r16, Z ; Load row from tileset
+	st Y+, r16 ; Write row to render-buffer
+	movw Z, r5:r4
+	
+	; Increment x-index and wrap if we've reached the right side of tiledata
+	inc r18
+	cpi r18, TILEDATA_WIDTH
+	breq wrap_index_x2
+		nop nop
+		rjmp wrap_index_x2_done
+	wrap_index_x2:
+		clr r18
+		sbiw Z, TILEDATA_WIDTH
+	wrap_index_x2_done:
+	
+	; Return jump takes 4 cycles
+	ret
 
 .include "default_leveldata.asm"
 .include "tileset.asm"
