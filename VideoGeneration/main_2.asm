@@ -34,10 +34,13 @@ rjmp start
 
 
 ; Fixed register allocations
+.DEF r_prodL = r0
+.DEF r_prodH = r1
+.DEF r_stream_tmp = r2
 .DEF r_zero = r3
+.DEF r_frame = r4
 .DEF r_tile_y = r24
 .DEF r_y = r25
-.DEF r_frame = r6
 
 ; Main entry point
 .cseg
@@ -133,7 +136,7 @@ start:
 	; tile. High nibble is tile index, low nibble is index in that tile
 	clr r_tile_y
 	; Initialize scroll_x
-	ldi r16, 2
+	ldi r16, 0
 	sts scroll_x, r16
 	; Initialize scroll_y
 	ldi r16, 0
@@ -154,7 +157,11 @@ start:
 		brne load_level_loop
 	; Register for counting frames. Useful for test animations and such
 	clr r6
-
+	; Initialize spriteslot 0
+	ldi r16, 0x0C sts (sprite_0 + 0), r16 ; Color = Window
+	ldi r16, 0x03 sts (sprite_0 + 1), r16 ; Mask = 2px Rectangle
+	ldi r16, 20   sts (sprite_0 + 2), r16 ; pos_x = 20
+	ldi r16, 21   sts (sprite_0 + 3), r16 ; pos_y = 18
 
 	; Enable USART0 and TCA0
 	; Make sure the prescaler of TCA is synchronized with the baud-rate
@@ -171,6 +178,7 @@ visible_scanline4x:
 	; Begin scanline 4k+0
 	; ===================
 	
+	; Wait until HBLANK is done
 	
 	; Make sure we only enable the output once we render row 1 (meaning row 0
 	; has been rendered, and should be streamed out).
@@ -180,10 +188,6 @@ visible_scanline4x:
 	enable_output:
 		sbi VPORTA_OUT, 1
 	enable_output_done:
-
-	; Wait until HBLANK is done
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop
 
 	; This block takes between 11 and 25 cycles, depending on the value in
 	; scroll_x.
@@ -204,10 +208,14 @@ visible_scanline4x:
 	timingjmpA_2: nop nop
 	timingjmpA_0:
 
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop
+
+
 	; Start streaming out the output-buffer, while rendering to the
 	; renderbuffer
-	ld r2, X+
-	sts USART0_TXDATAL, r2 ; Output byte 0
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp ; Output byte 0
 
 	; Render tiles of current line to the renderbuffer. Y holds a pointer to
 	; the current render-buffer.
@@ -230,8 +238,8 @@ visible_scanline4x:
 	lsr r18
 	lsr r18
 	
-	ld r2, X+
-	sts USART0_TXDATAL, r2 ; Output byte 1
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp ; Output byte 1
 
 	add r0, r18
 	adc r1, r_zero
@@ -284,12 +292,12 @@ visible_scanline4x:
 
 	; Output bytes 24 and 25 without rendering
 	nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 
 	; Rewind to start of output buffer
 	subi XL, SCANLINE_BUFFER_TILES
@@ -316,189 +324,342 @@ visible_scanline4x:
 	sbiw Y, SCANLINE_BUFFER_TILES
 	
 	nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 
-	nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
 
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
+	; Render sprite slot 1
 	
+	; Assume that pos_y <= r_y < pos_y+TILE_HEIGHT
+	; This needs to be checked here
+	lds r18, (sprite_0 + 3) ; Load pos_y
+
+	cp r_y, r18
+	brlt sprite_dont_render_1
+	subi r18, -TILE_HEIGHT
+	cp r_y, r18
+	brge sprite_dont_render_2
+	subi r18, TILE_HEIGHT
+	rjmp sprite_render
+
+	sprite_dont_render_1:
+		nop nop nop
+	sprite_dont_render_2:
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop nop
+		rjmp render_sprite_done
 	
+	sprite_render:
+
+	; Load color tile index and multiply by tile height
+	lds r16, (sprite_0 + 0)
+	ldi r17, TILE_HEIGHT
+	mul r16, r17
+	
+	; Compute and add the y-offset
+	mov r16, r_y
+	sub r16, r18 ; Subtract pos_y
+	add r0, r16
+	adc r1, r_zero
+
+	; Load the tile-data for the color
+	ldi ZL, low(tileset_data << 1)
+	ldi ZH, high(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	lpm r19, Z
+
+	; Load mask tile index and multiply by tile height
+	lds r16, (sprite_0 + 1)
+	ldi r17, TILE_HEIGHT
+	mul r16, r17
+	
+	; Compute and add the y-offset
+	mov r16, r_y
+	sub r16, r18 ; Subtract pos_y
+	add r0, r16
+	adc r1, r_zero
+
+	; Load the tile-data of the mask
+	ldi ZL, low(tileset_data << 1)
+	ldi ZH, high(tileset_data << 1)
+	add ZL, r0
+	adc ZH, r1
+	lpm r21, Z
+
+	; Load pos_x
+	lds r18, (sprite_0 + 2)
+	mov r17, r18
+	lsr r17
+	lsr r17
+	lsr r17
+	andi r18, 0x07
+
+	; Now r17 contains the 5 MSb of pos_x, r18 contains the 3 LSb, r19 contains
+	; the color data, and r21 contains the mask data.
+	; No other unallocated registers are used
+
+	; Shift color (r19) into r20:r19, and mask (r21) into r22:r21
+	clr r16
+	clr r20
+	clr r22
+
+	; The below mess does the respective shifts in a constant 44 clock cycles.
+	lsl r18
+	lsl r18
+	ldi ZL, low(shift_sprite_0)
+	ldi ZH, high(shift_sprite_0)
+	sub ZL, r18
+	sbc ZH, r_zero
+	ijmp
+	shift_sprite_7: lsr r19 ror r20 lsr r21 ror r22
+	shift_sprite_6: lsr r19 ror r20 lsr r21 ror r22
+	shift_sprite_5: lsr r19 ror r20 lsr r21 ror r22
+	shift_sprite_4: lsr r19 ror r20 lsr r21 ror r22
+	shift_sprite_3: lsr r19 ror r20 lsr r21 ror r22
+	shift_sprite_2: lsr r19 ror r20 lsr r21 ror r22
+	shift_sprite_1: lsr r19 ror r20 lsr r21 ror r22
+	shift_sprite_0:
+	ldi ZL, low(shift_delay_7)
+	ldi ZH, high(shift_delay_7)
+	add ZL, r18
+	adc ZH, r_zero
+	ijmp
+	shift_delay_7: nop nop nop nop
+	shift_delay_6: nop nop nop nop
+	shift_delay_5: nop nop nop nop
+	shift_delay_4: nop nop nop nop
+	shift_delay_3: nop nop nop nop
+	shift_delay_2: nop nop nop nop
+	shift_delay_1: nop nop nop nop
+	shift_delay_0:
+	lsr r18
+	lsr r18
+
+
+	; Compute set- and clear-values from the shifted color and mask
+	;   set = color & mask (the value to be or-ed into the buffer)
+	;   clear = color | ~mask (the value to be and-ed into the buffer)
+	; Backup color
+	mov r4, r19
+	mov r5, r20
+	; Create set-value in r20:r19
+	and r19, r21
+	and r20, r22
+	; Invert mask
+	com r21
+	com r22
+	; Create clear-value in r22:r21 (using backed-up color value)
+	or r21, r4
+	or r22, r5
+
+	; Move pointer to correct byte in renderbuffer
+	add YL, r17
+	adc YH, r_zero
+	; Load bytes
+	ld r8, Y+
+	ld r9, Y+
+
+	; Apply pre-calculated set- and clear-values
+	or r8, r19
+	or r9, r20
+	and r8, r21
+	and r9, r22
+
+	; Store bytes back to renderbuffer
+	st -Y, r9
+	st -Y, r8
+	; Return pointer to start
+	sub YL, r17
+	sbc YL, r_zero
+
+	render_sprite_done:
+
 	; ===================
 	; Begin scanline 4k+3
 	; ===================
 
 	; Wait until HBLANK is done
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
 	
 	nop
 	; Rewind to start of output buffer
 	subi XL, SCANLINE_BUFFER_TILES
 
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 	nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 
 	nop
 	
@@ -676,30 +837,43 @@ vblank:
 	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
 
 	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop nop nop ;nop nop nop nop
 
 
 	; Test scrolling functionality
-	inc r_frame
-	ldi r16, 5
-	cp r_frame, r16
-	breq scroll_12Hz
-		nop nop nop nop nop nop nop nop nop nop
-		rjmp scroll_12Hz_done
-	scroll_12Hz:
-		clr r_frame
-		lds r16, scroll_x
-		inc r16
 
-		cpi r16, (TILE_WIDTH * TILEDATA_WIDTH)
-		breq scroll_12Hz_wrap
-			rjmp scroll_12Hz_wrap_done	
-		scroll_12Hz_wrap:
-			clr r16
-		scroll_12Hz_wrap_done:
+	lds r16, (sprite_0 + 2)
+	inc r16
+	cpi r16, 200
+	breq scroll_wrap
+		rjmp scroll_wrap_done
+	scroll_wrap:
+		clr r16
+	scroll_wrap_done:
+	sts (sprite_0 + 2), r16
 
-		sts scroll_x, r16
-	scroll_12Hz_done:
+	nop nop nop nop ;nop nop nop nop nop nop
+	nop nop nop nop nop nop
+	;inc r_frame
+	;ldi r16, 1
+	;cp r_frame, r16
+	;breq scroll_12Hz
+	;	nop nop nop nop nop nop nop nop nop nop
+	;	rjmp scroll_12Hz_done
+	;scroll_12Hz:
+	;	clr r_frame
+	;	lds r16, scroll_x
+	;	inc r16
+	;
+	;	cpi r16, (TILE_WIDTH * TILEDATA_WIDTH)
+	;	breq scroll_12Hz_wrap
+	;		rjmp scroll_12Hz_wrap_done	
+	;	scroll_12Hz_wrap:
+	;		clr r16
+	;	scroll_12Hz_wrap_done:
+	;
+	;	sts scroll_x, r16
+	;scroll_12Hz_done:
 
 	nop nop
 
@@ -722,8 +896,8 @@ render_tile_while_streaming:
 	
 	ld r16, Z+ ; Load tile
 	
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 
 	movw r5:r4, Z
 	; Compute address in tileset
@@ -737,8 +911,8 @@ render_tile_while_streaming:
 	adc ZH, r1
 	nop nop
 	
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 
 	lpm r16, Z ; Load row from tileset
 	st Y+, r16 ; Write row to render-buffer
@@ -755,8 +929,8 @@ render_tile_while_streaming:
 		sbiw Z, TILEDATA_WIDTH
 	wrap_index_x_done:
 	
-	ld r2, X+
-	sts USART0_TXDATAL, r2
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
 
 	nop nop nop nop
 	; Return jump takes 4 cycles
@@ -798,6 +972,7 @@ render_tile:
 	; Return jump takes 4 cycles
 	ret
 
+
 .include "default_leveldata.asm"
 .include "tileset.asm"
 
@@ -808,8 +983,8 @@ scanline_bufferA: .byte SCANLINE_BUFFER_TILES
 scanline_bufferB: .byte SCANLINE_BUFFER_TILES
 tiledata: .byte (TILEDATA_WIDTH * TILEDATA_HEIGHT)
 window_tiles: .byte (H_VISIBLE / PIXEL_DIV / TILE_WIDTH)
-sprite_0: .byte 10
-sprite_1: .byte 10
+sprite_0: .byte 4 ; Bytes are: (color_tile_index, mask_tile_index, pos_x, pos_y)
+sprite_1: .byte 4
 sprite_2: .byte 4
 scroll_x: .byte 1
 scroll_y: .byte 1
