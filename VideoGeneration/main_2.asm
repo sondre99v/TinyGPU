@@ -113,7 +113,6 @@ start:
 	ldi r16, PORTMUX_LUT0_bm
 	sts PORTMUX_CTRLA, r16
 	sbi VPORTB_DIR, 4
-	cbi VPORTA_OUT, 4
 
 	; VSYNC pin on PA4 (fully software controlled)
 	sbi VPORTA_DIR, 4
@@ -125,11 +124,6 @@ start:
 	; ====================
 	; Always-zero register
 	clr r_zero
-	; Setup registers to control the generation
-	ldi XH, high(scanline_bufferA)
-	ldi XL, low(scanline_bufferA)
-	ldi YH, high(scanline_bufferB)
-	ldi YL, low(scanline_bufferB)
 	; Register keeping track of the currently drawing line, in pixels
 	clr r_y
 	; Register keeping track of the current tile y-index, and position in that
@@ -155,13 +149,18 @@ start:
 		inc r17
 		cpi r17, TILEDATA_WIDTH * TILEDATA_HEIGHT / 2
 		brne load_level_loop
+	; Setup registers to control the generation
+	ldi XH, high(scanline_bufferA)
+	ldi XL, low(scanline_bufferA)
+	ldi YH, high(scanline_bufferB)
+	ldi YL, low(scanline_bufferB)
 	; Register for counting frames. Useful for test animations and such
 	clr r6
 	; Initialize spriteslot 0
 	ldi r16, 0x0C sts (sprite_0 + 0), r16 ; Color = Window
 	ldi r16, 0x03 sts (sprite_0 + 1), r16 ; Mask = 2px Rectangle
 	ldi r16, 20   sts (sprite_0 + 2), r16 ; pos_x = 20
-	ldi r16, 21   sts (sprite_0 + 3), r16 ; pos_y = 18
+	ldi r16, 3    sts (sprite_0 + 3), r16 ; pos_y = 1
 
 	; Enable USART0 and TCA0
 	; Make sure the prescaler of TCA is synchronized with the baud-rate
@@ -323,6 +322,8 @@ visible_scanline4x:
 	; Rendering finished, rewind to start of renderbuffer
 	sbiw Y, SCANLINE_BUFFER_TILES
 	
+	; Below block can be placed in subroutine for rendering sprite while
+	; streaming.
 	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
@@ -366,45 +367,43 @@ visible_scanline4x:
 	nop nop nop nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-
-	;nop nop nop nop nop nop nop nop nop nop
-	;nop nop nop nop nop nop nop nop nop nop
-	;nop nop nop nop nop nop nop nop nop nop
-	;nop nop nop nop nop nop nop nop nop nop
-	;nop nop nop nop nop nop nop nop nop nop
-	;nop nop nop nop nop nop nop nop nop nop
-	;nop nop nop nop nop nop nop nop nop nop
-	;nop nop nop nop nop nop nop nop nop nop
-
-	; Render sprite slot 1
+	nop nop nop nop
 	
-	; Assume that pos_y <= r_y < pos_y+TILE_HEIGHT
-	; This needs to be checked here
-	lds r18, (sprite_0 + 3) ; Load pos_y
+	
+	nop nop nop
+	nop nop nop nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	
+	; Rewind to start of output buffer
+	subi XL, SCANLINE_BUFFER_TILES
 
-	cp r_y, r18
-	brlt sprite_dont_render_1
-	subi r18, -TILE_HEIGHT
-	cp r_y, r18
+
+	; Render sprite 0
+
+	; Compute y in sprite
+	ldi r17, TILE_HEIGHT
+	lds r16, (sprite_0 + 3) ; pos_y
+	sub r16, r_y
+	neg r16
+
+	; Check y-limits
+	brmi sprite_dont_render
+	cp r16, r17
 	brge sprite_dont_render_2
-	subi r18, TILE_HEIGHT
-	rjmp sprite_render
-
-	sprite_dont_render_1:
-		nop nop nop
+		rjmp sprite_start_render
+	sprite_dont_render:
+		nop nop
 	sprite_dont_render_2:
+		; 107 cycles delay
 		nop nop nop nop nop nop nop nop nop nop
 		nop nop nop nop nop nop nop nop nop nop
 		nop nop nop nop nop nop nop nop nop nop
@@ -415,134 +414,115 @@ visible_scanline4x:
 		nop nop nop nop nop nop nop nop nop nop
 		nop nop nop nop nop nop nop nop nop nop
 		nop nop nop nop nop nop nop nop nop nop
-		nop nop nop nop nop nop nop nop nop nop nop
-		rjmp render_sprite_done
-	
-	sprite_render:
+		nop nop nop nop nop nop nop
+		rjmp sprite_render_done
+	sprite_start_render:
 
-	; Load color tile index and multiply by tile height
+	; Get sprite data
+	ldi ZL, low(tileset_data << 1)
+	ldi ZH, high(tileset_data << 1)
+	add ZL, r16
+	adc ZH, r_zero
 	lds r16, (sprite_0 + 0)
-	ldi r17, TILE_HEIGHT
 	mul r16, r17
-	
-	; Compute and add the y-offset
-	mov r16, r_y
-	sub r16, r18 ; Subtract pos_y
-	add r0, r16
-	adc r1, r_zero
-
-	; Load the tile-data for the color
-	ldi ZL, low(tileset_data << 1)
-	ldi ZH, high(tileset_data << 1)
 	add ZL, r0
 	adc ZH, r1
-	lpm r19, Z
-
-	; Load mask tile index and multiply by tile height
+	lpm r18, Z
+	sub ZL, r0
+	sbc ZH, r1
 	lds r16, (sprite_0 + 1)
-	ldi r17, TILE_HEIGHT
 	mul r16, r17
-	
-	; Compute and add the y-offset
-	mov r16, r_y
-	sub r16, r18 ; Subtract pos_y
-	add r0, r16
-	adc r1, r_zero
-
-	; Load the tile-data of the mask
-	ldi ZL, low(tileset_data << 1)
-	ldi ZH, high(tileset_data << 1)
 	add ZL, r0
 	adc ZH, r1
-	lpm r21, Z
+	lpm r20, Z
 
-	; Load pos_x
-	lds r18, (sprite_0 + 2)
-	mov r17, r18
+	; Set- and clr- values
+	mov r16, r18
+	and r18, r20
+	com r16
+	and r20, r16
+
+	; Split up x_pos
+	lds r16, (sprite_0 + 2)
+	mov r17, r16
 	lsr r17
 	lsr r17
 	lsr r17
-	andi r18, 0x07
+	andi r16, 0x07
 
-	; Now r17 contains the 5 MSb of pos_x, r18 contains the 3 LSb, r19 contains
-	; the color data, and r21 contains the mask data.
-	; No other unallocated registers are used
-
-	; Shift color (r19) into r20:r19, and mask (r21) into r22:r21
-	clr r16
-	clr r20
-	clr r22
-
-	; The below mess does the respective shifts in a constant 44 clock cycles.
-	lsl r18
-	lsl r18
-	ldi ZL, low(shift_sprite_0)
-	ldi ZH, high(shift_sprite_0)
-	sub ZL, r18
+	; Shift to x_pos
+	clr r19
+	clr r21
+	lsl r16
+	lsl r16
+	ldi ZL, low(sprite_shift_0)
+	ldi ZH, high(sprite_shift_0)
+	sub ZL, r16
 	sbc ZH, r_zero
 	ijmp
-	shift_sprite_7: lsr r19 ror r20 lsr r21 ror r22
-	shift_sprite_6: lsr r19 ror r20 lsr r21 ror r22
-	shift_sprite_5: lsr r19 ror r20 lsr r21 ror r22
-	shift_sprite_4: lsr r19 ror r20 lsr r21 ror r22
-	shift_sprite_3: lsr r19 ror r20 lsr r21 ror r22
-	shift_sprite_2: lsr r19 ror r20 lsr r21 ror r22
-	shift_sprite_1: lsr r19 ror r20 lsr r21 ror r22
-	shift_sprite_0:
-	ldi ZL, low(shift_delay_7)
-	ldi ZH, high(shift_delay_7)
-	add ZL, r18
+	sprite_shift_7: lsr r18 ror r19 lsr r20 ror r21
+	sprite_shift_6: lsr r18 ror r19 lsr r20 ror r21
+	sprite_shift_5: lsr r18 ror r19 lsr r20 ror r21
+	sprite_shift_4: lsr r18 ror r19 lsr r20 ror r21
+	sprite_shift_3: lsr r18 ror r19 lsr r20 ror r21
+	sprite_shift_2: lsr r18 ror r19 lsr r20 ror r21
+	sprite_shift_1: lsr r18 ror r19 lsr r20 ror r21
+	sprite_shift_0:
+	ldi ZL, low(sprite_delay_7)
+	ldi ZH, high(sprite_delay_7)
+	add ZL, r16
 	adc ZH, r_zero
 	ijmp
-	shift_delay_7: nop nop nop nop
-	shift_delay_6: nop nop nop nop
-	shift_delay_5: nop nop nop nop
-	shift_delay_4: nop nop nop nop
-	shift_delay_3: nop nop nop nop
-	shift_delay_2: nop nop nop nop
-	shift_delay_1: nop nop nop nop
-	shift_delay_0:
-	lsr r18
-	lsr r18
+	sprite_delay_7: nop nop nop nop
+	sprite_delay_6: nop nop nop nop
+	sprite_delay_5: nop nop nop nop
+	sprite_delay_4: nop nop nop nop
+	sprite_delay_3: nop nop nop nop
+	sprite_delay_2: nop nop nop nop
+	sprite_delay_1: nop nop nop nop
 
-
-	; Compute set- and clear-values from the shifted color and mask
-	;   set = color & mask (the value to be or-ed into the buffer)
-	;   clear = color | ~mask (the value to be and-ed into the buffer)
-	; Backup color
-	mov r4, r19
-	mov r5, r20
-	; Create set-value in r20:r19
-	and r19, r21
-	and r20, r22
-	; Invert mask
-	com r21
-	com r22
-	; Create clear-value in r22:r21 (using backed-up color value)
-	or r21, r4
-	or r22, r5
-
-	; Move pointer to correct byte in renderbuffer
+	; Modify the renderbuffer
 	add YL, r17
 	adc YH, r_zero
-	; Load bytes
-	ld r8, Y+
-	ld r9, Y+
-
-	; Apply pre-calculated set- and clear-values
-	or r8, r19
-	or r9, r20
-	and r8, r21
-	and r9, r22
-
-	; Store bytes back to renderbuffer
-	st -Y, r9
-	st -Y, r8
-	; Return pointer to start
+	ld r14, Y+
+	cpi r17, (SCANLINE_BUFFER_TILES - 1)
+	brge sprite_wrap_A
+		nop
+		rjmp sprite_wrap_A_done
+	sprite_wrap_A:
+		sbiw Y, SCANLINE_BUFFER_TILES
+	sprite_wrap_A_done:
+	ld r15, Y+
+	or r14, r18
+	or r15, r19
+	com r20
+	com r21
+	and r14, r20
+	and r15, r21
+	st -Y, r15
+	cpi r17, (SCANLINE_BUFFER_TILES - 1)
+	brge sprite_wrap_B
+		nop
+		rjmp sprite_wrap_B_done
+	sprite_wrap_B:
+		adiw Y, SCANLINE_BUFFER_TILES
+	sprite_wrap_B_done:
+	st -Y, r14
 	sub YL, r17
-	sbc YL, r_zero
+	sbc YH, r_zero
+	sprite_render_done:
 
-	render_sprite_done:
+	nop nop nop nop
+
+
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
 
 	; ===================
 	; Begin scanline 4k+3
@@ -552,11 +532,8 @@ visible_scanline4x:
 	;nop nop nop nop nop nop nop nop nop nop
 	;nop nop nop nop nop nop nop nop nop nop
 	;nop nop nop nop nop nop nop nop nop nop
-	;nop nop nop nop nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop
 	
-	nop
-	; Rewind to start of output buffer
-	subi XL, SCANLINE_BUFFER_TILES
 
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
@@ -837,14 +814,14 @@ vblank:
 	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
 
 	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop nop nop ;nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
 
 
 	; Test scrolling functionality
 
 	lds r16, (sprite_0 + 2)
 	inc r16
-	cpi r16, 200
+	cpi r16, (8*SCANLINE_BUFFER_TILES)
 	breq scroll_wrap
 		rjmp scroll_wrap_done
 	scroll_wrap:
@@ -852,7 +829,7 @@ vblank:
 	scroll_wrap_done:
 	sts (sprite_0 + 2), r16
 
-	nop nop nop nop ;nop nop nop nop nop nop
+	;nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop
 	;inc r_frame
 	;ldi r16, 1
