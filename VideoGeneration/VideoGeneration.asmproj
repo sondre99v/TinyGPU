@@ -15,7 +15,7 @@
     <Name>VideoGeneration</Name>
     <RootNamespace>VideoGeneration</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
-    <EntryFile>$(MSBuildProjectDirectory)\main_2.asm</EntryFile>
+    <EntryFile>$(MSBuildProjectDirectory)\main.asm</EntryFile>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
     <CacheFlash>true</CacheFlash>
@@ -78,9 +78,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="main.asm">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="main_2.asm">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tileset.asm">
