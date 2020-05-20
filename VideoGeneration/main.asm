@@ -152,6 +152,16 @@ start:
 	sbi VPORTA_OUT, 4
 
 	
+	; Setup SPI for receiving commands
+	ldi r16, PORTMUX_SPI0_ALTERNATE_gc
+	sts PORTMUX_CTRLB, r16
+	sbi VPORTC_DIR, 1 ; MISO as output
+	ldi r16, SPI_BUFEN_bm | SPI_BUFWR_bm | SPI_SSD_bm | SPI_MODE_0_gc
+	sts SPI0_CTRLB, r16
+	ldi r16, SPI_PRESC_DIV16_gc | SPI_ENABLE_bm
+	sts SPI0_CTRLA, r16
+
+
 	; ====================
 	; State Initialization
 	; ====================
@@ -190,10 +200,12 @@ start:
 	; Register for counting frames. Useful for test animations and such
 	clr r6
 	; Initialize spriteslot 0
-	ldi r16, 'F' sts (sprite_0 + SPR_COL), r16
-	ldi r16, 'F' sts (sprite_0 + SPR_MASK), r16
+	ldi r16, 'P' sts (sprite_0 + SPR_COL), r16
+	ldi r16, 'P' sts (sprite_0 + SPR_MASK), r16
 	ldi r16, 68   sts (sprite_0 + SPR_POSX), r16
 	ldi r16, 57   sts (sprite_0 + SPR_POSY), r16
+
+
 
 	; Enable USART0 and TCA0
 	; Make sure the prescaler of TCA is synchronized with the baud-rate
@@ -241,6 +253,28 @@ visible_scanline4x:
 	timingjmpA_2: nop nop
 	timingjmpA_0:
 
+	; vvv
+	; Read SPI communication
+	;lds r16, SPI0_INTFLAGS
+	;sbrs r16, SPI_RXCIE_bp
+	;	rjmp spi_comm_delayA
+	;; Read command
+	;	lds ZL, SPI0_DATA  ; Low byte of address
+	;	lds ZH, SPI0_DATA  ; High byte of address
+	;	andi ZH, 0x01
+	;	ldi r16, high(INTERNAL_SRAM_START)
+	;	add ZH, r16
+	;	lds r16, SPI0_DATA ; Data
+	;	st Z, r16
+	;	rjmp spi_comm_doneA
+	;spi_comm_delayA:
+	;	nop nop nop nop nop nop nop nop nop nop
+	;	nop nop nop nop
+	;spi_comm_doneA:
+	;
+	;ser r16
+	;sts SPI0_INTFLAGS, r16
+	; ^^^
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop
 	
@@ -249,6 +283,8 @@ visible_scanline4x:
 	ld r_stream_tmp, X+
 	; USART starts first pixel exactly 4 cycles after the end of this write
 	sts USART0_TXDATAL, r_stream_tmp ; Output byte 0
+
+	nop nop
 
 	; Render tiles of current line to the renderbuffer. Y holds a pointer to
 	; the current render-buffer.
@@ -270,18 +306,17 @@ visible_scanline4x:
 	lsr r18
 	lsr r18
 	lsr r18
-	nop nop
 	
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp ; Output byte 1
 
-	add r0, r18
-	adc r1, r_zero
 	; Load tiledata pointer into Z, and offset to the correct starting tile
 	ldi ZL, low(tiledata)
 	ldi ZH, high(tiledata)
 	add ZL, r0
 	adc ZH, r1
+	add ZL, r18
+	adc ZH, r_zero
 	; Set r19 to the y-index within the tile
 	mov r19, r_tile_y
 	andi r19, 0x0F
@@ -298,12 +333,32 @@ visible_scanline4x:
 
 	; Rewind to start of output buffer
 	subi XL, SCANLINE_BUFFER_TILES
-
+	
 	rcall render_tile ; Render byte 8
 	rcall render_tile ; Render byte 9
+	rcall render_tile ; Render byte 10
 
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
+	; Read SPI communication
+	lds r16, SPI0_INTFLAGS
+	sbrs r16, SPI_RXCIE_bp
+		rjmp spi_comm_delayB
+	; Read command
+		lds ZL, SPI0_DATA  ; Low byte of address
+		lds ZH, SPI0_DATA  ; High byte of address
+		andi ZH, 0x01
+		ldi r16, high(INTERNAL_SRAM_START)
+		add ZH, r16
+		lds r16, SPI0_DATA ; Data
+		st Z, r16
+		rjmp spi_comm_doneB
+	spi_comm_delayB:
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop
+	spi_comm_doneB:
+
+	ser r16
+	sts SPI0_INTFLAGS, r16
+	
 	nop
 
 
@@ -311,9 +366,6 @@ visible_scanline4x:
 	; Begin scanline 4k+1
 	; ===================
 
-	; Wait until HBLANK is done
-	rcall render_tile ; Render byte 10
-	nop nop nop
 
 	; Start rendering and streaming data
 	rcall render_tile_while_streaming ; Render byte 11. Output bytes 0,1,2
@@ -339,20 +391,36 @@ visible_scanline4x:
 	
 	rcall render_tile ; Render byte 19
 	rcall render_tile ; Render byte 20
+	rcall render_tile ; Render byte 21
 
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop
 
+	; Read SPI communication
+	lds r16, SPI0_INTFLAGS
+	sbrs r16, SPI_RXCIE_bp
+		rjmp spi_comm_delayC
+	; Read command
+		lds ZL, SPI0_DATA  ; Low byte of address
+		lds ZH, SPI0_DATA  ; High byte of address
+		andi ZH, 0x01
+		ldi r16, high(INTERNAL_SRAM_START)
+		add ZH, r16
+		lds r16, SPI0_DATA ; Data
+		st Z, r16
+		rjmp spi_comm_doneC
+	spi_comm_delayC:
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop
+	spi_comm_doneC:
+
+	ser r16
+	sts SPI0_INTFLAGS, r16
+	
+	nop nop nop nop nop nop nop nop nop
+	
 	; ===================
 	; Begin scanline 4k+2 (not exactly correct place...)
 	; ===================
 
-	; Wait until HBLANK is done
-	rcall render_tile ; Render byte 21
-
-	nop nop nop nop nop nop nop nop
-	
 	rcall render_tile_while_streaming ; Render byte 22. Output bytes 0,1,2
 	rcall render_tile_while_streaming ; Render byte 23. Output bytes 3,4,5
 	rcall render_tile_while_streaming ; Render byte 24. Output bytes 6,7,8
@@ -527,10 +595,30 @@ visible_scanline4x:
 	sbc YH, r_zero
 	sprite_render_done:
 	
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop
+
+	; Read SPI communication
+	lds r16, SPI0_INTFLAGS
+	sbrs r16, SPI_RXCIE_bp
+		rjmp spi_comm_delayD
+	; Read command
+		lds ZL, SPI0_DATA  ; Low byte of address
+		lds ZH, SPI0_DATA  ; High byte of address
+		andi ZH, 0x01
+		ldi r16, high(INTERNAL_SRAM_START)
+		add ZH, r16
+		lds r16, SPI0_DATA ; Data
+		st Z, r16
+		rjmp spi_comm_doneD
+	spi_comm_delayD:
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop
+	spi_comm_doneD:
+
+	ser r16
+	sts SPI0_INTFLAGS, r16
+
+
+	nop nop nop nop nop nop nop nop nop
 
 	; ===================
 	; Begin scanline 4k+3 (not exactly correct place...)
@@ -650,12 +738,10 @@ visible_scanline4x:
 	subi XL, SCANLINE_BUFFER_TILES
 	
 
-
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
-
 	
 
 	; Compensation for the scroll-delay at the top
