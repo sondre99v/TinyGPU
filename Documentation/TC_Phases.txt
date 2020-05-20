@@ -1,0 +1,26 @@
+CNTH  CNTL  hSYNC  MASK
+ 0B    01    H      H
+ 0A    00    H      H
+ 09    41    H       L
+ 08    40    H       L
+ 07    3F     L      L
+ 06    3E     L      L
+ 05    3D     L      L
+ 04    3C     L      L
+ 03    3B     L      L
+ 02    3A     L      L
+ 01    39     L      L
+ 00    38     L      L
+ 41    37    H       L
+ 40    36    H       L
+ 3F    35    H       L
+ 3E    34    H       L
+ 3D    33    H       L
+ 3C    32    H       L
+ 3B    31    H      H
+ 3A    30    H      H
+ 39    2F    H      H
+ 38    2E    H      H
+ 37    2D    H      H
+ 36    2C    H      H
+ 35    2B    H      H 

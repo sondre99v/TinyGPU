@@ -1,0 +1,36 @@
+i = 0
+
+if sprite_0 is on row and i < sprite_limit
+	render sprite_0
+	inc i
+if sprite_1 is on row and i < sprite_limit
+	render sprite1
+
+
+
+Transaction protocol:
+	if (SPI0.INTFLAGS & SPI_RXCIE_bm) {
+		uint8_t cmdL = SPI0.DATA;
+		uint8_t cmdH = SPI0.DATA;
+		uint8_t arg = SPI0.DATA;
+		
+		*((cmdH << 8) | cmdL) = arg;
+	}
+
+
+; 21 cycle asm-implementation
+lds r16, SPI0_INTFLAGS
+sbrs r16, SPI_RXCIE_bp
+	rjmp delay_then_done
+; Read command
+	sts SPI0_INTFLAGS, r16
+	movw r5:r4, X
+	lds XL, SPI0_DATA
+	lds XH, SPI0_DATA
+	lds r16, SPI0_DATA
+	st X, r16
+	movw X, r5:r4
+	rjmp done
+delay_then_done:
+	nop nop nop nop nop...
+done:

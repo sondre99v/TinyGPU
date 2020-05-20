@@ -1,0 +1,32 @@
+# Description
+"visible_scanline4x" is a loop that takes exactly 2112 CPU-cycles to run. This corresponds to four scanlines of the VGA signal. Since the VGA resolution is divided by four, these four lines have the same pixel-data, so they don't have to be rendered separatly. The line-data is streamed out from a buffer in RAM. Meanwhile, interleaved with the stores to the USART data-register, the next line is being rendered to another buffer in RAM. Since the USART-streaming occupies 4 cycles pr. byte, equalling 416 cycles across the four lines, this leaves 2112-416=1696 cycles of processing to render the following line.
+
+During the lines before the first row of pixles, the rendering for row 0 is required, but no streaming of pixel-data should occur. Similarly, during the final four visible lines, there is nothing to render, but the buffer still contains pixel-data to be streamed out. Since the streaming and rendering are interleaved in the code, these two special cases are handled by simply blocking the data-stream output in the first case, and rendering an out-of-view line to the buffer in the second case.
+
+This results in the visible_scanline4x-loop being run 151 times pr. frame, even though a frame only consists of 150 rows of pixles. This also means that the visible_scanline4x-loop must begin with a check to see if it should enable the
+
+# Problem
+When I add rendering to a line (one forth of a row), that line seems to slow down by about 1/6th of a percent, resulting in a line about 1/3 pixels longer than the others. My theory is that this occurs due to the CPU doing more stuff, which somehow causes the clock to slow down slightly. Might try running with external clock to see if this improves stuff.
+
+
+Screen is 200px * 150px = 25 tiles * 12.5 tiles
+
+RAM
+tiledata: 26*14 = 364 bytes
+window: 25 bytes
+scanline_buffer_A: 26 bytes
+scanline_buffer_B: 26 bytes
+71 bytes left -> 17 sprites á 4 bytes, or 14 sprites á 5 bytes
+
+sprite:
+	pos_x: 8
+	pos_y: 8
+	tile_color: 8 (or 7, with MSb indicating inversion)
+	tile_mask: 8 (or 7, with MSb indicating inversion)
+	properties:
+		invert: 1
+		flip_x: 1 ??? (Hard to implement?, 15 cycles byte-reverse is possible)
+		flip_y: 1
+		swap l&r: 1 ??? (Easy to implement, but might not be very useful...)
+		more in the remaining 4 bits?
+	

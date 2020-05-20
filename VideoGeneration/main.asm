@@ -28,7 +28,7 @@ rjmp start
 .EQU TILE_WIDTH = 8
 .EQU TILE_HEIGHT = 12
 .EQU TILEDATA_WIDTH = 27
-.EQU TILEDATA_HEIGHT = 15
+.EQU TILEDATA_HEIGHT = 14
 
 .EQU SCANLINE_BUFFER_TILES = 26
 
@@ -42,6 +42,38 @@ rjmp start
 .DEF r_scroll_x = r23
 .DEF r_tile_y = r24
 .DEF r_y = r25
+
+; Buffers and settings in RAM
+; Important that the tiledata array is larger than 256 bytes, so that only
+; 8-bit address calculation is required for the other buffers.
+.dseg
+.org 0x3E00
+tiledata: .byte (TILEDATA_WIDTH * TILEDATA_HEIGHT)
+scanline_bufferA: .byte SCANLINE_BUFFER_TILES
+scanline_bufferB: .byte SCANLINE_BUFFER_TILES
+window_tiles: .byte (H_VISIBLE / PIXEL_DIV / TILE_WIDTH)
+scroll_x: .byte 1
+scroll_y: .byte 1
+window_y: .byte 1
+reserved0: .byte 1
+reserved1: .byte 1
+sprite_0: .byte 4 ; Bytes are: (color_tile_index, mask_tile_index, pos_x, pos_y)
+sprite_1: .byte 4
+sprite_3: .byte 4
+sprite_4: .byte 4
+sprite_5: .byte 4
+sprite_6: .byte 4
+sprite_7: .byte 4
+sprite_8: .byte 4
+sprite_9: .byte 4
+sprite_10: .byte 4
+sprite_11: .byte 4
+sprite_12: .byte 4
+sprite_13: .byte 4
+.EQU SPR_COL = 0
+.EQU SPR_MASK = 1
+.EQU SPR_POSX = 2
+.EQU SPR_POSY = 3
 
 ; Main entry point
 .cseg
@@ -88,7 +120,7 @@ start:
 	sts PORTA_PIN5CTRL, r16
 
 	; Setup USART0 to serialize the pixel data, to be passed to the CCL
-	ldi r16, USART_MSPI_CMODE_MSPI_gc
+	ldi r16, USART_MSPI_CMODE_MSPI_gc | USART_UDORD_bm
 	sts USART0_CTRLC, r16
 	ldi r16, (1 << 6)
 	sts USART0_BAUD, r16
@@ -158,10 +190,10 @@ start:
 	; Register for counting frames. Useful for test animations and such
 	clr r6
 	; Initialize spriteslot 0
-	ldi r16, 0x0C sts (sprite_0 + 0), r16 ; Color = Window
-	ldi r16, 0x03 sts (sprite_0 + 1), r16 ; Mask = 2px Rectangle
-	ldi r16, 10   sts (sprite_0 + 2), r16 ; pos_x
-	ldi r16, 97    sts (sprite_0 + 3), r16 ; pos_y
+	ldi r16, 'F' sts (sprite_0 + SPR_COL), r16
+	ldi r16, 'F' sts (sprite_0 + SPR_MASK), r16
+	ldi r16, 68   sts (sprite_0 + SPR_POSX), r16
+	ldi r16, 57   sts (sprite_0 + SPR_POSY), r16
 
 	; Enable USART0 and TCA0
 	; Make sure the prescaler of TCA is synchronized with the baud-rate
@@ -271,7 +303,8 @@ visible_scanline4x:
 	rcall render_tile ; Render byte 9
 
 	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop
 
 
 	; ===================
@@ -280,7 +313,7 @@ visible_scanline4x:
 
 	; Wait until HBLANK is done
 	rcall render_tile ; Render byte 10
-	nop nop
+	nop nop nop
 
 	; Start rendering and streaming data
 	rcall render_tile_while_streaming ; Render byte 11. Output bytes 0,1,2
@@ -309,7 +342,7 @@ visible_scanline4x:
 
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
-	nop nop
+	nop nop nop nop
 
 	; ===================
 	; Begin scanline 4k+2 (not exactly correct place...)
@@ -318,7 +351,7 @@ visible_scanline4x:
 	; Wait until HBLANK is done
 	rcall render_tile ; Render byte 21
 
-	nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop
 	
 	rcall render_tile_while_streaming ; Render byte 22. Output bytes 0,1,2
 	rcall render_tile_while_streaming ; Render byte 23. Output bytes 3,4,5
@@ -394,7 +427,7 @@ visible_scanline4x:
 
 	; Compute y in sprite
 	ldi r17, TILE_HEIGHT
-	lds r16, (sprite_0 + 3) ; pos_y
+	lds r16, (sprite_0 + SPR_POSY)
 	sub r16, r_y
 	neg r16
 	
@@ -413,8 +446,7 @@ visible_scanline4x:
 		nop nop nop nop nop nop nop nop nop nop
 		nop nop nop nop nop nop nop nop nop nop
 		nop nop nop nop nop nop nop nop nop nop
-		nop nop nop nop nop nop nop nop nop nop
-		nop nop nop
+		nop nop nop nop nop nop nop nop nop
 		rjmp sprite_render_done
 	sprite_start_render:
 	
@@ -423,14 +455,14 @@ visible_scanline4x:
 	ldi ZH, high(tileset_data << 1)
 	add ZL, r16
 	adc ZH, r_zero
-	lds r16, (sprite_0 + 0)
+	lds r16, (sprite_0 + SPR_COL)
 	mul r16, r17
 	add ZL, r0
 	adc ZH, r1
 	lpm r18, Z
 	sub ZL, r0
 	sbc ZH, r1
-	lds r16, (sprite_0 + 1)
+	lds r16, (sprite_0 + SPR_MASK)
 	mul r16, r17
 	add ZL, r0
 	adc ZH, r1
@@ -443,7 +475,7 @@ visible_scanline4x:
 	and r20, r16
 	
 	; Split up x_pos
-	lds r16, (sprite_0 + 2)
+	lds r16, (sprite_0 + SPR_POSX)
 	mov r17, r_scroll_x
 	andi r17, 0x07
 	add r16, r17
@@ -454,20 +486,16 @@ visible_scanline4x:
 	andi r16, 0x07
 	
 	; Shift to x_pos
-	ldi ZL, low((powers_of_2_table << 1) + 7)
-	ldi ZH, high((powers_of_2_table << 1) + 7)
-	sub ZL, r16
-	sbc ZH, r_zero
+	ldi ZL, low(powers_of_2_table << 1)
+	ldi ZH, high(powers_of_2_table << 1)
+	add ZL, r16
+	adc ZH, r_zero
 	lpm r21, Z
 	mul r18, r21
 	movw r19:r18, r1:r0
 	mul r20, r21
 	movw r21:r20, r1:r0
-	lsl r20
-	rol r21
-	lsl r18
-	rol r19
-	
+
 	; Modify the renderbuffer
 	add YL, r17
 	adc YH, r_zero
@@ -480,12 +508,12 @@ visible_scanline4x:
 		sbiw Y, SCANLINE_BUFFER_TILES
 	sprite_wrap_A_done:
 	ld r15, Y+
-	or r14, r19
-	or r15, r18
+	or r14, r18
+	or r15, r19
 	com r20
 	com r21
-	and r14, r21
-	and r15, r20
+	and r14, r20
+	and r15, r21
 	st -Y, r15
 	cpi r17, (SCANLINE_BUFFER_TILES - 1)
 	brge sprite_wrap_B
@@ -501,7 +529,8 @@ visible_scanline4x:
 	
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 
 	; ===================
 	; Begin scanline 4k+3 (not exactly correct place...)
@@ -792,8 +821,9 @@ vblank:
 	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop
 	
+	; Update r_scroll_x from memory in case it has been changed
 	lds r_scroll_x, scroll_x
-	clr r_scroll_x ; inc replaced with clr to stop scrolling
+	nop ;inc r_scroll_x
 	cpi r_scroll_x, 216
 	breq wrap_x
 		rjmp wrap_done
@@ -852,13 +882,14 @@ render_tile_while_streaming:
 	inc r18
 	cpi r18, TILEDATA_WIDTH
 	breq wrap_index_x
-		nop nop
+		nop
 		rjmp wrap_index_x_done
 	wrap_index_x:
-		clr r18
 		sbiw Z, TILEDATA_WIDTH
 	wrap_index_x_done:
 	
+	nop
+
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
 
@@ -867,21 +898,21 @@ render_tile_while_streaming:
 	ret
 
 ; Subroutine to render 1 byte while no streaming is needed
-; Takes 30 cycles, including call and return
+; Takes 29 cycles, including call and return
 render_tile:
 	; Subroutine call takes 2 cycles
-	ld r16, Z+ ; Load tile
+	ld r16, Z+ ; Load tile index
 
 	; Compute address in tileset
 	movw r5:r4, Z
-	ldi r17, TILE_HEIGHT
-	mul r16, r17
-	add r0, r19
-	adc r1, r_zero
 	ldi ZL, low(tileset_data << 1)
 	ldi ZH, high(tileset_data << 1)
+	ldi r17, TILE_HEIGHT
+	mul r16, r17
 	add ZL, r0
 	adc ZH, r1
+	add ZL, r19
+	adc ZH, r_zero
 
 	; Render byte
 	lpm r16, Z ; Load row from tileset
@@ -892,13 +923,12 @@ render_tile:
 	inc r18
 	cpi r18, TILEDATA_WIDTH
 	breq wrap_index_x2
-		nop nop
+		nop
 		rjmp wrap_index_x2_done
 	wrap_index_x2:
-		clr r18
 		sbiw Z, TILEDATA_WIDTH
 	wrap_index_x2_done:
-	
+
 	; Return jump takes 4 cycles
 	ret
 
@@ -906,17 +936,3 @@ powers_of_2_table: .db 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
 
 .include "default_leveldata.asm"
 .include "tileset.asm"
-
-; Tiledata array in RAM
-.dseg
-.org 0x3E00
-scanline_bufferA: .byte SCANLINE_BUFFER_TILES
-scanline_bufferB: .byte SCANLINE_BUFFER_TILES
-tiledata: .byte (TILEDATA_WIDTH * TILEDATA_HEIGHT)
-window_tiles: .byte (H_VISIBLE / PIXEL_DIV / TILE_WIDTH)
-sprite_0: .byte 4 ; Bytes are: (color_tile_index, mask_tile_index, pos_x, pos_y)
-sprite_1: .byte 4
-sprite_2: .byte 4
-scroll_x: .byte 1
-scroll_y: .byte 1
-window_y: .byte 1
