@@ -170,7 +170,7 @@ start:
 	ldi r16, SPI_BUFEN_bm | SPI_BUFWR_bm | SPI_SSD_bm | SPI_MODE_0_gc
 	sts SPI0_CTRLB, r16
 	ldi r16, SPI_PRESC_DIV16_gc | SPI_ENABLE_bm
-	;sts SPI0_CTRLA, r16
+	sts SPI0_CTRLA, r16
 
 
 	; ====================
@@ -976,8 +976,11 @@ vblank:
 			st Z, r16
 			rjmp spi_comm_done_V5
 		spi_comm_delay_V5:
-			nop nop nop nop nop nop nop nop nop nop
-			nop nop nop nop
+			; Flush SPI buffers
+			lds r16, SPI0_DATA
+			lds r16, SPI0_DATA
+			lds r16, SPI0_DATA
+			nop nop nop nop nop
 		spi_comm_done_V5:
 		ser r16
 		sts SPI0_INTFLAGS, r16
