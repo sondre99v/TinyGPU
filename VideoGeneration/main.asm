@@ -76,6 +76,16 @@ window_tiles: .byte (H_VISIBLE / PIXEL_DIV / TILE_WIDTH)
 .EQU SPR_POSX = 2
 .EQU SPR_POSY = 3
 
+; Macro for delaying exact number of cycles, in increments of 10.
+; Disturbs r16
+.MACRO delay_decacycles
+	ldi r16, @0
+	delay_loop_1:
+		nop nop nop nop nop nop nop
+		dec r16
+		brne delay_loop_1
+.ENDMACRO
+
 ; Main entry point
 .cseg
 start:
@@ -160,7 +170,7 @@ start:
 	ldi r16, SPI_BUFEN_bm | SPI_BUFWR_bm | SPI_SSD_bm | SPI_MODE_0_gc
 	sts SPI0_CTRLB, r16
 	ldi r16, SPI_PRESC_DIV16_gc | SPI_ENABLE_bm
-	sts SPI0_CTRLA, r16
+	;sts SPI0_CTRLA, r16
 
 
 	; ====================
@@ -806,80 +816,142 @@ visible_scanline4x:
 ; so that row 0 can be rendered to the buffer.
 ;   24 lines = 24*1056/2 = 12672 cycles
 vblank:
-	nop ; 1-cycle delay to synchronize with where the visible_scanline4x starts
-
 	; Disable pixel output
 	cbi VPORTA_OUT, 1
 
-	; Wait until start of line
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop
-
-	; Delay for 1 line minus 1 cycle (527 cycles)
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
-
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop
-
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop	nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
+	; Wait 470 cycles until first HSYNC pulse
+	delay_decacycles 47
 	
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop	nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop
-
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop
 	
+	; Read SPI communication
+	lds r16, SPI0_INTFLAGS
+	sbrs r16, SPI_RXCIE_bp
+		rjmp spi_comm_delay_V0
+	; Read command
+		lds ZL, SPI0_DATA  ; Low byte of address
+		lds ZH, SPI0_DATA  ; High byte of address
+		andi ZH, 0x01
+		ldi r16, high(INTERNAL_SRAM_START)
+		add ZH, r16
+		lds r16, SPI0_DATA ; Data
+		st Z, r16
+		rjmp spi_comm_done_V0
+	spi_comm_delay_V0:
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop
+	spi_comm_done_V0:
+	ser r16
+	sts SPI0_INTFLAGS, r16
 
+	; Wait 84 cycles until the end of the back porch
+	delay_decacycles 8
+	nop nop nop nop
+	
 	; Lower vsync-pulse
 	cbi VPORTA_OUT, 4
+
+	; Wait 420 cycles until the second HSYNC pulse
+	delay_decacycles 42
 	
-	; Delay for 4 lines minus 1 cycles (4 * 528 - 1 cycles)
-	clr r16
-	loop1: inc r16 inc r16 brne loop1 ; 512 cycles
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
-
-	clr r16
-	loop2: inc r16 inc r16 brne loop2 ; 512 cycles
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
-
-	clr r16
-	loop3: inc r16 inc r16 brne loop3 ; 512 cycles
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop
-
-	clr r16
-	loop4: inc r16 inc r16 brne loop4 ; 512 cycles
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop
-
+	; Read SPI communication
+	lds r16, SPI0_INTFLAGS
+	sbrs r16, SPI_RXCIE_bp
+		rjmp spi_comm_delay_V1
+	; Read command
+		lds ZL, SPI0_DATA  ; Low byte of address
+		lds ZH, SPI0_DATA  ; High byte of address
+		andi ZH, 0x01
+		ldi r16, high(INTERNAL_SRAM_START)
+		add ZH, r16
+		lds r16, SPI0_DATA ; Data
+		st Z, r16
+		rjmp spi_comm_done_V1
+	spi_comm_delay_V1:
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop
+	spi_comm_done_V1:
+	ser r16
+	sts SPI0_INTFLAGS, r16
+	
+	; Wait 505 cycles until the third HSYNC pulse
+	delay_decacycles 50
+	nop nop nop nop nop
+	
+	; Read SPI communication
+	lds r16, SPI0_INTFLAGS
+	sbrs r16, SPI_RXCIE_bp
+		rjmp spi_comm_delay_V2
+	; Read command
+		lds ZL, SPI0_DATA  ; Low byte of address
+		lds ZH, SPI0_DATA  ; High byte of address
+		andi ZH, 0x01
+		ldi r16, high(INTERNAL_SRAM_START)
+		add ZH, r16
+		lds r16, SPI0_DATA ; Data
+		st Z, r16
+		rjmp spi_comm_done_V2
+	spi_comm_delay_V2:
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop
+	spi_comm_done_V2:
+	ser r16
+	sts SPI0_INTFLAGS, r16
+	
+	; Wait 505 cycles until the fourth HSYNC pulse
+	delay_decacycles 50
+	nop nop nop nop nop
+	
+	; Read SPI communication
+	lds r16, SPI0_INTFLAGS
+	sbrs r16, SPI_RXCIE_bp
+		rjmp spi_comm_delay_V3
+	; Read command
+		lds ZL, SPI0_DATA  ; Low byte of address
+		lds ZH, SPI0_DATA  ; High byte of address
+		andi ZH, 0x01
+		ldi r16, high(INTERNAL_SRAM_START)
+		add ZH, r16
+		lds r16, SPI0_DATA ; Data
+		st Z, r16
+		rjmp spi_comm_done_V3
+	spi_comm_delay_V3:
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop
+	spi_comm_done_V3:
+	ser r16
+	sts SPI0_INTFLAGS, r16
+	
+	; Wait 505 cycles until the fifth HSYNC pulse
+	delay_decacycles 50
+	nop nop nop nop nop
+	
+	; Read SPI communication
+	lds r16, SPI0_INTFLAGS
+	sbrs r16, SPI_RXCIE_bp
+		rjmp spi_comm_delay_V4
+	; Read command
+		lds ZL, SPI0_DATA  ; Low byte of address
+		lds ZH, SPI0_DATA  ; High byte of address
+		andi ZH, 0x01
+		ldi r16, high(INTERNAL_SRAM_START)
+		add ZH, r16
+		lds r16, SPI0_DATA ; Data
+		st Z, r16
+		rjmp spi_comm_done_V4
+	spi_comm_delay_V4:
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop
+	spi_comm_done_V4:
+	ser r16
+	sts SPI0_INTFLAGS, r16
+	
+	; Wait 84 cycles until the end of the back porch
+	delay_decacycles 8
+	nop nop nop nop
 	
 	; Raise vsync-pulse
 	sbi VPORTA_OUT, 4
 
-
-	; Delay for 19 lines minus the back porch of the last line (approx)
-	
 	; 18 lines
 	ldi r17, 18
 	loop6:
@@ -893,22 +965,11 @@ vblank:
 	ldi r16, 0x80
 	loop7: inc r16 inc r16 brne loop7 ; 256 cycles
 
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop nop	nop nop nop nop
-
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop	nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop	nop nop nop nop
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
-
-	nop nop nop nop nop nop nop nop	nop nop nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop
+	delay_decacycles 22
+	nop nop ;nop nop nop nop
 	
 	; Update r_scroll_x from memory in case it has been changed
+	; Also, maybe test scrolling functionality
 	lds r_scroll_x, scroll_x
 	nop ;inc r_scroll_x
 	cpi r_scroll_x, 216
@@ -919,7 +980,6 @@ vblank:
 	wrap_done:
 	sts scroll_x, r_scroll_x
 
-	; Test scrolling functionality
 
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop
