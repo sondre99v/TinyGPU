@@ -38,7 +38,8 @@ rjmp start
 .DEF r_prodH = r1
 .DEF r_stream_tmp = r2
 .DEF r_zero = r3
-.DEF r_frame = r4
+.DEF r_tmp16L = r4
+.DEF r_tmp16H = r5
 .DEF r_scroll_x = r23
 .DEF r_tile_y = r24
 .DEF r_y = r25
@@ -49,15 +50,10 @@ rjmp start
 .dseg
 .org 0x3E00
 tiledata: .byte (TILEDATA_WIDTH * TILEDATA_HEIGHT)
-scanline_bufferA: .byte SCANLINE_BUFFER_TILES
-scanline_bufferB: .byte SCANLINE_BUFFER_TILES
-window_tiles: .byte (H_VISIBLE / PIXEL_DIV / TILE_WIDTH)
 scroll_x: .byte 1
 scroll_y: .byte 1
 window_y: .byte 1
-reserved0: .byte 1
-reserved1: .byte 1
-sprite_0: .byte 4 ; Bytes are: (color_tile_index, mask_tile_index, pos_x, pos_y)
+sprite_0: .byte 4
 sprite_1: .byte 4
 sprite_3: .byte 4
 sprite_4: .byte 4
@@ -70,6 +66,11 @@ sprite_10: .byte 4
 sprite_11: .byte 4
 sprite_12: .byte 4
 sprite_13: .byte 4
+reserved0: .byte 1
+reserved1: .byte 1
+scanline_bufferA: .byte SCANLINE_BUFFER_TILES
+scanline_bufferB: .byte SCANLINE_BUFFER_TILES
+window_tiles: .byte (H_VISIBLE / PIXEL_DIV / TILE_WIDTH)
 .EQU SPR_COL = 0
 .EQU SPR_MASK = 1
 .EQU SPR_POSX = 2
