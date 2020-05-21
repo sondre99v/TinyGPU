@@ -76,8 +76,6 @@ window_tiles: .byte (H_VISIBLE / PIXEL_DIV / TILE_WIDTH)
 .EQU SPR_POSX = 2
 .EQU SPR_POSY = 3
 
-.include "render_macros.asm"
-
 ; Main entry point
 .cseg
 start:
@@ -221,10 +219,6 @@ start:
 
 ; Loop across four scanlines
 visible_scanline4x:
-	; ===================
-	; Begin scanline 4k+0 ( 8 cycles too late...)
-	; ===================
-	
 	; Make sure we only enable the output once we render row 1 (meaning row 0
 	; has been rendered, and should be streamed out).
 	cpi r_y, 1
@@ -234,9 +228,6 @@ visible_scanline4x:
 		sbi VPORTA_OUT, 1
 	enable_output_done:
 
-
-	; Wait until HBLANK is done
-	
 	; This block takes between 9 and 23 cycles, depending on the value in
 	; scroll_x.
 	mov r16, r_scroll_x
@@ -279,10 +270,12 @@ visible_scanline4x:
 	lsr r18
 	lsr r18
 
-
-	; USART starts first pixel exactly 4 cycles after the end of this write
+	; ===============================
+	; Begin streaming scanline 4k + 0
+	; ===============================
 	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp ; Output byte 0
+	sts USART0_TXDATAL, r_stream_tmp
+	; USART starts first pixel exactly 4 cycles after the end of this write
 	
 
 	; Load tiledata pointer into Z, and offset to the correct starting tile
@@ -303,7 +296,7 @@ visible_scanline4x:
 	adc r21, r_zero
 	
 	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp ; Output byte 1
+	sts USART0_TXDATAL, r_stream_tmp
 
 	nop nop nop nop nop nop nop nop nop nop
 	nop
@@ -359,17 +352,11 @@ visible_scanline4x:
 	; to reset the pointer accordingly.
 	subi XL, (SCANLINE_BUFFER_TILES + 2)
 	
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop
 
 	; Read SPI communication
 	lds r16, SPI0_INTFLAGS
 	sbrs r16, SPI_RXCIE_bp
-		rjmp spi_comm_delayB
+		rjmp spi_comm_delay_0
 	; Read command
 		lds ZL, SPI0_DATA  ; Low byte of address
 		lds ZH, SPI0_DATA  ; High byte of address
@@ -378,21 +365,25 @@ visible_scanline4x:
 		add ZH, r16
 		lds r16, SPI0_DATA ; Data
 		st Z, r16
-		rjmp spi_comm_doneB
-	spi_comm_delayB:
+		rjmp spi_comm_done_0
+	spi_comm_delay_0:
 		nop nop nop nop nop nop nop nop nop nop
 		nop nop nop nop
-	spi_comm_doneB:
-
+	spi_comm_done_0:
 	ser r16
 	sts SPI0_INTFLAGS, r16
 	
-	nop nop nop nop
 
-
-	; ===================
-	; Begin scanline 4k+1
-	; ===================
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop
+	
+	; ===============================
+	; Begin streaming scanline 4k + 1
+	; ===============================
 
 	; Use r22 as loop counter
 	ldi r22, 13
@@ -440,20 +431,15 @@ visible_scanline4x:
 	subi XL, SCANLINE_BUFFER_TILES
 	
 
+	; Wait for sync-pulse before reading SPI
 	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop
 
-
+	
 	; Read SPI communication
 	lds r16, SPI0_INTFLAGS
 	sbrs r16, SPI_RXCIE_bp
-		rjmp spi_comm_delayC
+		rjmp spi_comm_delay_1
 	; Read command
 		lds ZL, SPI0_DATA  ; Low byte of address
 		lds ZH, SPI0_DATA  ; High byte of address
@@ -462,244 +448,142 @@ visible_scanline4x:
 		add ZH, r16
 		lds r16, SPI0_DATA ; Data
 		st Z, r16
-		rjmp spi_comm_doneC
-	spi_comm_delayC:
+		rjmp spi_comm_done_1
+	spi_comm_delay_1:
 		nop nop nop nop nop nop nop nop nop nop
 		nop nop nop nop
-	spi_comm_doneC:
-
+	spi_comm_done_1:
 	ser r16
 	sts SPI0_INTFLAGS, r16
 	
-	nop nop nop nop nop nop nop nop nop
 	
-	; ===================
-	; Begin scanline 4k+2 (not exactly correct place...)
-	; ===================
-
-	nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop
-
-	nop
-
 	
+	
+	; ===============================
+	; Begin streaming scanline 4k + 2
+	; ===============================
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	
+	; Rewind to start of output buffer
+	subi XL, SCANLINE_BUFFER_TILES
+	
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-
-
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
 	
-	; Rewind to start of output buffer
-	subi XL, SCANLINE_BUFFER_TILES
-
-	; Render sprite 0
-
-	; Compute y in sprite
-	ldi r17, TILE_HEIGHT
-	lds r16, (sprite_0 + SPR_POSY)
-	sub r16, r_y
-	neg r16
-	
-	; Check y-limits
-	brmi sprite_dont_render
-	cp r16, r17
-	brge sprite_dont_render_2
-		rjmp sprite_start_render
-	sprite_dont_render:
-		nop nop
-	sprite_dont_render_2:
-		nop nop nop nop nop nop nop nop nop nop
-		nop nop nop nop nop nop nop nop nop nop
-		nop nop nop nop nop nop nop nop nop nop
-		nop nop nop nop nop nop nop nop nop nop
-		nop nop nop nop nop nop nop nop nop nop
-		nop nop nop nop nop nop nop nop nop nop
-		nop nop nop nop nop nop nop nop nop nop
-		nop nop nop nop nop nop nop nop nop
-		rjmp sprite_render_done
-	sprite_start_render:
-	
-	; Get sprite data
-	ldi ZL, low(tileset_data << 1)
-	ldi ZH, high(tileset_data << 1)
-	add ZL, r16
-	adc ZH, r_zero
-	lds r16, (sprite_0 + SPR_COL)
-	mul r16, r17
-	add ZL, r0
-	adc ZH, r1
-	lpm r18, Z
-	sub ZL, r0
-	sbc ZH, r1
-	lds r16, (sprite_0 + SPR_MASK)
-	mul r16, r17
-	add ZL, r0
-	adc ZH, r1
-	lpm r20, Z
-	
-	; Set- and clr- values
-	mov r16, r18
-	and r18, r20
-	com r16
-	and r20, r16
-	
-	; Split up x_pos
-	lds r16, (sprite_0 + SPR_POSX)
-	mov r17, r_scroll_x
-	andi r17, 0x07
-	add r16, r17
-	mov r17, r16
-	lsr r17
-	lsr r17
-	lsr r17
-	andi r16, 0x07
-	
-	; Shift to x_pos
-	ldi ZL, low(powers_of_2_table << 1)
-	ldi ZH, high(powers_of_2_table << 1)
-	add ZL, r16
-	adc ZH, r_zero
-	lpm r21, Z
-	mul r18, r21
-	movw r19:r18, r1:r0
-	mul r20, r21
-	movw r21:r20, r1:r0
-
-	; Modify the renderbuffer
-	add YL, r17
-	adc YH, r_zero
-	ld r14, Y+
-	cpi r17, (SCANLINE_BUFFER_TILES - 1)
-	brge sprite_wrap_A
-		nop
-		rjmp sprite_wrap_A_done
-	sprite_wrap_A:
-		sbiw Y, SCANLINE_BUFFER_TILES
-	sprite_wrap_A_done:
-	ld r15, Y+
-	or r14, r18
-	or r15, r19
-	com r20
-	com r21
-	and r14, r20
-	and r15, r21
-	st -Y, r15
-	cpi r17, (SCANLINE_BUFFER_TILES - 1)
-	brge sprite_wrap_B
-		nop
-		rjmp sprite_wrap_B_done
-	sprite_wrap_B:
-		adiw Y, SCANLINE_BUFFER_TILES
-	sprite_wrap_B_done:
-	st -Y, r14
-	sub YL, r17
-	sbc YH, r_zero
-	sprite_render_done:
-	
-
 	; Read SPI communication
 	lds r16, SPI0_INTFLAGS
 	sbrs r16, SPI_RXCIE_bp
-		rjmp spi_comm_delayD
+		rjmp spi_comm_delay_2
 	; Read command
 		lds ZL, SPI0_DATA  ; Low byte of address
 		lds ZH, SPI0_DATA  ; High byte of address
@@ -708,128 +592,127 @@ visible_scanline4x:
 		add ZH, r16
 		lds r16, SPI0_DATA ; Data
 		st Z, r16
-		rjmp spi_comm_doneD
-	spi_comm_delayD:
+		rjmp spi_comm_done_2
+	spi_comm_delay_2:
 		nop nop nop nop nop nop nop nop nop nop
 		nop nop nop nop
-	spi_comm_doneD:
-
+	spi_comm_done_2:
 	ser r16
 	sts SPI0_INTFLAGS, r16
-
-
-	nop nop nop nop nop nop nop nop nop
-
-	; ===================
-	; Begin scanline 4k+3 (not exactly correct place...)
-	; ===================
-
-	; Wait until HBLANK is done
-	;nop nop nop nop nop nop nop nop nop nop
-	;nop nop nop nop nop nop nop nop nop nop
-	;nop nop nop nop nop nop nop nop nop nop
-	;nop nop nop nop nop nop nop
 	
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop
+	
+
+	; ===============================
+	; Begin streaming scanline 4k + 4
+	; ===============================
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop
-	nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 	ld r_stream_tmp, X+
 	sts USART0_TXDATAL, r_stream_tmp
 
@@ -840,9 +723,30 @@ visible_scanline4x:
 
 	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop
 	
+
+	; Read SPI communication
+	lds r16, SPI0_INTFLAGS
+	sbrs r16, SPI_RXCIE_bp
+		rjmp spi_comm_delay_3
+	; Read command
+		lds ZL, SPI0_DATA  ; Low byte of address
+		lds ZH, SPI0_DATA  ; High byte of address
+		andi ZH, 0x01
+		ldi r16, high(INTERNAL_SRAM_START)
+		add ZH, r16
+		lds r16, SPI0_DATA ; Data
+		st Z, r16
+		rjmp spi_comm_done_3
+	spi_comm_delay_3:
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop
+	spi_comm_done_3:
+	ser r16
+	sts SPI0_INTFLAGS, r16
+
+	nop nop nop nop nop nop nop
 
 	; Compensation for the scroll-delay at the top
 	; This block takes between 9 and 23 cycles, depending on the value in
@@ -872,9 +776,6 @@ visible_scanline4x:
 	eor YH, XH
 	eor XH, YH
 	eor YH, XH
-
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop nop
 	
 	; Advance r_tile_y. Add one to the low nibble, if the incremented value
 	; equals TILE_HEIGHT, clear it, and increment the high nibble. There is no
@@ -1039,3 +940,109 @@ powers_of_2_table: .db 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
 
 .include "default_leveldata.asm"
 .include "tileset.asm"
+
+/*
+; Render sprite 0
+
+	; Compute y in sprite
+	ldi r17, TILE_HEIGHT
+	lds r16, (sprite_0 + SPR_POSY)
+	sub r16, r_y
+	neg r16
+	
+	; Check y-limits
+	brmi sprite_dont_render
+	cp r16, r17
+	brge sprite_dont_render_2
+		rjmp sprite_start_render
+	sprite_dont_render:
+		nop nop
+	sprite_dont_render_2:
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop nop
+		nop nop nop nop nop nop nop nop nop
+		rjmp sprite_render_done
+	sprite_start_render:
+	
+	; Get sprite data
+	ldi ZL, low(tileset_data << 1)
+	ldi ZH, high(tileset_data << 1)
+	add ZL, r16
+	adc ZH, r_zero
+	lds r16, (sprite_0 + SPR_COL)
+	mul r16, r17
+	add ZL, r0
+	adc ZH, r1
+	lpm r18, Z
+	sub ZL, r0
+	sbc ZH, r1
+	lds r16, (sprite_0 + SPR_MASK)
+	mul r16, r17
+	add ZL, r0
+	adc ZH, r1
+	lpm r20, Z
+	
+	; Set- and clr- values
+	mov r16, r18
+	and r18, r20
+	com r16
+	and r20, r16
+	
+	; Split up x_pos
+	lds r16, (sprite_0 + SPR_POSX)
+	mov r17, r_scroll_x
+	andi r17, 0x07
+	add r16, r17
+	mov r17, r16
+	lsr r17
+	lsr r17
+	lsr r17
+	andi r16, 0x07
+	
+	; Shift to x_pos
+	ldi ZL, low(powers_of_2_table << 1)
+	ldi ZH, high(powers_of_2_table << 1)
+	add ZL, r16
+	adc ZH, r_zero
+	lpm r21, Z
+	mul r18, r21
+	movw r19:r18, r1:r0
+	mul r20, r21
+	movw r21:r20, r1:r0
+
+	; Modify the renderbuffer
+	add YL, r17
+	adc YH, r_zero
+	ld r14, Y+
+	cpi r17, (SCANLINE_BUFFER_TILES - 1)
+	brge sprite_wrap_A
+		nop
+		rjmp sprite_wrap_A_done
+	sprite_wrap_A:
+		sbiw Y, SCANLINE_BUFFER_TILES
+	sprite_wrap_A_done:
+	ld r15, Y+
+	or r14, r18
+	or r15, r19
+	com r20
+	com r21
+	and r14, r20
+	and r15, r21
+	st -Y, r15
+	cpi r17, (SCANLINE_BUFFER_TILES - 1)
+	brge sprite_wrap_B
+		nop
+		rjmp sprite_wrap_B_done
+	sprite_wrap_B:
+		adiw Y, SCANLINE_BUFFER_TILES
+	sprite_wrap_B_done:
+	st -Y, r14
+	sub YL, r17
+	sbc YH, r_zero
+	sprite_render_done:
+*/
