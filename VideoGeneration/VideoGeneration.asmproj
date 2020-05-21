@@ -71,6 +71,9 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="render_macros.asm">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="clock_gen.asm">
       <SubType>Code</SubType>
     </Compile>

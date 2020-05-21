@@ -76,6 +76,8 @@ window_tiles: .byte (H_VISIBLE / PIXEL_DIV / TILE_WIDTH)
 .EQU SPR_POSX = 2
 .EQU SPR_POSY = 3
 
+.include "render_macros.asm"
+
 ; Main entry point
 .cseg
 start:
@@ -254,38 +256,7 @@ visible_scanline4x:
 	timingjmpA_2: nop nop
 	timingjmpA_0:
 
-	; vvv
-	; Read SPI communication
-	;lds r16, SPI0_INTFLAGS
-	;sbrs r16, SPI_RXCIE_bp
-	;	rjmp spi_comm_delayA
-	;; Read command
-	;	lds ZL, SPI0_DATA  ; Low byte of address
-	;	lds ZH, SPI0_DATA  ; High byte of address
-	;	andi ZH, 0x01
-	;	ldi r16, high(INTERNAL_SRAM_START)
-	;	add ZH, r16
-	;	lds r16, SPI0_DATA ; Data
-	;	st Z, r16
-	;	rjmp spi_comm_doneA
-	;spi_comm_delayA:
-	;	nop nop nop nop nop nop nop nop nop nop
-	;	nop nop nop nop
-	;spi_comm_doneA:
-	;
-	;ser r16
-	;sts SPI0_INTFLAGS, r16
-	; ^^^
-	nop nop nop nop nop nop nop nop nop nop
 	nop nop nop nop nop
-	
-	; Start streaming out the output-buffer, while rendering to the
-	; renderbuffer
-	ld r_stream_tmp, X+
-	; USART starts first pixel exactly 4 cycles after the end of this write
-	sts USART0_TXDATAL, r_stream_tmp ; Output byte 0
-
-	nop nop
 
 	; Render tiles of current line to the renderbuffer. Y holds a pointer to
 	; the current render-buffer.
@@ -307,9 +278,12 @@ visible_scanline4x:
 	lsr r18
 	lsr r18
 	lsr r18
-	
+
+
+	; USART starts first pixel exactly 4 cycles after the end of this write
 	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp ; Output byte 1
+	sts USART0_TXDATAL, r_stream_tmp ; Output byte 0
+	
 
 	; Load tiledata pointer into Z, and offset to the correct starting tile
 	ldi ZL, low(tiledata)
@@ -321,23 +295,76 @@ visible_scanline4x:
 	; Set r19 to the y-index within the tile
 	mov r19, r_tile_y
 	andi r19, 0x0F
+	
+	; Setup r21:r20 for tile-rendering
+	ldi r20, low(tileset_data << 1)
+	ldi r21, high(tileset_data << 1)
+	add r20, r19
+	adc r21, r_zero
+	
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp ; Output byte 1
+
+	nop nop nop nop nop nop nop nop nop nop
+	nop
 
 
-	rcall render_tile_while_streaming ; Render byte 0. Output bytes 2,3,4
-	rcall render_tile_while_streaming ; Render byte 1. Output bytes 5,6,7
-	rcall render_tile_while_streaming ; Render byte 2. Output bytes 8,9,10
-	rcall render_tile_while_streaming ; Render byte 3. Output bytes 11,12,13
-	rcall render_tile_while_streaming ; Render byte 4. Output bytes 14,15,16
-	rcall render_tile_while_streaming ; Render byte 5. Output bytes 17,18,19
-	rcall render_tile_while_streaming ; Render byte 6. Output bytes 20,21,22
-	rcall render_tile_while_streaming ; Render byte 7. Output bytes 23,24,25
+	; Use r22 as loop counter
+	; Only 12 loops are needed to output all the bytes to the USART, but in
+	; order to render the remaining tiles for the next row, we allow this loop
+	; to run 13 times (the final 13 tiles for the next row are rendered during
+	; the next scanline).
+	; The USART output will be masked by the CCL, so it doesn't matter that it
+	; is two bytes of garbage to transmit.
+	ldi r22, 13
+	render_while_streaming_loop:
+	
+		ld r_stream_tmp, X+
+		sts USART0_TXDATAL, r_stream_tmp
+
+		ld r16, Z+ ; Load tile
+		movw r5:r4, Z
+		; Compute address in tileset
+		ldi r17, TILE_HEIGHT
+		mul r16, r17
+		movw Z, r21:r20
+		add ZL, r0
+		adc ZH, r1
+
+		lpm r16, Z ; Load row from tileset
+	
+		ld r_stream_tmp, X+
+		sts USART0_TXDATAL, r_stream_tmp
+
+		st Y+, r16 ; Write row to render-buffer
+		movw Z, r5:r4
+	
+		; Increment x-index and wrap if we've reached the right side of tiledata
+		inc r18
+		cpi r18, TILEDATA_WIDTH
+		breq wrap_index_xA
+			nop
+			rjmp wrap_index_x_doneA
+		wrap_index_xA:
+			sbiw Z, TILEDATA_WIDTH
+		wrap_index_x_doneA:
+		
+		nop
+
+		dec r22
+		brne render_while_streaming_loop
 
 	; Rewind to start of output buffer
-	subi XL, SCANLINE_BUFFER_TILES
+	; The renderloop above overruns the output buffer by two bytes, so we need
+	; to reset the pointer accordingly.
+	subi XL, (SCANLINE_BUFFER_TILES + 2)
 	
-	rcall render_tile ; Render byte 8
-	rcall render_tile ; Render byte 9
-	rcall render_tile ; Render byte 10
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop
 
 	; Read SPI communication
 	lds r16, SPI0_INTFLAGS
@@ -360,39 +387,67 @@ visible_scanline4x:
 	ser r16
 	sts SPI0_INTFLAGS, r16
 	
-	nop
+	nop nop nop nop
 
 
 	; ===================
 	; Begin scanline 4k+1
 	; ===================
 
+	; Use r22 as loop counter
+	ldi r22, 13
+	render_while_streaming_loop2:
+	
+		ld r_stream_tmp, X+
+		sts USART0_TXDATAL, r_stream_tmp
 
-	; Start rendering and streaming data
-	rcall render_tile_while_streaming ; Render byte 11. Output bytes 0,1,2
-	rcall render_tile_while_streaming ; Render byte 12. Output bytes 3,4,5
-	rcall render_tile_while_streaming ; Render byte 13. Output bytes 6,7,8
-	rcall render_tile_while_streaming ; Render byte 14. Output bytes 9,10,11
-	rcall render_tile_while_streaming ; Render byte 15. Output bytes 12,13,14
-	rcall render_tile_while_streaming ; Render byte 16. Output bytes 15,16,17
-	rcall render_tile_while_streaming ; Render byte 17. Output bytes 18,19,20
-	rcall render_tile_while_streaming ; Render byte 18. Output bytes 21,22,23
+		ld r16, Z+ ; Load tile
+		movw r5:r4, Z
+		; Compute address in tileset
+		ldi r17, TILE_HEIGHT
+		mul r16, r17
+		movw Z, r21:r20
+		add ZL, r0
+		adc ZH, r1
 
-	; Output bytes 24 and 25 without rendering
-	nop nop nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-	nop nop nop nop nop nop nop nop nop nop
-	nop nop
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
+		lpm r16, Z ; Load row from tileset
+	
+		ld r_stream_tmp, X+
+		sts USART0_TXDATAL, r_stream_tmp
+
+		st Y+, r16 ; Write row to render-buffer
+		movw Z, r5:r4
+	
+		; Increment x-index and wrap if we've reached the right side of tiledata
+		inc r18
+		cpi r18, TILEDATA_WIDTH
+		breq wrap_index_xB
+			nop
+			rjmp wrap_index_x_doneB
+		wrap_index_xB:
+			sbiw Z, TILEDATA_WIDTH
+		wrap_index_x_doneB:
+		
+		nop
+
+		dec r22
+		brne render_while_streaming_loop2
+
+	; Rendering finished, rewind to start of srenderbuffer
+	sbiw Y, SCANLINE_BUFFER_TILES
 
 	; Rewind to start of output buffer
 	subi XL, SCANLINE_BUFFER_TILES
 	
-	rcall render_tile ; Render byte 19
-	rcall render_tile ; Render byte 20
-	rcall render_tile ; Render byte 21
+
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop nop nop nop nop nop
+	nop nop nop nop nop
 
 
 	; Read SPI communication
@@ -422,13 +477,57 @@ visible_scanline4x:
 	; Begin scanline 4k+2 (not exactly correct place...)
 	; ===================
 
-	rcall render_tile_while_streaming ; Render byte 22. Output bytes 0,1,2
-	rcall render_tile_while_streaming ; Render byte 23. Output bytes 3,4,5
-	rcall render_tile_while_streaming ; Render byte 24. Output bytes 6,7,8
-	rcall render_tile_while_streaming ; Render byte 25. Output bytes 9,10,11
-	; Rendering finished, rewind to start of srenderbuffer
-	sbiw Y, SCANLINE_BUFFER_TILES
-	
+	nop nop nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop
+	nop nop nop nop nop
+	ld r_stream_tmp, X+
+	sts USART0_TXDATAL, r_stream_tmp
+	nop nop nop nop nop nop nop
+	nop
+
+	nop
 
 	
 	nop nop nop
@@ -929,95 +1028,12 @@ vblank:
 	clr r_y
 	clr r_tile_y ;TODO here is to load in scroll_y, instead of clearing
 	
-	ldi XH, high(scanline_bufferA)
-	ldi XL, low(scanline_bufferA)
-	ldi YH, high(scanline_bufferB)
-	ldi YL, low(scanline_bufferB)
+	nop;ldi XH, high(scanline_bufferA)
+	nop;ldi XL, low(scanline_bufferA)
+	nop;ldi YH, high(scanline_bufferB)
+	nop;ldi YL, low(scanline_bufferB)
 
 	rjmp visible_scanline4x
-
-
-; Subroutine which renders 1 byte, while outputting three to the USART
-render_tile_while_streaming:
-	; Subroutine call takes 2 cycles
-	
-	ld r16, Z+ ; Load tile
-	
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-
-	movw r5:r4, Z
-	; Compute address in tileset
-	ldi r17, TILE_HEIGHT
-	mul r16, r17
-	add r0, r19
-	adc r1, r_zero
-	ldi ZL, low(tileset_data << 1)
-	ldi ZH, high(tileset_data << 1)
-	add ZL, r0
-	adc ZH, r1
-	nop nop
-	
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-
-	lpm r16, Z ; Load row from tileset
-	st Y+, r16 ; Write row to render-buffer
-	movw Z, r5:r4
-	
-	; Increment x-index and wrap if we've reached the right side of tiledata
-	inc r18
-	cpi r18, TILEDATA_WIDTH
-	breq wrap_index_x
-		nop
-		rjmp wrap_index_x_done
-	wrap_index_x:
-		sbiw Z, TILEDATA_WIDTH
-	wrap_index_x_done:
-	
-	nop
-
-	ld r_stream_tmp, X+
-	sts USART0_TXDATAL, r_stream_tmp
-
-	nop nop nop nop
-	; Return jump takes 4 cycles
-	ret
-
-; Subroutine to render 1 byte while no streaming is needed
-; Takes 29 cycles, including call and return
-render_tile:
-	; Subroutine call takes 2 cycles
-	ld r16, Z+ ; Load tile index
-
-	; Compute address in tileset
-	movw r5:r4, Z
-	ldi ZL, low(tileset_data << 1)
-	ldi ZH, high(tileset_data << 1)
-	ldi r17, TILE_HEIGHT
-	mul r16, r17
-	add ZL, r0
-	adc ZH, r1
-	add ZL, r19
-	adc ZH, r_zero
-
-	; Render byte
-	lpm r16, Z ; Load row from tileset
-	st Y+, r16 ; Write row to render-buffer
-	movw Z, r5:r4
-	
-	; Increment x-index and wrap if we've reached the right side of tiledata
-	inc r18
-	cpi r18, TILEDATA_WIDTH
-	breq wrap_index_x2
-		nop
-		rjmp wrap_index_x2_done
-	wrap_index_x2:
-		sbiw Z, TILEDATA_WIDTH
-	wrap_index_x2_done:
-
-	; Return jump takes 4 cycles
-	ret
 
 powers_of_2_table: .db 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
 
