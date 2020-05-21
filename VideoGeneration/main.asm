@@ -955,18 +955,49 @@ vblank:
 	; 18 lines
 	ldi r17, 18
 	loop6:
-		clr r16
-		loop5: inc r16 inc r16 brne loop5 ; 512 cycles
-		nop nop nop nop nop nop nop nop nop nop nop
+		; Delay through "visible" portion
+		delay_decacycles 39
+		nop nop nop nop nop nop nop nop nop
+
+		; Delay through front porch
+		delay_decacycles 2
+
+		; Read SPI communication
+		lds r16, SPI0_INTFLAGS
+		sbrs r16, SPI_RXCIE_bp
+			rjmp spi_comm_delay_V5
+		; Read command
+			lds ZL, SPI0_DATA  ; Low byte of address
+			lds ZH, SPI0_DATA  ; High byte of address
+			andi ZH, 0x01
+			ldi r16, high(INTERNAL_SRAM_START)
+			add ZH, r16
+			lds r16, SPI0_DATA ; Data
+			st Z, r16
+			rjmp spi_comm_done_V5
+		spi_comm_delay_V5:
+			nop nop nop nop nop nop nop nop nop nop
+			nop nop nop nop
+		spi_comm_done_V5:
+		ser r16
+		sts SPI0_INTFLAGS, r16
+		
+		; Delay through rest of HSYNC + back porch (41 + 44 - 4(for jump))
+		delay_decacycles 8
+		nop nop
+		
 		dec r17
-		brne loop6
+		breq loop6_exit
+		rjmp loop6
+	loop6_exit:
+	
 
 	; Incomplete 21st line (528-44=484 cycles)
 	ldi r16, 0x80
 	loop7: inc r16 inc r16 brne loop7 ; 256 cycles
 
-	delay_decacycles 22
-	nop nop ;nop nop nop nop
+	delay_decacycles 18
+	nop nop nop nop nop nop
 	
 	; Update r_scroll_x from memory in case it has been changed
 	; Also, maybe test scrolling functionality
