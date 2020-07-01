@@ -1,0 +1,57 @@
+USART0,TXD: PA 0/4
+USART1,TXD: PC 0/4
+USART2,TXD: PF 0/4
+USART3,TXD: PB 0/4
+USART4,TXD: PE 0/4
+USART5,TXD: PG 0/4
+
+USART0,XCK: PA 2/6
+USART1,XCK: PC 2/6
+USART2,XCK: PF 2
+USART3,XCK: PB 2/6
+USART4,XCK: PE 2/6
+USART5,XCK: PG 2/6
+
+LUT0,OUT:   PA (0,1,2 -> 3/6)
+LUT1,OUT:   PC (0,1,2 -> 3/6)
+LUT2,OUT:   PD (0,1,2 -> 3/6)
+LUT3,OUT:   PF (0,1,2 -> 3)
+LUT4,OUT:   PB (0,1,2 -> 3/6)
+LUT5,OUT:   PG (0,1,2 -> 3/6)
+
+
+TXD0/XCK0/TXD3/XCK3 -> EVCH0/1 -> EVOUT A-G (PA2/7, PB2/7, PC2/7, PD2/7, PE2/7, PF2, PG2/7)
+TXD1/XCK1           -> EVCH2/3 -> EVOUT A-G (PA2/7, PB2/7, PC2/7, PD2/7, PE2/7, PF2, PG2/7)
+TXD4/XCK4/TXD2/XCK2 -> EVCH4/5 -> EVOUT A-G (PA2/7, PB2/7, PC2/7, PD2/7, PE2/7, PF2, PG2/7)
+TXD5/XCK5           -> EVCH6/7 -> EVOUT A-G (PA2/7, PB2/7, PC2/7, PD2/7, PE2/7, PF2, PG2/7)
+
+Through event system, any TX-data can be mapped to LUT input 2
+
+TXD 0-2 -> Any LUT inputs 0-2 (CCL MUX)
+Any TXD -> Any LUT input 2 (through event system)
+
+Any TXD -> LUT input 0 on same PORT (same pin)
+Any XCK -> LUT input 2 on same PORT (same pin)
+Any XCK -> LUT input 1 on same PORT (adjacent pin)
+
+
+# Currently using
+(pin 62) PA0  USART0,TxD  (internal)
+(pin 64) PA2  USART0,XCK  (same pin)
+(pin 1)  PA3  LUT0,OUT    (internal)
+(pin 52) PG0  USART5,TXD  (external jumper)
+(pin 16) PC0  USART1,TXD  (internal)
+(pin 44) PF0  USART2,TXD  (same pin)
+(pin 45) PF1  LUT3,IN1    (external jumper)
+(pin 46) PF2  USART2,XCK  (same pin)
+(pin 47) PF3  LUT3,OUT    (internal)
+(pin 55) PG3  LUT5,OUT    (external output)
+(pin 29) PD3  LUT2,OUT    (external output)
+
+Need LUT5 and LUT2 for output masking (if internal linking is to be used)
+LUT5,OUT: PG 3/6
+LUT2,OUT: PD 3/6
+
+PORTB and PORTE unused
+PORTC unused if drivers for internal signals are not turned on
+Small downside: external jumper from pin 45 to pin 52
